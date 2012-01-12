@@ -1,4 +1,4 @@
-" IndentSigns.vim - Using Signs for indenting level
+	" IndentSigns.vim - Using Signs for indenting level
 " ---------------------------------------------------------------
 " Version:	0.1
 " Authors:	Christian Brabandt <cb@256bit.org>
@@ -21,7 +21,7 @@ let s:keepcpo              = &cpo
 set cpo&vim
 
 " Check preconditions
-fu! s:Check() "{{{1
+fu! <sid>Check() "{{{1
 	" Check for the existence of unsilent
 	if exists(":unsilent")
 		let s:echo_cmd='unsilent echomsg'
@@ -41,9 +41,15 @@ fu! s:Check() "{{{1
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
 	let s:id_hl.Check = "User1"
+
+	" Indent Cache
+	let s:indentCache = {}
+
+	" Define Signs
+	call s:DefineSigns()
 endfu
 
-fu! s:WarningMsg() "{{{1
+fu! <sid>WarningMsg() "{{{1
 	redraw!
 	if !empty(s:msg)
 		let msg=["IndentSigns.vim: " . s:msg[0]] + s:msg[1:]
@@ -57,7 +63,7 @@ fu! s:WarningMsg() "{{{1
 	endif
 endfu
 
-fu! s:Init() "{{{1
+fu! <sid>Init(...) "{{{1
 	" Message queue, that will be displayed.
 	let s:msg  = []
 	" Only check the first time this file is loaded
@@ -66,18 +72,41 @@ fu! s:Init() "{{{1
 		call s:Check()
 		let s:precheck=1
 	endif
+	if exists("a:1") && a:1
+		call <sid>UnPlaceSigns()
+	endif
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
 	let s:signs={}
 
 	" Delete previously placed signs
-	call s:UnPlaceSigns()
-	call s:DefineSigns()
+	let s:Signs = <sid>ReturnSigns(bufnr(''))
+	"call s:UnPlaceSigns()
 	call s:AuCmd(1)
 endfu
 
-fu! s:AuCmd(arg) "{{{1
+fu! <sid>IndentFactor() "{{{1
+	return &l:sts>0 ? &l:sts : &ts
+endfu
+
+fu! <sid>ReturnSigns(buffer) "{{{1
+	redir => a 
+		exe "sil sign place buffer=". a:buffer 
+	redir end
+	let b = split(a, "\n")[1:]
+	call filter(b, 'matchstr(v:val, ''id=\zs\d\+'')')
+	return b
+endfu
+
+fu! <sid>CacheIndent() "{{{1
+	for i in range(1,line('$'))
+		let s:indentCache[i] = (indent(i)/<sid>IndentFactor())
+	endfor
+	return s:indentCache
+endfu
+
+fu! <sid>AuCmd(arg) "{{{1
 	if a:arg
 	augroup IndentSigns
 		autocmd!
@@ -91,7 +120,7 @@ fu! s:AuCmd(arg) "{{{1
 	endif
 endfu
 
-fu! s:UnPlaceSigns() "{{{1
+fu! <sid>UnPlaceSigns() "{{{1
 	redir => a
 	silent sign place
 	redir end
@@ -103,22 +132,35 @@ fu! s:UnPlaceSigns() "{{{1
 	endfor
 endfu
 
-fu! s:PlaceSigns() "{{{1
-	for item in range(1,line('$'))
-		let indent=indent(item)
-		let div   = &l:sts > 0 ? &l:sts : &ts
-		if div > 0 && indent > 0 && (indent/&l:sts) < 10
-			exe "sign place " s:sign_prefix . item . " line=" . item .
-				\ " name=" . (indent/&l:sts) . " buffer=" . bufnr('')
-		elseif div > 0 && indent > 0 && (indent/&l:sts) > 9
-			exe "sign place " s:sign_prefix . item . " line=" . item .
-				\ " name=10  buffer=" . bufnr('')
+fu! <sid>UnplaceSignSingle(item) "{{{1
+	if a:item == 0
+		return
+	endif
+	call setpos('.', a:item)
+	" Vim errors, if the line does not contain a sign
+	sil! sign unplace
+endfu
+
+fu! <sid>PlaceSigns() "{{{1
+	for line in range(1,line('$'))
+		let indent = indent(line)
+		let div    = <sid>IndentFactor()
+		if div > 0 && indent > 0 && (indent/div) != get(s:indentCache, line-1, 0)
+			call <sid>UnplaceSignSingle( get(s:indentCache,(line-1),0) )
+			let s:indentCache[line-1] = indent/div
+			if (indent/div) < 10
+				exe "sign place " s:sign_prefix . line . " line=" . line .
+					\ " name=" . (indent/div) . " buffer=" . bufnr('')
+			else 
+				exe "sign place " s:sign_prefix . line . " line=" . line .
+					\ " name=10  buffer=" . bufnr('')
+			endif
 		endif
 	endfor
 endfu
 
 
-fu! s:DefineSigns() "{{{1
+fu! <sid>DefineSigns() "{{{1
 	for item in range(1,9)
 		exe "silent! sign undefine " item
 		exe "sign define" item	"text=".item . " texthl=" . s:id_hl.Line
@@ -130,7 +172,7 @@ fu! s:DefineSigns() "{{{1
 	"exe "sign define IndentCheck text=C texthl=" . s:id_hl.Check . " linehl=" . s:id_hl.Check
 endfu
 
-fu! s:UpdateView() "{{{1
+fu! <sid>UpdateView() "{{{1
 	if !exists("b:changes_chg_tick")
 		let b:changes_chg_tick = 0
 	endif
@@ -140,8 +182,11 @@ fu! s:UpdateView() "{{{1
 	endif
 endfu
 
-fu! indentSigns#Run() "{{{1
+fu! indentSigns#Run(...) "{{{1
 	try
+		if exists("a:1") && a:1
+			unlet! s:precheck
+		endif
 		call s:Init()
 		catch /^indentSigns:/
 		call s:WarningMsg()
@@ -150,7 +195,7 @@ fu! indentSigns#Run() "{{{1
 	call s:PlaceSigns()
 endfu
 
-fu! s:CleanUp()"{{{1
+fu! <sid>CleanUp()"{{{1
 	" only delete signs, that have been set by this plugin
 	call s:UnPlaceSigns()
 	for item in range(1,9)
@@ -161,6 +206,7 @@ endfu
 
 " Define Commands "{{{1
 :com! IndentSigns :call indentSigns#Run()
+:com! UpdateSigns :call indentSigns#Run(1)
 :com! DisableIndentSigns :call s:CleanUp()
 
 " Restore Vim Settings "{{{1
