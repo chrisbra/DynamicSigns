@@ -76,8 +76,17 @@ fu! <sid>Init(...) "{{{1
 	endif
 
 
+	" Setup configuration variables:
 	let s:MixedIndentation = exists("g:IndentSigns_MixedIndentation") ? 
 				\ g:IndentSigns_MixedIndentation : 1
+
+	let s:IndentationLevel = exists("g:IndentSigns_IndentationLevel") &&
+					\ g:IndentSigns_IndentationLevel = 1
+
+	let s:MixedIndentation = exists("g:IndentSigns_MixedIndentation") &&
+					\ g:IndentSigns_MixedIndentation= 1
+
+	let s:SignHook = exists("g:IndentSigns_Hook") ? g:IndentSigns_Hook : ''
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
@@ -163,57 +172,78 @@ fu! <sid>UpdateWindowSigns() "{{{1
 		call <sid>WarningMsg()
 		return
 	endtry
-	call <sid>PlaceSings(line('w0'), line('w$'))
+	call <sid>PlaceSigns(line('w0'), line('w$'))
 	" Redraw Screen
-	exe "norm \<C-L>"
+	exe "norm! \<C-L>"
 endfu
 
 fu! <sid>PlaceSigns(...) "{{{1
 	let _a = winsaveview()
 	let PlacedSigns = copy(s:Signs)
-	let first = empty("a:1") ? 1 : a:1
-	let lasat = empty("a:2") ? line('$') : a:2
+	let first = !exists("a:1") ? 1 : a:1
+	let last = !exists("a:2") ? line('$') : a:2
 	for line in range(first, last)
-		let did_place_sign = 0
 
-		" Place signs for mixed indentation rules {{{3
-		let a=matchstr(getline(line), '^\s\+\ze\S')
-		let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
-		if match(a, '\%(\t \)\|\%( \t\)') > -1
-			\ && s:MixedIndentation
-			if oldSign >= 0
-				let did_place_sign = 1
-				continue
-			endif
-			exe "sign place " s:sign_prefix . line . " line=" . line .
-				\ " name=IndentWSError buffer=" . bufnr('')
-			let did_place_sign = 1
-		endif "}}}3
-
-		" No more wrong indentation, remove sign
-		if oldSign >= 0
-			call <sid>UnplaceSignSingle(oldSign)
-		endif
-
-		if did_place_sign
+		" Custom Sign Hooks "{{{3
+		if exists("s:SignHook") && !empty(s:SignHook)
+			try
+				let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentCustom')
+				let expr = substitute(s:SignHook, 'v:lnum', line, 'g')
+				if oldSign >= 0
+					continue
+				endif
+				if eval(expr)
+					exe "sign place " s:sign_prefix . line . " line=" . line .
+						\ " name=IndentCustom buffer=" . bufnr('')
+					let 
+				elseif oldSign >= 0
+					" Custom Sign no longer needed, remove it
+					call <sid>UnplaceSignSingle(oldSign)
+				endif
+			catch
+				echo "Error: " v:exception
+			endtry
 			continue
 		endif
 
-		" Place signs for Indentation Level {{{3
-		let indent = indent(line)
-		let div    = <sid>IndentFactor()
+		if exists("s:MixedIndentation") &&
+					\ s:MixedIndentation = 1
+			" Place signs for mixed indentation rules {{{3
+			let a=matchstr(getline(line), '^\s\+\ze\S')
+			let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
+			if match(a, '\%(\t \)\|\%( \t\)') > -1
+				\ && s:MixedIndentation
+				if oldSign >= 0
+					let did_place_sign = 1
+					continue
+				endif
+				exe "sign place " s:sign_prefix . line . " line=" . line .
+					\ " name=IndentWSError buffer=" . bufnr('')
+				continue
+			elseif oldSign >= 0
+				" No more wrong indentation, remove sign
+				call <sid>UnplaceSignSingle(oldSign)
+			endif
 
-		if div > 0 && indent > 0 && (indent/div) != get(b:indentCache, line-1, -1)
-			call <sid>UnplaceSignSingle( get(b:indentCache,(line-1),-1) )
-			let b:indentCache[line-1] = indent/div
-			if (indent/div) < 10
-				exe "sign place " s:sign_prefix . line . " line=" . line .
-					\ " name=" . (indent/div) . " buffer=" . bufnr('')
-				let did_place_sign = 1
-			else 
-				exe "sign place " s:sign_prefix . line . " line=" . line .
-					\ " name=10  buffer=" . bufnr('')
-				let did_place_sign = 1
+		endif
+
+		if exists("s:_IndentationLevel") &&
+					\ s:_IndentationLevel = 1
+			" Place signs for Indentation Level {{{3
+			let indent = indent(line)
+			let div    = <sid>IndentFactor()
+
+			if div > 0 && indent > 0 && (indent/div) != get(b:indentCache, line-1, -1)
+				call <sid>UnplaceSignSingle( get(b:indentCache,(line-1),-1) )
+				let b:indentCache[line-1] = indent/div
+				if (indent/div) < 10
+					exe "sign place " s:sign_prefix . line . " line=" . line .
+						\ " name=" . (indent/div) . " buffer=" . bufnr('')
+				else 
+					exe "sign place " s:sign_prefix . line . " line=" . line .
+						\ " name=10  buffer=" . bufnr('')
+				endif
+				continue
 			endif
 		endif "}}}3
 
@@ -239,6 +269,10 @@ fu! <sid>DefineSigns() "{{{1
 	exe "sign define IndentWSError text=X texthl=" . s:id_hl.Error . 
 		\ " linehl=" . s:id_hl.Error
 	"exe "sign define IndentCheck text=C texthl=" . s:id_hl.Check . " linehl=" . s:id_hl.Check
+	"
+	" Custom Signs Hooks
+	silent! sign undefine IndentCustom
+	exe "sign define IndentCustom text=C texthl=" . s:id_hl.Error
 endfu
 
 fu! <sid>UpdateView() "{{{1
@@ -273,6 +307,8 @@ fu! <sid>CleanUp()"{{{1
 	endfor
 	" Remove IndentWSError Sign
 	silent! sign undefine IndentWSError
+	" Remove Custom Signs
+	silent! sign undefine IndentCustom
 	call <sid>AuCmd(0)
 endfu
 
@@ -282,7 +318,7 @@ endfu
 :com! DisableIndentSigns :call <sid>CleanUp()
 
 " Maping commands "{{{1
-nnoremap <C-L> :call <sid>UpdateView()<cr>
+nnoremap <C-L> :call <sid>UpdateWindowSigns()<cr>
 
 " Restore Vim Settings "{{{1
 let &cpo= s:keepcpo
