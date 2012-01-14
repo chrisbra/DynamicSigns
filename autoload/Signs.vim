@@ -1,4 +1,4 @@
-	" IndentSigns.vim - Using Signs for indenting level
+	" Signs.vim - Using Signs
 " ---------------------------------------------------------------
 " Version:	0.1
 " Authors:	Christian Brabandt <cb@256bit.org>
@@ -11,13 +11,10 @@
 
 " Documentation: N/A
 
-" Init Folkore "{{{1
-if &cp || exists("g:loaded_IndentSigns")
-	finish
-endif
+" Init Folkore  -- not needed for autoload script
 
-let g:loaded_IndentSigns   = 1
-let s:keepcpo              = &cpo
+let g:loaded_Signs   = 1
+let s:keepcpo        = &cpo
 set cpo&vim
 
 " Check preconditions
@@ -31,9 +28,9 @@ fu! <sid>Check() "{{{1
 
 	if !has("signs")
 		call add(s:msg, "Sign Support support not available in your Vim version.")
-		call add(s:msg, "IndentSigns plugin will not be working!")
+		call add(s:msg, "Signs plugin will not be working!")
 		call <sid>WarningMsg()
-		throw 'IndentSigns:abort'
+		throw 'Signs:abort'
 	endif
 
 	let s:sign_prefix = 99
@@ -49,7 +46,7 @@ endfu
 fu! <sid>WarningMsg() "{{{1
 	redraw!
 	if !empty(s:msg)
-		let msg=["IndentSigns.vim: " . s:msg[0]] + s:msg[1:]
+		let msg=["Signs.vim: " . s:msg[0]] + s:msg[1:]
 		echohl WarningMsg
 		for mess in msg
 			exe s:echo_cmd "mess"
@@ -65,18 +62,18 @@ fu! <sid>Init(...) "{{{1
 	let s:msg  = []
 	
 	" Setup configuration variables:
-	let s:MixedIndentation = exists("g:IndentSigns_MixedIndentation") ? 
-				\ g:IndentSigns_MixedIndentation : 1
+	let s:MixedIndentation = exists("g:Signs_MixedIndentation") ? 
+				\ g:Signs_MixedIndentation : 1
 
-	let s:IndentationLevel = exists("g:IndentSigns_IndentationLevel") ?
-					\ g:IndentSigns_IndentationLevel : 1
+	let s:IndentationLevel = exists("g:Signs_IndentationLevel") ?
+					\ g:Signs_IndentationLevel : 1
 
-	let s:BookmarkSigns	   = exists("g:IndentSigns_Bookmarks") ? 
-					\ g:IndentSigns_Bookmarks : 1
+	let s:BookmarkSigns	   = exists("g:Signs_Bookmarks") ? 
+					\ g:Signs_Bookmarks : 1
 
 	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
 
-	let s:SignHook = exists("g:IndentSigns_Hook") ? g:IndentSigns_Hook : ''
+	let s:SignHook = exists("g:Signs_Hook") ? g:Signs_Hook : ''
 
 	" Only check the first time this file is loaded
 	" It should not be neccessary to check every time
@@ -129,16 +126,16 @@ endfu
 
 fu! <sid>AuCmd(arg) "{{{1
 	if a:arg
-	augroup IndentSigns
+	augroup Signs
 		autocmd!
 		let s:verbose=0
 		au BufWritePost,InsertLeave * :call <sid>UpdateView()
 	augroup END
 	else
-	augroup IndentSigns
+	augroup Signs
 		autocmd!
 	augroup END
-	augroup! IndentSigns
+	augroup! Signs
 	endif
 endfu
 
@@ -166,7 +163,7 @@ fu! <sid>UnplaceSignSingle(item) "{{{1
 	sil! sign unplace
 endfu
 
-fu! <sid>UpdateWindowSigns() "{{{1
+fu! Signs#UpdateWindowSigns() "{{{1
 	" Only update all signs in the current window viewport
 	try
 		call <sid>Init()
@@ -325,17 +322,17 @@ fu! <sid>UpdateView() "{{{1
 	endif
 	" Only update, if there have been changes to the buffer
 	if b:changes_chg_tick != b:changedtick
-		call IndentSigns#Run()
+		call Signs#Run()
 	endif
 endfu
 
-fu! IndentSigns#Run(...) "{{{1
+fu! Signs#Run(...) "{{{1
 	try
 		if exists("a:1") && a:1 == 1
 			unlet! s:precheck
 		endif
 		call <sid>Init()
-		catch /^IndentSigns:/
+		catch /^Signs:/
 			call <sid>WarningMsg()
 		return
 	endtry
@@ -356,10 +353,6 @@ fu! <sid>CleanUp()"{{{1
 	call <sid>AuCmd(0)
 endfu
 
-" Define Commands "{{{1
-:com! IndentSigns :call IndentSigns#Run()
-:com! UpdateSigns :call IndentSigns#Run(1)
-:com! DisableIndentSigns :call <sid>CleanUp()
 
 " Maping commands "{{{1
 nnoremap <C-L> :call <sid>UpdateWindowSigns()<cr>
