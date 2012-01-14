@@ -63,6 +63,21 @@ endfu
 fu! <sid>Init(...) "{{{1
 	" Message queue, that will be displayed.
 	let s:msg  = []
+	
+	" Setup configuration variables:
+	let s:MixedIndentation = exists("g:IndentSigns_MixedIndentation") ? 
+				\ g:IndentSigns_MixedIndentation : 1
+
+	let s:IndentationLevel = exists("g:IndentSigns_IndentationLevel") ?
+					\ g:IndentSigns_IndentationLevel : 1
+
+	let s:BookmarkSigns	   = exists("g:IndentSigns_Bookmarks") ? 
+					\ g:IndentSigns_Bookmarks : 1
+
+	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
+
+	let s:SignHook = exists("g:IndentSigns_Hook") ? g:IndentSigns_Hook : ''
+
 	" Only check the first time this file is loaded
 	" It should not be neccessary to check every time
 	if !exists("s:precheck") || (exists("a:1") && a:1)
@@ -74,19 +89,6 @@ fu! <sid>Init(...) "{{{1
 	if !exists("b:indentCache")
 		let b:indentCache = {}
 	endif
-
-
-	" Setup configuration variables:
-	let s:MixedIndentation = exists("g:IndentSigns_MixedIndentation") ? 
-				\ g:IndentSigns_MixedIndentation : 1
-
-	let s:IndentationLevel = exists("g:IndentSigns_IndentationLevel") &&
-					\ g:IndentSigns_IndentationLevel = 1
-
-	let s:MixedIndentation = exists("g:IndentSigns_MixedIndentation") &&
-					\ g:IndentSigns_MixedIndentation= 1
-
-	let s:SignHook = exists("g:IndentSigns_Hook") ? g:IndentSigns_Hook : ''
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
@@ -177,17 +179,30 @@ fu! <sid>UpdateWindowSigns() "{{{1
 	exe "norm! \<C-L>"
 endfu
 
+fu! <sid>GetMarks() "{{{1
+	let marks={}
+	let t = []
+	for mark in s:Bookmarks
+		let t = getpos("'".mark)
+		if t[1] > 0
+			let marks[t[1]] = mark
+		endif
+	endfor
+	return marks
+endfu
+
 fu! <sid>PlaceSigns(...) "{{{1
 	let _a = winsaveview()
 	let PlacedSigns = copy(s:Signs)
 	let first = !exists("a:1") ? 1 : a:1
 	let last = !exists("a:2") ? line('$') : a:2
+	let did_place_sign=0
 	for line in range(first, last)
 
 		" Custom Sign Hooks "{{{3
 		if exists("s:SignHook") && !empty(s:SignHook)
 			try
-				let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentCustom')
+				let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentCustom')
 				let expr = substitute(s:SignHook, 'v:lnum', line, 'g')
 				if oldSign >= 0
 					continue
@@ -195,7 +210,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 				if eval(expr)
 					exe "sign place " s:sign_prefix . line . " line=" . line .
 						\ " name=IndentCustom buffer=" . bufnr('')
-					let 
+					continue
 				elseif oldSign >= 0
 					" Custom Sign no longer needed, remove it
 					call <sid>UnplaceSignSingle(oldSign)
@@ -203,18 +218,41 @@ fu! <sid>PlaceSigns(...) "{{{1
 			catch
 				echo "Error: " v:exception
 			endtry
-			continue
 		endif
 
+		" Place signs for bookmarks "{{{3
+		if exists("s:BookmarkSigns") &&
+					\ s:BookmarkSigns == 1
+			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentBookmark')
+			let bookmarks = <sid>GetMarks()
+			for mark in sort(keys(bookmarks))
+				if mark == line
+					exe "sign place " s:sign_prefix . line . " line=" . line .
+						\ " name=IndentBookmark". bookmarks[mark] . " buffer=" . bufnr('')
+					let did_place_sign = 1
+					break
+				elseif mark > line
+					break
+				endif
+			endfor
+			if oldSign >= 0
+				" Bookmark Sign no longer needed, remove it
+				call <sid>UnplaceSignSingle(oldSign)
+			endif
+			if did_place_sign
+				continue
+			endif
+		endif
+
+		" Place signs for mixed indentation rules "{{{3
 		if exists("s:MixedIndentation") &&
-					\ s:MixedIndentation = 1
-			" Place signs for mixed indentation rules {{{3
+					\ s:MixedIndentation == 1
+
 			let a=matchstr(getline(line), '^\s\+\ze\S')
 			let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
 			if match(a, '\%(\t \)\|\%( \t\)') > -1
 				\ && s:MixedIndentation
 				if oldSign >= 0
-					let did_place_sign = 1
 					continue
 				endif
 				exe "sign place " s:sign_prefix . line . " line=" . line .
@@ -228,7 +266,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 		endif
 
 		if exists("s:_IndentationLevel") &&
-					\ s:_IndentationLevel = 1
+					\ s:_IndentationLevel == 1
 			" Place signs for Indentation Level {{{3
 			let indent = indent(line)
 			let div    = <sid>IndentFactor()
@@ -273,6 +311,12 @@ fu! <sid>DefineSigns() "{{{1
 	" Custom Signs Hooks
 	silent! sign undefine IndentCustom
 	exe "sign define IndentCustom text=C texthl=" . s:id_hl.Error
+
+	" Bookmark Signs
+	for item in s:Bookmarks
+		exe "silent! sign undefine IndentBookmark".item
+		exe "sign define IndentBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
+	endfor
 endfu
 
 fu! <sid>UpdateView() "{{{1
