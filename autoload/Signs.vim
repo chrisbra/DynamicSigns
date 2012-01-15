@@ -13,10 +13,6 @@
 
 " Init Folkore  -- not needed for autoload script
 
-let g:loaded_Signs   = 1
-let s:keepcpo        = &cpo
-set cpo&vim
-
 " Check preconditions
 fu! <sid>Check() "{{{1
 	" Check for the existence of unsilent
@@ -75,6 +71,8 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignHook = exists("g:Signs_Hook") ? g:Signs_Hook : ''
 
+	let s:SignQF   = exists("g:Signs_QFList" ? g:Signs_QFList : 1
+
 	" Only check the first time this file is loaded
 	" It should not be neccessary to check every time
 	if !exists("s:precheck") || (exists("a:1") && a:1)
@@ -130,6 +128,7 @@ fu! <sid>AuCmd(arg) "{{{1
 		autocmd!
 		let s:verbose=0
 		au BufWritePost,InsertLeave * :call <sid>UpdateView()
+		exe "s:SignQF" ? "au QuickFixCmdPost * :call <sid>QFSigns()" : ''
 	augroup END
 	else
 	augroup Signs
@@ -137,6 +136,15 @@ fu! <sid>AuCmd(arg) "{{{1
 	augroup END
 	augroup! Signs
 	endif
+endfu
+
+fu! <sid>QFSigns() "{{{1
+	" Remove all previously placed QF Signs
+	exe "sign unplace " s:sign_prefix . '0'
+	for item in getqflist()
+		exe "sign place" s:sign_prefix . '0' . " line=" . item.lnum .
+			\ " name=SignQF buffer=" . item.bufnr
+	endfor
 endfu
 
 fu! <sid>UnPlaceSigns() "{{{1
@@ -201,10 +209,10 @@ fu! <sid>PlaceSigns(...) "{{{1
 			try
 				let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentCustom')
 				let expr = substitute(s:SignHook, 'v:lnum', line, 'g')
-				if oldSign >= 0
-					continue
-				endif
 				if eval(expr)
+					if oldSign >= 0
+						continue
+					endif
 					exe "sign place " s:sign_prefix . line . " line=" . line .
 						\ " name=IndentCustom buffer=" . bufnr('')
 					continue
@@ -224,6 +232,10 @@ fu! <sid>PlaceSigns(...) "{{{1
 			let bookmarks = <sid>GetMarks()
 			for mark in sort(keys(bookmarks))
 				if mark == line
+					if oldSign >= 0
+						let did_place_sign = 1
+						break
+					endif
 					exe "sign place " s:sign_prefix . line . " line=" . line .
 						\ " name=IndentBookmark". bookmarks[mark] . " buffer=" . bufnr('')
 					let did_place_sign = 1
@@ -232,12 +244,12 @@ fu! <sid>PlaceSigns(...) "{{{1
 					break
 				endif
 			endfor
+			if did_place_sign
+				continue
+			endif
 			if oldSign >= 0
 				" Bookmark Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(oldSign)
-			endif
-			if did_place_sign
-				continue
 			endif
 		endif
 
@@ -290,6 +302,12 @@ endfu
 
 
 fu! <sid>DefineSigns() "{{{1
+	let icon = 0
+	let i_path = fnamemodify(expand("<sfile>"), ':p:h') . '/Signicons/'
+	if (has("gui_gtk") || has("gui_w32s")) && has("gui_running") 
+		let icon = 1
+	endif
+
 	for item in range(1,9)
 		exe "silent! sign undefine " item
 		exe "sign define" item	"text=".item . " texthl=" . s:id_hl.Line
@@ -298,22 +316,30 @@ fu! <sid>DefineSigns() "{{{1
 	" Indentlevel > 9
 	silent! sign undefine 10
 	exe "sign define 10" 	"text=>".item . " texthl=" . s:id_hl.Error
+				\ icon ? " icon=". i_path . "error.png" : ''
 
 	" Mixed Indentation Error
 	silent! sign undefine IndentWSError
 	exe "sign define IndentWSError text=X texthl=" . s:id_hl.Error . 
-		\ " linehl=" . s:id_hl.Error
+		\ " linehl=" . s:id_hl.Error 
+		\ icon ? " icon=". i_path . "error.png" : ''
 	"exe "sign define IndentCheck text=C texthl=" . s:id_hl.Check . " linehl=" . s:id_hl.Check
 	"
 	" Custom Signs Hooks
 	silent! sign undefine IndentCustom
 	exe "sign define IndentCustom text=C texthl=" . s:id_hl.Error
+		\ icon ? " icon=". i_path . "stop.png" : ''
 
 	" Bookmark Signs
 	for item in s:Bookmarks
 		exe "silent! sign undefine IndentBookmark".item
 		exe "sign define IndentBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
 	endfor
+
+	" Make Errors (quickfix list)
+	silent! sign undefine SignQF
+	exe "sign define SignQF text=! texthl=" . s:id_hl.Check
+		\ icon ? " icon=". i_path . "arrow-right.png" : ''
 endfu
 
 fu! <sid>UpdateView() "{{{1
@@ -339,7 +365,7 @@ fu! Signs#Run(...) "{{{1
 	call <sid>PlaceSigns()
 endfu
 
-fu! <sid>CleanUp()"{{{1
+fu! Signs#CleanUp()"{{{1
 	" only delete signs, that have been set by this plugin
 	unlet! s:precheck
 	call <sid>UnPlaceSigns()
@@ -357,8 +383,5 @@ endfu
 " Maping commands "{{{1
 nnoremap <C-L> :call <sid>UpdateWindowSigns()<cr>
 
-" Restore Vim Settings "{{{1
-let &cpo= s:keepcpo
-unlet s:keepcpo
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4

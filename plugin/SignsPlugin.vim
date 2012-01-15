@@ -32,6 +32,7 @@ nnoremap <C-L> :call Signs#UpdateWindowSigns()<cr>
 :com! Signs :call Signs#Run()
 :com! UpdateSigns :call Signs#Run(1)
 :com! DisableSigns :call Signs#CleanUp()
+:com! -nargs=1 SignExpression :let g:Signs_Hook=<q-args>|call Signs#Run(1)
 
 " Restore: "{{{1
 let &cpo=s:cpo
