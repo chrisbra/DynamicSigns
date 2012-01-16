@@ -37,6 +37,7 @@ fu! <sid>Check() "{{{1
 
 	" Define Signs
 	call <sid>DefineSigns()
+	call <sid>UnPlaceSigns()
 endfu
 
 fu! <sid>WarningMsg() "{{{1
@@ -73,11 +74,18 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignQF   = exists("g:Signs_QFList" ? g:Signs_QFList : 1
 
+	if !exists("s:gui_running") 
+		let s:gui_running = has("gui_running")
+	endif
+
 	" Only check the first time this file is loaded
+	" or Signs shall be cleared first or
+	" GUI has started (use icons then)
 	" It should not be neccessary to check every time
-	if !exists("s:precheck") || (exists("a:1") && a:1)
+	if !exists("s:precheck") ||
+		\ (exists("a:1") && a:1) ||
+		\ s:gui_running != has("gui_running")
 		call <sid>Check()
-		call <sid>UnPlaceSigns()
 		let s:precheck=1
 	endif
 	" Indent Cache
