@@ -518,8 +518,6 @@ fu! Signs#CleanUp()"{{{1
 endfu
 
 
-" Maping commands "{{{1
-nnoremap <C-L> :call Signs#UpdateWindowSigns()<cr>
 
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4
