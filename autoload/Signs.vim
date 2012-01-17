@@ -14,6 +14,7 @@
 " Init Folkore  -- not needed for autoload script
 
 " Check preconditions
+let s:i_path = fnamemodify(expand("<sfile>"), ':p:h') . '/Signs/'
 fu! <sid>Check() "{{{1
 	" Check for the existence of unsilent
 	if exists(":unsilent")
@@ -34,6 +35,7 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
 	let s:id_hl.Check = "User1"
+	hi SignColumn guibg=black
 
 	" Define Signs
 	call <sid>DefineSigns()
@@ -50,8 +52,9 @@ fu! <sid>WarningMsg() "{{{1
 		endfor
 
 		echohl Normal
-		let v:errmsg=msg[0]
+		"let v:errmsg=msg[0]
 	endif
+	let s:msg=[]
 endfu
 
 fu! <sid>Init(...) "{{{1
@@ -72,7 +75,9 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignHook = exists("g:Signs_Hook") ? g:Signs_Hook : ''
 
-	let s:SignQF   = exists("g:Signs_QFList" ? g:Signs_QFList : 1
+	let s:SignQF   = exists("g:Signs_QFList") ? g:Signs_QFList : 1
+
+	let s:SignDiff = exists("g:Signs_Diff") ? g:Signs_Diff : 0
 
 	if !exists("s:gui_running") 
 		let s:gui_running = has("gui_running")
@@ -112,7 +117,7 @@ fu! <sid>ReturnSigns(buffer) "{{{1
 	let b = split(a, "\n")[2:]
 	" Remove old deleted Signs
 	call <sid>RemoveDeletedSigns(filter(copy(b), 'matchstr(v:val, ''deleted'')'))
-	call filter(b, 'matchstr(v:val, ''id=\zs\d\+'')')
+	call filter(b, 'matchstr(v:val, ''id=\zs''.s:sign_prefix.''\d\+'')')
 	return b
 endfu
 
@@ -136,6 +141,7 @@ fu! <sid>AuCmd(arg) "{{{1
 		autocmd!
 		let s:verbose=0
 		au BufWritePost,InsertLeave * :call <sid>UpdateView()
+		au GUIEnter * :call <sid>UpdateView()
 		exe "s:SignQF" ? "au QuickFixCmdPost * :call <sid>QFSigns()" : ''
 	augroup END
 	else
@@ -147,12 +153,14 @@ fu! <sid>AuCmd(arg) "{{{1
 endfu
 
 fu! <sid>QFSigns() "{{{1
-	" Remove all previously placed QF Signs
-	exe "sign unplace " s:sign_prefix . '0'
-	for item in getqflist()
-		exe "sign place" s:sign_prefix . '0' . " line=" . item.lnum .
-			\ " name=SignQF buffer=" . item.bufnr
-	endfor
+	if has("quickfix")
+		" Remove all previously placed QF Signs
+		exe "sign unplace " s:sign_prefix . '0'
+		for item in getqflist()
+			exe "sign place" s:sign_prefix . '0' . " line=" . item.lnum .
+				\ " name=SignQF buffer=" . item.bufnr
+		endfor
+	endif
 endfu
 
 fu! <sid>UnPlaceSigns() "{{{1
@@ -207,10 +215,65 @@ endfu
 fu! <sid>PlaceSigns(...) "{{{1
 	let _a = winsaveview()
 	let PlacedSigns = copy(s:Signs)
+	try
+		let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
+	catch /DiffError/
+		call <sid>WarningMsg()
+		return
+	endtry
 	let first = !exists("a:1") ? 1 : a:1
-	let last = !exists("a:2") ? line('$') : a:2
-	let did_place_sign=0
+	let last  = !exists("a:2") ? line('$') : a:2
 	for line in range(first, last)
+		let did_place_sign=0
+
+		" Diff Signs "{{{3
+		if !empty(DiffSigns)
+			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=Sign\(Add\|Change\|Delete\)')
+			" Added Lines
+			for sign in sort(DiffSigns['a'])
+				if sign == line
+					if oldSign >= 0
+						let did_place_sign = 1
+						break
+					else
+						exe "sign place " s:sign_prefix . line . " line=" . line .
+							\ " name=SignAdded buffer=" . bufnr('')
+						let did_place_sign = 1
+						break
+					endif
+				endif
+			endfor
+			if did_place_sign
+				continue
+			endif
+			" Changed Lines
+			for sign in sort(DiffSigns['c'])
+				if sign == line
+					exe "sign place " s:sign_prefix . line . " line=" . line .
+						\ " name=SignChanged buffer=" . bufnr('')
+					let did_place_sign = 1
+					break
+				endif
+			endfor
+			if did_place_sign
+				continue
+			endif
+			" Deleted Lines
+			for sign in sort(DiffSigns['d'])
+				if sign == line
+					exe "sign place " s:sign_prefix . line . " line=" . line .
+						\ " name=SignDeleted buffer=" . bufnr('')
+					let did_place_sign = 1
+					break
+				endif
+			endfor
+			if did_place_sign
+				continue
+			elseif oldSign >= 0
+				" Diff Sign no longer needed, remove it
+				call <sid>UnplaceSignSingle(line)
+			endif
+		endif
 
 		" Custom Sign Hooks "{{{3
 		if exists("s:SignHook") && !empty(s:SignHook)
@@ -226,7 +289,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 					continue
 				elseif oldSign >= 0
 					" Custom Sign no longer needed, remove it
-					call <sid>UnplaceSignSingle(oldSign)
+					call <sid>UnplaceSignSingle(line)
 				endif
 			catch
 				echo "Error: " v:exception
@@ -254,10 +317,9 @@ fu! <sid>PlaceSigns(...) "{{{1
 			endfor
 			if did_place_sign
 				continue
-			endif
-			if oldSign >= 0
+			elseif oldSign >= 0
 				" Bookmark Sign no longer needed, remove it
-				call <sid>UnplaceSignSingle(oldSign)
+				call <sid>UnplaceSignSingle(line)
 			endif
 		endif
 
@@ -277,7 +339,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 				continue
 			elseif oldSign >= 0
 				" No more wrong indentation, remove sign
-				call <sid>UnplaceSignSingle(oldSign)
+				call <sid>UnplaceSignSingle(line)
 			endif
 
 		endif
@@ -311,7 +373,6 @@ endfu
 
 fu! <sid>DefineSigns() "{{{1
 	let icon = 0
-	let i_path = fnamemodify(expand("<sfile>"), ':p:h') . '/Signicons/'
 	if (has("gui_gtk") || has("gui_w32s")) && has("gui_running") 
 		let icon = 1
 	endif
@@ -324,31 +385,100 @@ fu! <sid>DefineSigns() "{{{1
 	" Indentlevel > 9
 	silent! sign undefine 10
 	exe "sign define 10" 	"text=>".item . " texthl=" . s:id_hl.Error
-				\ icon ? " icon=". i_path . "error.png" : ''
+				\ icon ? " icon=". s:i_path . "error.png" : ''
 
 	" Mixed Indentation Error
 	silent! sign undefine IndentWSError
 	exe "sign define IndentWSError text=X texthl=" . s:id_hl.Error . 
 		\ " linehl=" . s:id_hl.Error 
-		\ icon ? " icon=". i_path . "error.png" : ''
+		\ icon ? " icon=". s:i_path . "error.png" : ''
 	"exe "sign define IndentCheck text=C texthl=" . s:id_hl.Check . " linehl=" . s:id_hl.Check
 	"
 	" Custom Signs Hooks
 	silent! sign undefine IndentCustom
 	exe "sign define IndentCustom text=C texthl=" . s:id_hl.Error
-		\ icon ? " icon=". i_path . "stop.png" : ''
+		\ icon ? " icon=". s:i_path . "stop.png" : ''
 
 	" Bookmark Signs
-	for item in s:Bookmarks
-		exe "silent! sign undefine IndentBookmark".item
-		exe "sign define IndentBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
-	endfor
+	if has("quickfix")
+		for item in s:Bookmarks
+			exe "silent! sign undefine IndentBookmark".item
+			exe "sign define IndentBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
+		endfor
+	endif
 
 	" Make Errors (quickfix list)
 	silent! sign undefine SignQF
 	exe "sign define SignQF text=! texthl=" . s:id_hl.Check
-		\ icon ? " icon=". i_path . "arrow-right.png" : ''
+		\ icon ? " icon=". s:i_path . "arrow-right.png" : ''
+
+	" Diff Signs
+	silent! sign undefine SignAdded
+	silent! sign undefine SignChanged
+	silent! sign undefine SignDeleted
+
+	if has("diff")
+		exe "sign define SignAdded text=+ texthl=DiffAdd"
+					\ icon ? " icon=". s:i_path . "add.png" : ''
+		exe "sign define SignChanged text=M texthl=DiffChange"
+					\ icon ? " icon=". s:i_path . "warning.png" : ''
+		exe "sign define SignDeleted text=- texthl=DiffDelete"
+					\ icon ? " icon=". s:i_path . "delete.png" : ''
+	endif
 endfu
+
+fu! <sid>ReturnDiffSigns() "{{{1
+	if !executable("diff") ||
+		\ empty(expand("%")) ||
+		\ !has("diff")
+		" nothing to do
+		call add(s:msg, 'Diff not possible:' . 
+			\ (!executable("diff") ? ' No diff executable found!' :
+			\ empty(expand("%")) ? ' Current file has never been written!' :
+			\ 'Vim was compiled without diff feature!'))
+		throw "DiffError"
+	endif
+	let new_file = tempname()
+	let cmd = "diff "
+	if &dip =~ 'icase'
+		let cmd .= "-i "
+	endif
+	if &dip =~ 'iwhite'
+		let cmd .= "-b "
+	endif
+	let cmd .=  shellescape(expand("%")) . " " .
+				\ shellescape(new_file, 1)
+	call writefile(getline(1,'$'), new_file)
+	let result = split(system(cmd), "\n")
+
+	if v:shell_error == -1 || (v:shell_error && v:shell_error != 1)
+		call add(s:msg, "There was an error executing the diff command!")
+		call add(s:msg, result[0])
+		throw "DiffError"
+	endif
+	call filter(result, 'v:val =~ ''^\d\+\(,\d\+\)\?[acd]\d\+\(,\d\+\)\?''')
+	" Init result set
+	let diffsigns = {}
+	let diffsigns['a'] = []
+	let diffsigns['c'] = []
+	let diffsigns['d'] = []
+	" parse diff output
+	for item in result
+		let m = matchlist(item, '^\v%(\d+)%(,%(\d+))?([acd])(\d+)%(,?(\d+)?)')
+		if empty(m)
+			continue
+		endif
+		if m[2] == 0
+			let m[2] = 1
+		endif
+
+		"call add(diffsigns[m[3]], range(m[1], empty(m[2]) ? m[1] : m[2]))
+		let diffsigns[m[1]] = diffsigns[m[1]] + range(m[2], empty(m[3]) ? m[2] : m[3])
+	endfor
+	return diffsigns
+endfu
+
+
 
 fu! <sid>UpdateView() "{{{1
 	if !exists("b:changes_chg_tick")
@@ -389,7 +519,7 @@ endfu
 
 
 " Maping commands "{{{1
-nnoremap <C-L> :call <sid>UpdateWindowSigns()<cr>
+nnoremap <C-L> :call Signs#UpdateWindowSigns()<cr>
 
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4
