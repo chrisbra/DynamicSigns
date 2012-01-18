@@ -75,7 +75,7 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignHook = exists("g:Signs_Hook") ? g:Signs_Hook : ''
 
-	let s:SignQF   = exists("g:Signs_QFList") ? g:Signs_QFList : 1
+	let s:SignQF   = exists("g:Signs_QFList") ? g:Signs_QFList : 0
 
 	let s:SignDiff = exists("g:Signs_Diff") ? g:Signs_Diff : 0
 
@@ -139,10 +139,9 @@ fu! <sid>AuCmd(arg) "{{{1
 	if a:arg
 	augroup Signs
 		autocmd!
-		let s:verbose=0
 		au BufWritePost,InsertLeave * :call <sid>UpdateView()
 		au GUIEnter * :call <sid>UpdateView()
-		exe "s:SignQF" ? "au QuickFixCmdPost * :call <sid>QFSigns()" : ''
+		exe s:SignQF ? "au QuickFixCmdPost * :call Signs#QFSigns()" : ''
 	augroup END
 	else
 	augroup Signs
@@ -152,8 +151,41 @@ fu! <sid>AuCmd(arg) "{{{1
 	endif
 endfu
 
-fu! <sid>QFSigns() "{{{1
+fu! Signs#SignsQFList(local) "{{{1
+	if !has("quickfix")
+		return
+	endif
+	call <sid>Init()
+	let qflist = []
+	redir => a| exe "sil sign place" |redir end
+	for sign in split(a, "\n")
+		if match(sign, '^Signs for \(.*\):$') >= 0
+			let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
+		elseif match(sign, '^\s\+line=\d\+\s') >= 0
+			call add(qflist, {'filename': fname, 'lnum': 
+				\ matchstr(sign, 'line=\zs\d\+\ze\s')})
+		else
+			continue
+		endif
+	endfor
+	if a:local
+		let func = 'setloclist'
+		let args = [0, qflist]
+	else
+		let func = 'setqflist'
+		let args = [qflist]
+	endif
+	call call(func, args)
+	copen
+endfu
+
+fu! Signs#QFSigns() "{{{1
 	if has("quickfix")
+		if exists("s:no_qf_autocmd") && s:no_qf_autocmd
+			" Don't run the autocommand
+			return
+		endif
+		call <sid>Init()
 		" Remove all previously placed QF Signs
 		exe "sign unplace " s:sign_prefix . '0'
 		for item in getqflist()

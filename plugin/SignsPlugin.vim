@@ -33,11 +33,19 @@ let g:loaded_Signs = 1
 :com! Signs :call Signs#Run()
 :com! UpdateSigns :call Signs#Run(1)
 :com! DisableSigns :call Signs#CleanUp()
+:com! -bang SignQF :call Signs#SignsQFList(<bang>0)
 :com! -nargs=1 SignExpression :let g:Signs_Hook=<q-args>|
 		\call Signs#Run(1)
 
 :com! SignDiff :let g:Signs_Diff=1|
 		\ call Signs#Run(1)
+
+if  exists("g:Signs_QFList") && g:Signs_QFList
+	augroup Signs
+			autocmd!
+			au QuickFixCmdPost * :call Signs#QFSigns()
+	augroup END
+endif
 
 " Restore: "{{{1
 let &cpo=s:cpo
