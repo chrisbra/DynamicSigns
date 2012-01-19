@@ -250,13 +250,16 @@ fu! <sid>GetMarks() "{{{1
 endfu
 
 fu! <sid>PlaceSigns(...) "{{{1
-	let PlacedSigns = copy(s:Signs)
 	try
 		let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
 	catch /DiffError/
 		call <sid>WarningMsg()
 		return
 	endtry
+	if !<sid>DoSigns()
+		return
+	endif
+	let PlacedSigns = copy(s:Signs)
 	let first = !exists("a:1") ? 1 : a:1
 	let last  = !exists("a:2") ? line('$') : a:2
 	for line in range(first, last)
@@ -596,6 +599,38 @@ fu! <sid>UnletSignCache(line) "{{{1
 		return
 	else
 		unlet b:indentCache[a:line]
+	endif
+endfu
+
+fu! <sid>DoSigns() "{{{1
+	if !s:MixedIndentation
+		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentWSError')
+		while index > -1
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			call <sid>UnplaceSignSingle(line)
+			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentWSError') 
+		endw
+	elseif !s:IndentationLevel
+		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=\d\+')
+		while index > -1
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			call <sid>UnplaceSignSingle(line)
+			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=\d\+') 
+		endw
+"TODO
+	elseif !s:BookmarkSigns
+	elseif !s:SignHook
+	elseif !s:SignDiff
+	endif
+
+	if (  !s:MixedIndentation  &&
+		\ !s:IndentationLevel  &&
+		\ !s:BookmarkSigns	   &&
+		\ !s:SignHook		   &&
+		\ !s:SignDiff )
+		return 0
+	else
+		return 1
 	endif
 endfu
 " Modeline "{{{1

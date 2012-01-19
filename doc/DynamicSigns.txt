@@ -93,6 +93,8 @@ enter >
 
     :SignExpression getline(v:lnum)=~'TODO'
 
+This will place a sign on each line, that contains the word TODO
+
 2.2 Disable                                             *Signs-Disable*
 -----------
 
