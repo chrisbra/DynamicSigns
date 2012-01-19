@@ -1,0 +1,68 @@
+*Signs.txt* - Using Signs for different things
+
+Author:  Christian Brabandt <cb@256bit.org>
+Version: 0.1 Fri, 13 Jan 2012 21:30:54 +0100
+
+Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
+           The VIM LICENSE applies to improved_ft.vim and improved_ft.txt
+           (see |copyright|) except use improved_ft instead of "Vim".
+           NO WARRANTY, EXPRESS OR IMPLIED.  USE AT-YOUR-OWN-RISK.
+
+
+==============================================================================
+1. Contents                                                  *Signs-ft*
+
+        1.  Contents...................................: |Signs-ft|
+        2.  Manual.....................................: |Signs-manual|
+        2.1   Enable...................................: |Signs-Enable|
+        2.2   Disable..................................: |Signs-Disable|
+        3.  Feedback...................................: |Signs-feedback|
+        4.  History....................................: |Signs-history|
+
+==============================================================================
+2. Using Signs Plugin                                         *Signs-manual*
+
+Functionality
+
+TODO:
+
+
+2.1 Enable                                               *Signs-Enable*
+----------
+EnablePlugin
+<
+
+2.2 Disable                                             *Signs-Disable*
+-----------
+
+If for any reason, you want to disable the plugin, use >
+    :DisableSigns
+<
+
+
+==============================================================================
+3. Feedback                                         *Signs-feedback*
+
+Feedback is always welcome. If you like the plugin, please rate it at the
+vim-page:
+http://www.vim.org/scripts/script.php?script_id=
+
+You can also follow the development of the plugin at github:
+http://github.com/chrisbra/Signs
+
+Please don't hesitate to report any bugs to the maintainer, mentioned in the
+third line of this document.
+
+==============================================================================
+4. History                                              *Signs-history*
+
+0.1: (unreleased) {{{1
+
+- Initial upload
+- development versions are available at the github repository
+- put plugin on a public repository (http://github.com/chrisbra/Signs)
+  }}}
+
+==============================================================================
+Modeline:
+vim:tw=78:ts=8:ft=help:et:fdm=marker:fdl=0:norl
