@@ -35,6 +35,10 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
 	let s:id_hl.Check = "User1"
+	
+	" Indent Cache
+	let b:indentCache = {}
+
 	hi SignColumn guibg=black
 
 	" Define Signs
@@ -63,15 +67,16 @@ fu! <sid>Init(...) "{{{1
 	
 	" Setup configuration variables:
 	let s:MixedIndentation = exists("g:Signs_MixedIndentation") ? 
-				\ g:Signs_MixedIndentation : 1
+				\ g:Signs_MixedIndentation : 0
 
 	let s:IndentationLevel = exists("g:Signs_IndentationLevel") ?
-					\ g:Signs_IndentationLevel : 1
+					\ g:Signs_IndentationLevel : 0
 
 	let s:BookmarkSigns	   = exists("g:Signs_Bookmarks") ? 
-					\ g:Signs_Bookmarks : 1
+					\ g:Signs_Bookmarks : 0
 
-	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
+	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyz" .
+				\ "ABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
 
 	let s:SignHook = exists("g:Signs_Hook") ? g:Signs_Hook : ''
 
@@ -92,10 +97,6 @@ fu! <sid>Init(...) "{{{1
 		\ s:gui_running != has("gui_running")
 		call <sid>Check()
 		let s:precheck=1
-	endif
-	" Indent Cache
-	if !exists("b:indentCache")
-		let b:indentCache = {}
 	endif
 
 	" This variable is a prefix for all placed signs.
@@ -161,9 +162,11 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	for sign in split(a, "\n")
 		if match(sign, '^Signs for \(.*\):$') >= 0
 			let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
+			let file  = readfile(fname)
 		elseif match(sign, '^\s\+line=\d\+\s') >= 0
-			call add(qflist, {'filename': fname, 'lnum': 
-				\ matchstr(sign, 'line=\zs\d\+\ze\s')})
+			let line = matchstr(sign, 'line=\zs\d\+\ze\s')
+			call add(qflist, {'filename': fname, 'lnum': line,
+				\ 'text': file[line-1]})
 		else
 			continue
 		endif
@@ -175,7 +178,9 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 		let func = 'setqflist'
 		let args = [qflist]
 	endif
+	let s:no_qf_autocmd = 1
 	call call(func, args)
+	unlet s:no_qf_autocmd 
 	copen
 endfu
 
@@ -245,7 +250,6 @@ fu! <sid>GetMarks() "{{{1
 endfu
 
 fu! <sid>PlaceSigns(...) "{{{1
-	let _a = winsaveview()
 	let PlacedSigns = copy(s:Signs)
 	try
 		let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
@@ -256,14 +260,15 @@ fu! <sid>PlaceSigns(...) "{{{1
 	let first = !exists("a:1") ? 1 : a:1
 	let last  = !exists("a:2") ? line('$') : a:2
 	for line in range(first, last)
-		let did_place_sign=0
+		let did_place_sign = 0
 
 		" Diff Signs "{{{3
 		if !empty(DiffSigns)
-			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=Sign\(Add\|Change\|Delete\)')
+			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=SignAdd')
 			" Added Lines
 			for sign in sort(DiffSigns['a'])
 				if sign == line
+					call <sid>UnletSignCache(line-1)
 					if oldSign >= 0
 						let did_place_sign = 1
 						break
@@ -279,24 +284,40 @@ fu! <sid>PlaceSigns(...) "{{{1
 				continue
 			endif
 			" Changed Lines
+			let oldSign = match(PlacedSigns, 'line='.line. 
+					\ '\D.*name=SignChange')
 			for sign in sort(DiffSigns['c'])
 				if sign == line
-					exe "sign place " s:sign_prefix . line . " line=" . line .
-						\ " name=SignChanged buffer=" . bufnr('')
-					let did_place_sign = 1
-					break
+					call <sid>UnletSignCache(line-1)
+					if oldSign >= 0
+						let did_place_sign = 1
+						break
+					else
+						exe "sign place " s:sign_prefix . line . " line=" . line .
+							\ " name=SignChanged buffer=" . bufnr('')
+						let did_place_sign = 1
+						break
+					endif
 				endif
 			endfor
 			if did_place_sign
 				continue
 			endif
 			" Deleted Lines
+			let oldSign = match(PlacedSigns, 'line='.line.
+					\ '\D.*name=SignDelete')
 			for sign in sort(DiffSigns['d'])
 				if sign == line
-					exe "sign place " s:sign_prefix . line . " line=" . line .
-						\ " name=SignDeleted buffer=" . bufnr('')
-					let did_place_sign = 1
-					break
+					call <sid>UnletSignCache(line-1)
+					if oldSign >= 0
+						let did_place_sign = 1
+						break
+					else
+						exe "sign place " s:sign_prefix . line . " line=" . line .
+							\ " name=SignDeleted buffer=" . bufnr('')
+						let did_place_sign = 1
+						break
+					endif
 				endif
 			endfor
 			if did_place_sign
@@ -310,9 +331,11 @@ fu! <sid>PlaceSigns(...) "{{{1
 		" Custom Sign Hooks "{{{3
 		if exists("s:SignHook") && !empty(s:SignHook)
 			try
-				let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentCustom')
+				let oldSign = match(PlacedSigns, 'line='.line.
+						\ '\D.*name=IndentCustom')
 				let expr = substitute(s:SignHook, 'v:lnum', line, 'g')
 				if eval(expr)
+					call <sid>UnletSignCache(line-1)
 					if oldSign >= 0
 						continue
 					endif
@@ -324,7 +347,11 @@ fu! <sid>PlaceSigns(...) "{{{1
 					call <sid>UnplaceSignSingle(line)
 				endif
 			catch
-				echo "Error: " v:exception
+				let s:SignHook = ''
+				call add(s:msg, 'Error evaluating SignExpression at ' . line)
+				call add(s:msg, v:exception)
+				call <sid>WarningMsg()
+				return
 			endtry
 		endif
 
@@ -333,8 +360,9 @@ fu! <sid>PlaceSigns(...) "{{{1
 					\ s:BookmarkSigns == 1
 			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentBookmark')
 			let bookmarks = <sid>GetMarks()
-			for mark in sort(keys(bookmarks))
+			for mark in sort(keys(bookmarks), "<sid>MySortBookmarks")
 				if mark == line
+					call <sid>UnletSignCache(line-1)
 					if oldSign >= 0
 						let did_place_sign = 1
 						break
@@ -361,8 +389,10 @@ fu! <sid>PlaceSigns(...) "{{{1
 
 			let a=matchstr(getline(line), '^\s\+\ze\S')
 			let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
-			if match(a, '\%(\t \)\|\%( \t\)') > -1
+			if (match(a, '\%(\t \)\|\%( \t\)') > -1
+			    \ || match(getline(line), '\s\+$') > -1)
 				\ && s:MixedIndentation
+				call <sid>UnletSignCache(line-1)
 				if oldSign >= 0
 					continue
 				endif
@@ -376,13 +406,15 @@ fu! <sid>PlaceSigns(...) "{{{1
 
 		endif
 
-		if exists("s:_IndentationLevel") &&
-					\ s:_IndentationLevel == 1
+		if exists("s:IndentationLevel") &&
+					\ s:IndentationLevel == 1
 			" Place signs for Indentation Level {{{3
 			let indent = indent(line)
 			let div    = <sid>IndentFactor()
 
-			if div > 0 && indent > 0 && (indent/div) != get(b:indentCache, line-1, -1)
+			let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
+			if div > 0 && indent > 0 &&
+				\ (indent/div) != get(b:indentCache, line-1, -1)
 				call <sid>UnplaceSignSingle( get(b:indentCache,(line-1),-1) )
 				let b:indentCache[line-1] = indent/div
 				if (indent/div) < 10
@@ -397,9 +429,6 @@ fu! <sid>PlaceSigns(...) "{{{1
 		endif "}}}3
 
 	endfor
-	if _a.lnum != getpos('.')[1]
-		call winrestview(_a)
-	endif
 endfu
 
 
@@ -523,6 +552,8 @@ fu! <sid>UpdateView() "{{{1
 endfu
 
 fu! DynamicSigns#Run(...) "{{{1
+	set lz
+	let _a = winsaveview()
 	try
 		if exists("a:1") && a:1 == 1
 			unlet! s:precheck
@@ -533,9 +564,11 @@ fu! DynamicSigns#Run(...) "{{{1
 		return
 	endtry
 	call <sid>PlaceSigns()
+	set nolz
+	call winrestview(_a)
 endfu
 
-fu! DynamicSigns#CleanUp()"{{{1
+fu! DynamicSigns#CleanUp() "{{{1
 	" only delete signs, that have been set by this plugin
 	unlet! s:precheck
 	call <sid>UnPlaceSigns()
@@ -549,7 +582,21 @@ fu! DynamicSigns#CleanUp()"{{{1
 	call <sid>AuCmd(0)
 endfu
 
+fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
+	let g:Signs_Hook = a:arg
+	call DynamicSigns#Run()
+endfu
 
+fu! <sid>MySortBookmarks(a, b) "{{{¹
+	return a:a+0 == a:b+0 ? 0 : a:a+0 > a:b+0 ? 1: -1
+endfu
 
+fu! <sid>UnletSignCache(line) "{{{1
+	if !has_key(b:indentCache, a:line)
+		return
+	else
+		unlet b:indentCache[a:line]
+	endif
+endfu
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4

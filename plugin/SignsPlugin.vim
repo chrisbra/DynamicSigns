@@ -34,8 +34,8 @@ let g:loaded_Signs = 1
 :com! UpdateSigns :call DynamicSigns#Run(1)
 :com! DisableSigns :call DynamicSigns#CleanUp()
 :com! -bang SignQF :call DynamicSigns#SignsQFList(<bang>0)
-:com! -nargs=1 SignExpression :let g:Signs_Hook=<q-args>|
-		\call DynamicSigns#Run(1)
+:com! -nargs=1 SignExpression
+		\ :call DynamicSigns#PrepareSignExpression(<q-args>)
 
 :com! SignDiff :let g:Signs_Diff=1|
 		\ call DynamicSigns#Run(1)
