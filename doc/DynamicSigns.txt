@@ -1,4 +1,4 @@
-*Signs.txt* - Using Signs for different things
+*DynamicSigns.txt* - Using Signs for different things
 
 Author:  Christian Brabandt <cb@256bit.org>
 Version: 0.1 Fri, 13 Jan 2012 21:30:54 +0100
@@ -10,9 +10,9 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
 
 
 ==============================================================================
-1. Contents                                                  *Signs-ft*
+1. Contents                                                  *Signs-content*
 
-        1.  Contents...................................: |Signs-ft|
+        1.  Contents...................................: |Signs-content|
         2.  Manual.....................................: |Signs-manual|
         2.1   Enable...................................: |Signs-Enable|
         2.2   Disable..................................: |Signs-Disable|
@@ -24,13 +24,74 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
 
 Functionality
 
-TODO:
+This plugin enables you to use signs |sign-support| for different things. For
+example you can use signs to display Indentation-Levels, display line
+whitespace errors, display marks |mark-motion|, display the differences
+between the current editing file and the file on disk or whenever an
+expression evalutates true (similar to how fold-expressions work |fold-expr|)
+
+All you need to do, is configure the plugin by setting some configuration
+variables and run |:Signs|
 
 
-2.1 Enable                                               *Signs-Enable*
-----------
-EnablePlugin
+2.1 Display Indentation Level                            *Signs-Indentation*
+-----------------------------
+
+If you want the plugin to display the numeric indentation level, simply set
+the g:Signs_IndentationLevel variable like this in your |.vimrc|, e.g. like
+this: >
+
+    let g:Signs_IndentationLevel = 1
 <
+
+By default, this displays the indentation level (e.g. the indentation divided
+by the 'tabstop' setting) as numeric values (actually it only displays levels
+1-9 or '>9' for a larger indent.
+
+Run |:Signs| to display the signs for those lines.
+
+2.2 Display Whitespace Warnings                           *Signs-Whitespace*
+-------------------------------
+
+If you want the plugin to display the warnings for lines with whitespace
+errors, simply set the variable g:Signs_MixedIndentation like this in your
+|.vimrc|, e.g. >
+
+    :let g:SignsMixedIndentation = 1
+<
+
+By default, this display warning signs for each line where either the
+indentation consists of mixed whitespace (e.g. tabspace and blanks) or the
+line ends with trailing whitespace.
+
+Run |:Signs| to display the signs for those lines.
+<
+
+2.3 Display Marks                                             *Signs-Marks*
+-----------------
+If you want the plugin to display your marks, set the variable
+g:Signs_Bookmarks to 1 in your |.vimrc|, e.g. >
+
+    :let g:Signs_Bookmarks = 1
+<
+This will display the marks a-z and A-Z, if they are in your current buffer. 
+
+Run |:Signs| to display the signs for those lines.
+
+2.4 Dynamicly display Signs                                      *Signs-Hook*
+---------------------------
+
+You can let Vim have an expression evaluated for each line in your current
+buffer. On each line, where this expression is true, Vim will place a sign for
+your. This enables you, to put e.g. a Sign on each line, that contains 'TODO'.
+To do this, run the command |:IndentExpression| and give an expression as its
+argument, which will be evaluated for each line. Use the variable |v:lnum| in
+your expression for the current line.
+
+Say, you want to place a sign on each line, that contains 'TODO'. You simply
+enter >
+
+    :SignExpression getline(v:lnum)=~'TODO'
 
 2.2 Disable                                             *Signs-Disable*
 -----------
@@ -39,6 +100,11 @@ If for any reason, you want to disable the plugin, use >
     :DisableSigns
 <
 
+==============================================================================
+
+3.0 :Signs                                                      *:Signs*
+----------
+Display signs for the current buffer, according to your configuration.
 
 ==============================================================================
 3. Feedback                                         *Signs-feedback*
