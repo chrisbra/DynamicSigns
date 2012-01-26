@@ -29,6 +29,16 @@ let g:loaded_Signs = 1
 " Don't do this!
 "nnoremap <C-L> :call Signs#UpdateWindowSigns()<cr>
 
+" Map m key?
+let s:bookmark = exists("g:Signs_Bookmarks") ? g:Signs_Bookmarks : 0
+if s:bookmark
+	nnoremap <silent> <expr> m DynamicSigns#MapBookmark()
+else
+	if maparg('m', 'n') == 'DynamicSigns#MapBookmark()'
+		unmap m
+	endif
+endif
+
 " Define Commands "{{{1
 :com! Signs :call DynamicSigns#Run()
 :com! UpdateSigns :call DynamicSigns#Run(1)
