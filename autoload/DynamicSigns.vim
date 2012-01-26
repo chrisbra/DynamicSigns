@@ -221,7 +221,7 @@ fu! <sid>UnplaceSignSingle(item) "{{{1
 	if a:item < 0
 		return
 	endif
-	call setpos('.', a:item)
+	call cursor(a:item,0)
 	" Vim errors, if the line does not contain a sign
 	sil! sign unplace
 endfu
@@ -262,6 +262,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 		return
 	endif
 	let PlacedSigns = copy(s:Signs)
+	let bookmarks = <sid>GetMarks()
 	let first = !exists("a:1") ? 1 : a:1
 	let last  = !exists("a:2") ? line('$') : a:2
 	for line in range(first, last)
@@ -364,23 +365,16 @@ fu! <sid>PlaceSigns(...) "{{{1
 		if exists("s:BookmarkSigns") &&
 					\ s:BookmarkSigns == 1
 			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentBookmark')
-			let bookmarks = <sid>GetMarks()
-			for mark in sort(keys(bookmarks), "<sid>MySortBookmarks")
-				if mark == line
-					call <sid>UnletSignCache(line-1)
-					if oldSign >= 0
-						let did_place_sign = 1
-						break
-					endif
-					exe "sign place " s:sign_prefix . line . " line=" . line .
-						\ " name=IndentBookmark". bookmarks[mark] . " buffer=" . bufnr('')
+			
+			if get(bookmarks, line, -1) >-1
+				call <sid>UnletSignCache(line-1)
+				if oldSign >= 0
 					let did_place_sign = 1
-					break
-				elseif mark > line
-					break
+					continue
 				endif
-			endfor
-			if did_place_sign
+				exe "sign place " s:sign_prefix . line . " line=" . line .
+					\ " name=IndentBookmark". bookmarks[mark] . " buffer=" . bufnr('')
+				let did_place_sign = 1
 				continue
 			elseif oldSign >= 0
 				" Bookmark Sign no longer needed, remove it
@@ -435,7 +429,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 
 	endfor
 	" Cache for configuration options
-	call <sid>BufferConfigCache
+	call <sid>BufferConfigCache()
 endfu
 
 
@@ -679,6 +673,23 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.BookmarkSigns    = s:BookmarkSigns
 	let s:CacheOpts.SignHook		 = s:SignHook
 	let s:CacheOpts.SignDiff		 = s:SignDiff
+endfu
+
+fu! DynamicSigns#MapBookmark() "{{{1
+	let char=nr2char(getchar())
+	" Initilize variables
+	call <sid>Init()
+	if s:BookmarkSigns && match(s:Bookmarks, char) >= 0
+		" unplace previous mark for this sign
+		let id = matchlist(s:Signs, 'id=\(\d\+\)\D\s\+name=IndentBookmark'.char)
+		if len(id) && get(id, 1)
+			exe "sign unplace" get(id,1)
+		endif
+		let sign_cmd = printf(":sign place %d%d line=%d name=IndentBookmark%s buffer=%d",
+					\ s:sign_prefix, line('.'), line('.'), char, bufnr(''))
+		exe sign_cmd
+	endif
+	return 'm'.char
 endfu
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4
