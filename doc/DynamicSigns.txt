@@ -2,7 +2,7 @@
 
 Author:  Christian Brabandt <cb@256bit.org>
 Version: 0.1 Fri, 13 Jan 2012 21:30:54 +0100
-
+                                                        *SignsCopyright*
 Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
            The VIM LICENSE applies to improved_ft.vim and improved_ft.txt
            (see |copyright|) except use improved_ft instead of "Vim".
@@ -14,13 +14,20 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
 
         1.  Contents...................................: |Signs-content|
         2.  Manual.....................................: |Signs-manual|
-        2.1   Enable...................................: |Signs-Enable|
-        2.2   Disable..................................: |Signs-Disable|
-        3.  Feedback...................................: |Signs-feedback|
-        4.  History....................................: |Signs-history|
+        2.1   Display Indent Level.....................: |Signs-Indentation|
+        2.2   Display Whitespace Warnings..............: |Signs-Whitespace|
+        2.3   Display Marks............................: |Signs-Marks|
+        2.4   SignExpressions..........................: |Signs-Hook|
+        2.5   Display Signs for Quickfix items.........: |Signs-QF|
+        2.6   Display Signs to display changes.........: |Signs-Diff|
+        3.  Autocommands...............................: |Signs-Autocommands|
+        4.  Commands...................................: |Signs-Commands|
+        5.  Icons......................................: |Signs-Icons|
+        6.  Feedback...................................: |Signs-feedback|
+        7.  History....................................: |Signs-history|
 
 ==============================================================================
-2. Using Signs Plugin                                         *Signs-manual*
+2. Using the Signs Plugin                                         *Signs-manual*
 
 Functionality
 
@@ -76,7 +83,10 @@ g:Signs_Bookmarks to 1 in your |.vimrc|, e.g. >
 <
 This will display the marks a-z and A-Z, if they are in your current buffer. 
 
-Run |:Signs| to display the signs for those lines.
+If this is enabled, |m| will be mapped to a function, that places the
+bookmarks in your buffer and sets the mark. (|:k| does not update the signs,
+Use |:Signs| or |:UpdateSigns| to manually update the view in case this is
+needed).
 
 2.4 Dynamicly display Signs                                      *Signs-Hook*
 ---------------------------
@@ -95,22 +105,108 @@ enter >
 
 This will place a sign on each line, that contains the word TODO
 
-2.2 Disable                                             *Signs-Disable*
------------
+2.5 Display signs for quickfix items                            *Signs-QF*
+------------------------------------
+If you want the plugin to display signs next to each match when using the
+|quickfix| feature of vim, set the variable g:Signs_QFList, e.g. >
 
-If for any reason, you want to disable the plugin, use >
-    :DisableSigns
+    :let g:Signs_QFList = 1
 <
+This will hook up an autocommand, that fires whenever the quickfix command
+(|:helpgrep|, |:make|, |:vimgrep|, etc has been executed and places a small
+sign next to each match.
+
+2.6 Display Signs for viewing changes to the buffer              *Signs-Diff*
+---------------------------------------------------
+You can also set up the plugin to display small signs, that indicate, whether
+the current line has been modified/deleted/added compared to the version
+stored on disk. To enable this feature, set the g:Signs_Diff variable in your
+|.vimrc| like this: >
+
+    :let g:Signs_Diff = 1
+<
+This will run a diff of your buffer and the version stored on disk and place a
+sign on each line that was modified.
+
+Run |:UpdateSigns| or |:Signs| to update displaying the signs in your buffer.
 
 ==============================================================================
 
-3.0 :Signs                                                      *:Signs*
-----------
-Display signs for the current buffer, according to your configuration.
+3.0 Autocommands                                          *:Signs-Autocommands*
+----------------
+This plugin installs some autocommands to update the signs dynamically.
+Basically it uses |BufWritePost| and |InsertLeave| autocommands to update
+displaying the signs.
+
+Theoretically, it could also use |CursorHold| and |CursorHoldI| autocommands,
+but that seems to slow down Vim a lot, when working with long buffers and also
+seems to interrupt the workflow too much. When switching to the |:gui|, Vim
+will also updates the signs, so the gui version can use some nice lookings
+|Signs-Icons|.
+
+Last, when the using the quickfix feature together with the Signs
+(|Signs-QF|), this plugin also installs an |QuickFixCmdPost| autocommand, to
+be able to put signs on each line, where a warning/error is.
 
 ==============================================================================
-3. Feedback                                         *Signs-feedback*
 
+4.0 Commands                                                   *:Signs-Commands*
+------------
+
+The plugin introduces the following commands:
+
+>
+    :Signs          
+
+Update the signs in the current buffer. According to your configuration runs
+through every line in your buffer and checks, if a sign has to be displayed.
+For performance reasons, it caches the values.
+
+>
+    :UpdateSigns
+
+Discard the cache and update the signs for each line.
+
+>
+    :DisableSigns
+
+Disable the Sign plugin.
+
+>
+    :SignQF
+
+Display a quickfix list that contains all your signs in the current buffer.
+|Sign-QF|
+
+>
+    :SignExpression expr
+
+Display a sign on each line, where expr evaluates to true |Signs-Hook|
+
+>
+    :SignDiff
+
+Run a diff of the buffer and the file on disk and display signs for the
+changes |Signs-Diff|
+
+==============================================================================
+5. Icons                                                          *Signs-Icons*
+--------
+
+The GTK version of Vim (and possibly also the Windows version) can also
+display graphical Signs. For this reason, this plugin includes some nice
+looking icons, that have been provided by
+http://www.designkode.com/blog/free-developer-icons
+
+"DesignKode is releasing this set of 40 free high quality icons for your web
+site and application GUI designs. All icons in this set are 32 x 32 pixel PNG
+image files. You may freely use these icons in your commercial or personal
+projects without attribution."
+
+
+==============================================================================
+6. Feedback                                                  *Signs-Feedback*
+-----------
 Feedback is always welcome. If you like the plugin, please rate it at the
 vim-page:
 http://www.vim.org/scripts/script.php?script_id=
