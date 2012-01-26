@@ -549,6 +549,7 @@ fu! <sid>UpdateView() "{{{1
 	" Only update, if there have been changes to the buffer
 	if b:changes_chg_tick != b:changedtick
 		call DynamicSigns#Run()
+		let b:changes_chg_tick = b:changedtick
 	endif
 endfu
 
