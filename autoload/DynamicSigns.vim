@@ -373,7 +373,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 					continue
 				endif
 				exe "sign place " s:sign_prefix . line . " line=" . line .
-					\ " name=IndentBookmark". bookmarks[mark] . " buffer=" . bufnr('')
+					\ " name=IndentBookmark". bookmarks[line] . " buffer=" . bufnr('')
 				let did_place_sign = 1
 				continue
 			elseif oldSign >= 0
