@@ -15,6 +15,7 @@
 
 " Check preconditions
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h') . '/Signs/'
+
 fu! <sid>Check() "{{{1
 	" Check for the existence of unsilent
 	if exists(":unsilent")
@@ -338,7 +339,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 		if exists("s:SignHook") && !empty(s:SignHook)
 			try
 				let oldSign = match(PlacedSigns, 'line='.line.
-						\ '\D.*name=IndentCustom')
+						\ '\D.*name=SignCustom')
 				let expr = substitute(s:SignHook, 'v:lnum', line, 'g')
 				if eval(expr)
 					call <sid>UnletSignCache(line-1)
@@ -346,7 +347,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 						continue
 					endif
 					exe "sign place " s:sign_prefix . line . " line=" . line .
-						\ " name=IndentCustom buffer=" . bufnr('')
+						\ " name=SignCustom buffer=" . bufnr('')
 					continue
 				elseif oldSign >= 0
 					" Custom Sign no longer needed, remove it
@@ -364,7 +365,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 		" Place signs for bookmarks "{{{3
 		if exists("s:BookmarkSigns") &&
 					\ s:BookmarkSigns == 1
-			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=IndentBookmark')
+			let oldSign = match(PlacedSigns, 'line='.line. '\D.*name=SignBookmark')
 			
 			if get(bookmarks, line, -1) >-1
 				call <sid>UnletSignCache(line-1)
@@ -373,7 +374,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 					continue
 				endif
 				exe "sign place " s:sign_prefix . line . " line=" . line .
-					\ " name=IndentBookmark". bookmarks[line] . " buffer=" . bufnr('')
+					\ " name=SignBookmark". bookmarks[line] . " buffer=" . bufnr('')
 				let did_place_sign = 1
 				continue
 			elseif oldSign >= 0
@@ -387,7 +388,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 					\ s:MixedIndentation == 1
 
 			let a=matchstr(getline(line), '^\s\+\ze\S')
-			let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
+			let oldSign = match(PlacedSigns, 'line='.line. '.*name=SignWSError')
 			if (match(a, '\%(\t \)\|\%( \t\)') > -1
 			    \ || match(getline(line), '\s\+$') > -1)
 				\ && s:MixedIndentation
@@ -396,7 +397,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 					continue
 				endif
 				exe "sign place " s:sign_prefix . line . " line=" . line .
-					\ " name=IndentWSError buffer=" . bufnr('')
+					\ " name=SignWSError buffer=" . bufnr('')
 				continue
 			elseif oldSign >= 0
 				" No more wrong indentation, remove sign
@@ -411,7 +412,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 			let indent = indent(line)
 			let div    = <sid>IndentFactor()
 
-			let oldSign = match(PlacedSigns, 'line='.line. '.*name=IndentWSError')
+			let oldSign = match(PlacedSigns, 'line='.line. '.*name=SignWSError')
 			if div > 0 && indent > 0 &&
 				\ (indent/div) != get(b:indentCache, line-1, -1)
 				call <sid>UnplaceSignSingle( get(b:indentCache,(line-1),-1) )
@@ -450,22 +451,21 @@ fu! <sid>DefineSigns() "{{{1
 				\ icon ? " icon=". s:i_path . "error.png" : ''
 
 	" Mixed Indentation Error
-	silent! sign undefine IndentWSError
-	exe "sign define IndentWSError text=X texthl=" . s:id_hl.Error . 
+	silent! sign undefine SignWSError
+	exe "sign define SignWSError text=X texthl=" . s:id_hl.Error . 
 		\ " linehl=" . s:id_hl.Error 
 		\ icon ? " icon=". s:i_path . "error.png" : ''
-	"exe "sign define IndentCheck text=C texthl=" . s:id_hl.Check . " linehl=" . s:id_hl.Check
 	"
 	" Custom Signs Hooks
-	silent! sign undefine IndentCustom
-	exe "sign define IndentCustom text=C texthl=" . s:id_hl.Error
+	silent! sign undefine SignCustom
+	exe "sign define SignCustom text=C texthl=" . s:id_hl.Error
 		\ icon ? " icon=". s:i_path . "stop.png" : ''
 
 	" Bookmark Signs
 	if has("quickfix")
 		for item in s:Bookmarks
-			exe "silent! sign undefine IndentBookmark".item
-			exe "sign define IndentBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
+			exe "silent! sign undefine SignBookmark".item
+			exe "sign define SignBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
 		endfor
 	endif
 
@@ -577,10 +577,10 @@ fu! DynamicSigns#CleanUp() "{{{1
 	for item in range(1,10)
 		exe "sil! sign undefine " item
 	endfor
-	" Remove IndentWSError Sign
-	silent! sign undefine IndentWSError
+	" Remove SignWSError Sign
+	silent! sign undefine SignWSError
 	" Remove Custom Signs
-	silent! sign undefine IndentCustom
+	silent! sign undefine SignCustom
 	call <sid>AuCmd(0)
 endfu
 
@@ -604,12 +604,12 @@ endfu
 fu! <sid>DoSigns() "{{{1
 	if !s:MixedIndentation &&
 		\ get(s:CacheOpts, 'MixedIndentation', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentWSError')
+		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignWSError')
 		while index > -1
 			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentWSError') 
+			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignWSError') 
 		endw
 
 	elseif !s:IndentationLevel &&
@@ -624,22 +624,22 @@ fu! <sid>DoSigns() "{{{1
 
 	elseif !s:BookmarkSigns && 
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentBookmark')
+		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignBookmark')
 		while index > -1
 			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentBookmark') 
+			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignBookmark') 
 		endw
 
 	elseif !s:SignHook &&
 		\ get(s:CacheOpts, 'SignHook', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentCustom')
+		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignCustom')
 		while index > -1
 			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=IndentCustom') 
+			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignCustom') 
 		endw
 
 	elseif !s:SignDiff &&
@@ -682,11 +682,11 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	call <sid>Init()
 	if s:BookmarkSigns && match(s:Bookmarks, char) >= 0
 		" unplace previous mark for this sign
-		let id = matchlist(s:Signs, 'id=\(\d\+\)\D\s\+name=IndentBookmark'.char)
+		let id = matchlist(s:Signs, 'id=\(\d\+\)\D\s\+name=SignBookmark'.char)
 		if len(id) && get(id, 1)
 			exe "sign unplace" get(id,1)
 		endif
-		let sign_cmd = printf(":sign place %d%d line=%d name=IndentBookmark%s buffer=%d",
+		let sign_cmd = printf(":sign place %d%d line=%d name=SignBookmark%s buffer=%d",
 					\ s:sign_prefix, line('.'), line('.'), char, bufnr(''))
 		exe sign_cmd
 	endif
