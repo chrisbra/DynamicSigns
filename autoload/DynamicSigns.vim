@@ -14,6 +14,7 @@
 " Init Folkore  -- not needed for autoload script
 
 " Check preconditions
+scriptencoding utf-8
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h') . '/Signs/'
 
 fu! <sid>Check() "{{{1
@@ -338,16 +339,21 @@ fu! <sid>PlaceSigns(...) "{{{1
 		" Custom Sign Hooks "{{{3
 		if exists("s:SignHook") && !empty(s:SignHook)
 			try
-				let oldSign = match(PlacedSigns, 'line='.line.
-						\ '\D.*name=SignCustom')
 				let expr = substitute(s:SignHook, 'v:lnum', line, 'g')
+				let result = eval(expr)
+				if result !~ 'Warning\|OK\|Error\|Info\|Add\|Arrow\|Flag\|'.
+						\ 'Delete\|Stop'
+					let result = 'Info'
+				endif
+				let oldSign = match(PlacedSigns, 'line='.line.
+						\ '\D.*name=SignCustom'.result)
 				if eval(expr)
 					call <sid>UnletSignCache(line-1)
 					if oldSign >= 0
 						continue
 					endif
 					exe "sign place " s:sign_prefix . line . " line=" . line .
-						\ " name=SignCustom buffer=" . bufnr('')
+						\ " name=SignCustom". result. " buffer=" . bufnr('')
 					continue
 				elseif oldSign >= 0
 					" Custom Sign no longer needed, remove it
@@ -452,20 +458,58 @@ fu! <sid>DefineSigns() "{{{1
 
 	" Mixed Indentation Error
 	silent! sign undefine SignWSError
+	let utf8signs = ('&enc==utf-8 || (exists("g:NoUtf8Signs") &&
+		!g:NoUtf8Signs") ? 1 : 0)
 	exe "sign define SignWSError text=X texthl=" . s:id_hl.Error . 
 		\ " linehl=" . s:id_hl.Error 
 		\ icon ? " icon=". s:i_path . "error.png" : ''
 	"
 	" Custom Signs Hooks
-	silent! sign undefine SignCustom
-	exe "sign define SignCustom text=C texthl=" . s:id_hl.Error
-		\ icon ? " icon=". s:i_path . "stop.png" : ''
+	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
+		\ 'Delete', 'Stop']
+		exe "silent! sign undefine SignCustom". sign
+		let icn  = (icon ? s:i_path : '')
+		let text = ""
+		if sign ==     'OK'
+			let text = (utf8signs ? '✓' : 'OK')
+			let icn  = (empty(icn) ? '' : icn . 'checkmark.png')
+		elseif sign == 'Warning'
+			let text = (utf8signs ? '⚠' : '!')
+			let icn  = (empty(icn) ? '' : icn . 'warning.png')
+		elseif sign == 'Error'
+			let text = 'X'
+			let icn  = (empty(icn) ? '' : icn . 'error.png')
+		elseif sign == 'Info'
+			let text = (utf8signs ? 'ℹ' : 'I')
+			let icn  = (empty(icn) ? '' : icn . 'thumbtack-yellow.png')
+		elseif sign == 'Add'
+			let text = '+'
+			let icn  = (empty(icn) ? '' : icn . 'add.png')
+		elseif sign == 'Arrow'
+			let text = (utf8signs ? '→' : '->')
+			let icn  = (empty(icn) ? '' : icn . 'arrow-right.png')
+		elseif sign == 'Flag'
+			let text = (utf8signs ? '⚑' : 'F')
+			let icn  = (empty(icn) ? '' : icn . 'flag-yellow.png')
+		elseif sign == 'Delete'
+			let text = (utf8signs ? '‒' : '-')
+			let icn  = (empty(icn) ? '' : icn . 'delete.png')
+		elseif sign == 'Stop'
+			let text = 'ST'
+			let icn  = (empty(icn) ? '' : icn . 'stop.png')
+		endif
+
+		let def = print("sign define SignCustom%s text=%s texthl=%s " .
+			\ "%s", sign, text, s:id_hl.Error, icn)
+		exe def
+	endfor
 
 	" Bookmark Signs
 	if has("quickfix")
 		for item in s:Bookmarks
 			exe "silent! sign undefine SignBookmark".item
-			exe "sign define SignBookmark". item	"text='".item . " texthl=" . s:id_hl.Line
+			exe "sign define SignBookmark". item	"text='".item .
+				\ " texthl=" . s:id_hl.Line
 		endfor
 	endif
 
@@ -580,7 +624,10 @@ fu! DynamicSigns#CleanUp() "{{{1
 	" Remove SignWSError Sign
 	silent! sign undefine SignWSError
 	" Remove Custom Signs
-	silent! sign undefine SignCustom
+	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
+		\ 'Delete', 'Stop']
+		exe "silent! sign undefine SignCustom". sign
+	endfor
 	call <sid>AuCmd(0)
 endfu
 
@@ -606,17 +653,20 @@ fu! <sid>DoSigns() "{{{1
 		\ get(s:CacheOpts, 'MixedIndentation', 0) > 0
 		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignWSError')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+				\'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignWSError') 
+			let index = match(s:Signs, 'id='.s:prefix.
+				\ '\d\+.*name=SignWSError') 
 		endw
 
 	elseif !s:IndentationLevel &&
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
 		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=\d\+')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+				\'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
 			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=\d\+') 
@@ -626,30 +676,37 @@ fu! <sid>DoSigns() "{{{1
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
 		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignBookmark')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+				\ '.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignBookmark') 
+			let index = match(s:Signs, 'id='.s:prefix.
+				\ '\d\+.*name=SignBookmark') 
 		endw
 
 	elseif !s:SignHook &&
 		\ get(s:CacheOpts, 'SignHook', 0) > 0
 		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignCustom')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+				\ '.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignCustom') 
+			let index = match(s:Signs, 'id='.s:prefix.
+				\ '\d\+.*name=SignCustom') 
 		endw
 
 	elseif !s:SignDiff &&
 		\ get(s:CacheOpts, 'SignDiff', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=Sign\(Add\|Change\|Delete\)')
+		let index = match(s:Signs, 'id='.s:prefix.
+			\ '\d\+.*name=Sign\(Add\|Change\|Delete\)')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.'.*line=\zs\d\+\ze\D')
+			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+				\ '.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=Sign\(Add\|Change\|Delete\)')
+			let index = match(s:Signs, 'id='.s:prefix.
+				\ '\d\+.*name=Sign\(Add\|Change\|Delete\)')
 		endw
 	endif
 
