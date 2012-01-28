@@ -45,9 +45,11 @@ fu! <sid>Check() "{{{1
 
 	hi SignColumn guibg=black
 
+	call <sid>UnPlaceSigns()
+	" Undefine Signs
+	call DynamicSigns#CleanUp()
 	" Define Signs
 	call <sid>DefineSigns()
-	call <sid>UnPlaceSigns()
 endfu
 
 fu! <sid>WarningMsg() "{{{1
@@ -447,17 +449,14 @@ fu! <sid>DefineSigns() "{{{1
 	endif
 
 	for item in range(1,9)
-		exe "silent! sign undefine " item
 		exe "sign define" item	"text=".item . " texthl=" . s:id_hl.Line
 	endfor
 
 	" Indentlevel > 9
-	silent! sign undefine 10
 	exe "sign define 10" 	"text=>".item . " texthl=" . s:id_hl.Error
 				\ icon ? " icon=". s:i_path . "error.png" : ''
 
 	" Mixed Indentation Error
-	silent! sign undefine SignWSError
 	let utf8signs = ('&enc==utf-8 || (exists("g:NoUtf8Signs") &&
 		!g:NoUtf8Signs") ? 1 : 0)
 	exe "sign define SignWSError text=X texthl=" . s:id_hl.Error . 
@@ -467,7 +466,6 @@ fu! <sid>DefineSigns() "{{{1
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
 		\ 'Delete', 'Stop']
-		exe "silent! sign undefine SignCustom". sign
 		let icn  = (icon ? s:i_path : '')
 		let text = ""
 		if sign ==     'OK'
@@ -507,22 +505,16 @@ fu! <sid>DefineSigns() "{{{1
 	" Bookmark Signs
 	if has("quickfix")
 		for item in s:Bookmarks
-			exe "silent! sign undefine SignBookmark".item
 			exe "sign define SignBookmark". item	"text='".item .
 				\ " texthl=" . s:id_hl.Line
 		endfor
 	endif
 
 	" Make Errors (quickfix list)
-	silent! sign undefine SignQF
 	exe "sign define SignQF text=! texthl=" . s:id_hl.Check
 		\ icon ? " icon=". s:i_path . "arrow-right.png" : ''
 
 	" Diff Signs
-	silent! sign undefine SignAdded
-	silent! sign undefine SignChanged
-	silent! sign undefine SignDeleted
-
 	if has("diff")
 		exe "sign define SignAdded text=+ texthl=DiffAdd"
 					\ icon ? " icon=". s:i_path . "add.png" : ''
@@ -616,19 +608,26 @@ endfu
 
 fu! DynamicSigns#CleanUp() "{{{1
 	" only delete signs, that have been set by this plugin
-	unlet! s:precheck
 	call <sid>UnPlaceSigns()
 	for item in range(1,10)
 		exe "sil! sign undefine " item
 	endfor
 	" Remove SignWSError Sign
-	silent! sign undefine SignWSError
+	sil! sign undefine SignWSError
 	" Remove Custom Signs
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
 		\ 'Delete', 'Stop']
-		exe "silent! sign undefine SignCustom". sign
+		exe "sil! sign undefine SignCustom". sign
 	endfor
+	for sign in s:Bookmarks
+		exe "sil! sign undefine SignBookmark".sign
+	endfor
+	sil! sign undefine SignQF
+	sil! sign undefine SignAdded
+	sil! sign undefine SignChanged
+	sil! sign undefine SignDeleted
 	call <sid>AuCmd(0)
+	unlet! s:precheck
 endfu
 
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
