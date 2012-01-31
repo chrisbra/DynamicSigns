@@ -444,7 +444,8 @@ endfu
 
 fu! <sid>DefineSigns() "{{{1
 	let icon = 0
-	if (has("gui_gtk") || has("gui_w32s")) && has("gui_running") 
+	if (has("gui_gtk") || has("gui_win32") || has("win32") || has("win64"))
+		\ && has("gui_running") 
 		let icon = 1
 	endif
 
@@ -457,8 +458,8 @@ fu! <sid>DefineSigns() "{{{1
 				\ icon ? " icon=". s:i_path . "error.png" : ''
 
 	" Mixed Indentation Error
-	let utf8signs = ('&enc==utf-8 || (exists("g:NoUtf8Signs") &&
-		!g:NoUtf8Signs") ? 1 : 0)
+	let utf8signs = (&enc=='utf-8' || (exists("g:NoUtf8Signs") &&
+		\ !g:NoUtf8Signs) ? 1 : 0)
 	exe "sign define SignWSError text=X texthl=" . s:id_hl.Error . 
 		\ " linehl=" . s:id_hl.Error 
 		\ icon ? " icon=". s:i_path . "error.png" : ''
@@ -497,7 +498,7 @@ fu! <sid>DefineSigns() "{{{1
 			let icn  = (empty(icn) ? '' : icn . 'stop.png')
 		endif
 
-		let def = print("sign define SignCustom%s text=%s texthl=%s " .
+		let def = printf("sign define SignCustom%s text=%s texthl=%s " .
 			\ "%s", sign, text, s:id_hl.Error, icn)
 		exe def
 	endfor
@@ -650,61 +651,61 @@ endfu
 fu! <sid>DoSigns() "{{{1
 	if !s:MixedIndentation &&
 		\ get(s:CacheOpts, 'MixedIndentation', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignWSError')
+		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*name=SignWSError')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+			let line = matchstr(s:Signs[s], 'id='.s:sign_prefix.
 				\'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.
+			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=SignWSError') 
 		endw
 
 	elseif !s:IndentationLevel &&
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=\d\+')
+		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*name=\d\+')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+			let line = matchstr(s:Signs[s], 'id='.s:sign_prefix.
 				\'.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=\d\+') 
+			let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*name=\d\+') 
 		endw
 
 	elseif !s:BookmarkSigns && 
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignBookmark')
+		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*name=SignBookmark')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+			let line = matchstr(s:Signs[s], 'id='.s:sign_prefix.
 				\ '.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.
+			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=SignBookmark') 
 		endw
 
 	elseif !s:SignHook &&
 		\ get(s:CacheOpts, 'SignHook', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.'\d\+.*name=SignCustom')
+		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*name=SignCustom')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+			let line = matchstr(s:Signs[s], 'id='.s:sign_prefix.
 				\ '.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.
+			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=SignCustom') 
 		endw
 
 	elseif !s:SignDiff &&
 		\ get(s:CacheOpts, 'SignDiff', 0) > 0
-		let index = match(s:Signs, 'id='.s:prefix.
+		let index = match(s:Signs, 'id='.s:sign_prefix.
 			\ '\d\+.*name=Sign\(Add\|Change\|Delete\)')
 		while index > -1
-			let line = matchstr(s:Signs[s], 'id='.s:prefix.
+			let line = matchstr(s:Signs[s], 'id='.s:sign_prefix.
 				\ '.*line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignSingle(line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:prefix.
+			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=Sign\(Add\|Change\|Delete\)')
 		endw
 	endif
@@ -733,7 +734,12 @@ fu! <sid>BufferConfigCache() "{{{1
 endfu
 
 fu! DynamicSigns#MapBookmark() "{{{1
-	let char=nr2char(getchar())
+	let a = getchar()
+	if type(a) == type(0)
+		let char = nr2char(a)
+	else
+		let char = a
+	endif
 	" Initilize variables
 	call <sid>Init()
 	if s:BookmarkSigns && match(s:Bookmarks, char) >= 0
@@ -742,11 +748,22 @@ fu! DynamicSigns#MapBookmark() "{{{1
 		if len(id) && get(id, 1)
 			exe "sign unplace" get(id,1)
 		endif
-		let sign_cmd = printf(":sign place %d%d line=%d name=SignBookmark%s buffer=%d",
-					\ s:sign_prefix, line('.'), line('.'), char, bufnr(''))
+		let sign_cmd =
+			\ printf(":sign place %d%d line=%d name=SignBookmark%s buffer=%d",
+			\ s:sign_prefix, line('.'), line('.'), char, bufnr(''))
 		exe sign_cmd
 	endif
 	return 'm'.char
+endfu
+
+fu! DynamicSigns#MapKey()
+	" Does not work: Error
+	" E15: Invalid expression: <80><fd>SDynamicSignsMapBookmark
+	" This looks like a bug in vim
+	" nnoremap <silent> <expr> <Plug>DynamicSignsMapBookmark DynamicSigns#MapBookmark()
+	if !hasmapto('DynamicSigns#MapBookmark', 'n')
+		nnoremap <expr> m DynamicSigns#MapBookmark()
+	endif
 endfu
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4

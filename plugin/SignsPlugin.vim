@@ -1,9 +1,8 @@
-" IndentSigns.vim - Using Signs 
+" DynamicSigns.vim - Using Signs 
 " -----------------------------
 " Version:	   0.1
 " Maintainer:  Christian Brabandt <cb@256bit.org>
 " Last Change: Fri, 13 Jan 2012 21:30:54 +0100
-"
 " Script: 
 " Copyright:   (c) 2009, 2010, 2011, 2012  by Christian Brabandt
 "			   The VIM LICENSE applies to histwin.vim 
@@ -30,14 +29,8 @@ let g:loaded_Signs = 1
 "nnoremap <C-L> :call Signs#UpdateWindowSigns()<cr>
 
 " Map m key?
-let s:bookmark = exists("g:Signs_Bookmarks") ? g:Signs_Bookmarks : 0
-if s:bookmark
-	nnoremap <silent> <expr> m DynamicSigns#MapBookmark()
-else
-	if maparg('m', 'n') == 'DynamicSigns#MapBookmark()'
-		unmap m
-	endif
-endif
+"nnoremap <silent> <expr> <Plug>DynamicSignsMapBookmark DynamicSigns#MapBookmark()
+call DynamicSigns#MapKey()
 
 " Define Commands "{{{1
 :com! Signs :call DynamicSigns#Run()
