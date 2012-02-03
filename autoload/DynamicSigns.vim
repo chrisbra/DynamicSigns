@@ -138,18 +138,17 @@ endfu
 
 fu! <sid>AuCmd(arg) "{{{1
 	if a:arg
-	augroup Signs
-		autocmd!
-		au InsertLeave * :call <sid>UpdateView(0)
-		au BufWritePost * :call <sid>UpdateView(1)
-		au GUIEnter * :call <sid>UpdateView()
-		exe s:SignQF ? "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
-	augroup END
+		augroup Signs
+			autocmd!
+			au InsertLeave * :call <sid>UpdateView(0)
+			au GUIEnter,BufWritePost * :call <sid>UpdateView(1)
+			exe s:SignQF ? "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
+		augroup END
 	else
-	augroup Signs
-		autocmd!
-	augroup END
-	augroup! Signs
+		augroup Signs
+			autocmd!
+		augroup END
+		augroup! Signs
 	endif
 endfu
 
