@@ -20,14 +20,15 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
         2.4   SignExpressions..........................: |Signs-Hook|
         2.5   Display Signs for Quickfix items.........: |Signs-QF|
         2.6   Display Signs to display changes.........: |Signs-Diff|
+        2.7   Alternating colors.......................: |Signs-Alternate|
         3.  Autocommands...............................: |Signs-Autocommands|
         4.  Commands...................................: |Signs-Commands|
         5.  Icons......................................: |Signs-Icons|
         6.  Feedback...................................: |Signs-feedback|
         7.  History....................................: |Signs-history|
 
-==============================================================================
-2. Using the Signs Plugin                                         *Signs-manual*
+============================================================================
+2. Using the Signs Plugin                                       *Signs-manual*
 
 Functionality
 
@@ -72,7 +73,6 @@ indentation consists of mixed whitespace (e.g. tabspace and blanks) or the
 line ends with trailing whitespace.
 
 Run |:Signs| to display the signs for those lines.
-<
 
 2.3 Display Marks                                             *Signs-Marks*
 -----------------
@@ -127,6 +127,19 @@ stored on disk. To enable this feature, set the g:Signs_Diff variable in your
 <
 This will run a diff of your buffer and the version stored on disk and place a
 sign on each line that was modified.
+
+Run |:UpdateSigns| or |:Signs| to update displaying the signs in your buffer.
+
+2.7 Alternating colors                                       *Signs-Alternate*
+----------------------
+You can also set up the plugin to color the lines in your buffer in
+alternating colors.
+To do so, set the g:Signs_Alternate variable in your |.vimrc| like this: >
+
+    :let g:Signs_Alternate = 1
+<
+This will display each even line nummer in one color and each odd line number
+in a different color.
 
 Run |:UpdateSigns| or |:Signs| to update displaying the signs in your buffer.
 

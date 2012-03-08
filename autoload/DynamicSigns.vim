@@ -36,6 +36,11 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
 	let s:id_hl.Check = "User1"
+	let s:id_hl.LineEven = exists("g:DynamicSigns_Even") ? g:DynamicSigns_Even	: 
+				\ <sid>Color("Even")
+
+	let s:id_hl.LineOdd  = exists("g:DynamicSigns_Odd")  ? g:DynamicSigns_Odd	:
+				\ <sid>Color("Odd")
 	
 	hi SignColumn guibg=black
 
@@ -44,6 +49,47 @@ fu! <sid>Check() "{{{1
 	call DynamicSigns#CleanUp()
 	" Define Signs
 	call <sid>DefineSigns()
+endfu
+
+fu! <sid>Color(name) "{{{1
+	let definition = ''
+	if a:name == 'Even'
+		if &bg == 'dark'
+			if !empty(&t_Co) && &t_Co < 88
+				let definition .= ' ctermbg=DarkGray'
+			else
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234') .
+					\ ' guibg=#292929'
+			endif
+		else
+			if !empty(&t_Co) && &t_Co < 88
+				let definition .= ' ctermbg=LightGrey'
+			else
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') .
+					\ ' guibg=#525252'
+			endif
+		endif
+		exe "hi LineEven" definition
+		return 'LineEven'
+	else
+		if &bg == 'dark'
+			if !empty(&t_Co) && &t_Co < 88
+				let definition .= ' ctermbg=LightGray'
+			else
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') .
+					\ ' guibg=#525252'
+			endif
+		else
+			if !empty(&t_Co) && &t_Co < 88
+				let definition .= ' ctermbg=LightGrey'
+			else
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234') .
+					\ ' guibg=#292929'
+			endif
+		endif
+		exe "hi LineOdd" definition
+		return 'LineOdd'
+	endif
 endfu
 
 fu! <sid>WarningMsg() "{{{1
@@ -70,10 +116,13 @@ fu! <sid>Init(...) "{{{1
 				\ g:Signs_MixedIndentation : 0
 
 	let s:IndentationLevel = exists("g:Signs_IndentationLevel") ?
-					\ g:Signs_IndentationLevel : 0
+				\ g:Signs_IndentationLevel : 0
 
-	let s:BookmarkSigns	   = exists("g:Signs_Bookmarks") ? 
-					\ g:Signs_Bookmarks : 0
+	let s:BookmarkSigns   = exists("g:Signs_Bookmarks") ? 
+				\ g:Signs_Bookmarks : 0
+
+	let s:AlternatingSigns = exists("g:Signs_Alternate") ?
+				\ g:Signs_Alternate : 0
 
 	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyz" .
 				\ "ABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
@@ -275,12 +324,18 @@ fu! <sid>PlaceSigns(...) "{{{1
 	let last  = !exists("a:2") ? line('$') : a:2
 	let range = range(first, last)
 	for line in range
+		let did_place_sign = 0
+		" Place alternating Signs "{{{3
+		" don't skip folded lines
+		if <sid>PlaceAlternatingSigns(line)
+			continue
+		endif
+
 		" Skip folded lines
 		if foldclosed(line) != -1
 			call <sid>SkipFoldedLines(foldclosedend(line), range)
 			continue
 		endif
-		let did_place_sign = 0
 
 		" Place Diff Signs "{{{3
 		if <sid>PlaceDiffSigns(line, DiffSigns)
@@ -346,31 +401,31 @@ fu! <sid>DefineSigns() "{{{1
 		let text = ""
 		if sign ==     'OK'
 			let text = (utf8signs ? '✓' : 'OK')
-			let icn  = (empty(icn) ? '' : icn . 'checkmark.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'checkmark.png')
 		elseif sign == 'Warning'
 			let text = (utf8signs ? '⚠' : '!')
-			let icn  = (empty(icn) ? '' : icn . 'warning.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'warning.png')
 		elseif sign == 'Error'
 			let text = 'X'
-			let icn  = (empty(icn) ? '' : icn . 'error.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'error.png')
 		elseif sign == 'Info'
 			let text = (utf8signs ? 'ℹ' : 'I')
-			let icn  = (empty(icn) ? '' : icn . 'thumbtack-yellow.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'thumbtack-yellow.png')
 		elseif sign == 'Add'
 			let text = '+'
-			let icn  = (empty(icn) ? '' : icn . 'add.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'add.png')
 		elseif sign == 'Arrow'
 			let text = (utf8signs ? '→' : '->')
-			let icn  = (empty(icn) ? '' : icn . 'arrow-right.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'arrow-right.png')
 		elseif sign == 'Flag'
 			let text = (utf8signs ? '⚑' : 'F')
-			let icn  = (empty(icn) ? '' : icn . 'flag-yellow.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'flag-yellow.png')
 		elseif sign == 'Delete'
 			let text = (utf8signs ? '‒' : '-')
-			let icn  = (empty(icn) ? '' : icn . 'delete.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'delete.png')
 		elseif sign == 'Stop'
 			let text = 'ST'
-			let icn  = (empty(icn) ? '' : icn . 'stop.png')
+			let icn  = (empty(icn) ? '' : "icon=". icn . 'stop.png')
 		endif
 
 		let def = printf("sign define SignCustom%s text=%s texthl=%s " .
@@ -399,6 +454,10 @@ fu! <sid>DefineSigns() "{{{1
 		exe "sign define SignDeleted text=- texthl=DiffDelete"
 					\ icon ? " icon=". s:i_path . "delete.png" : ''
 	endif
+
+	" Alternating Colors
+	exe "sign define SignEven text=! linehl=". s:id_hl.LineEven
+	exe "sign define SignOdd text=! linehl=".  s:id_hl.LineOdd
 endfu
 
 fu! <sid>ReturnDiffSigns() "{{{1
@@ -738,6 +797,18 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	endif
 	return 0
 endfu
+
+fu! <sid>PlaceAlternatingSigns(line) "{{{1
+	if !s:AlternatingSigns
+		return 0
+	endif
+	let sign = printf('sign place %d%d line=%d name=%s buffer=%d',
+				\ s:sign_prefix, a:line, a:line,
+				\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr('.'))
+	exe sign
+	return 1
+endfu
+
 fu! <sid>PlaceBookmarks(line) "{{{1
 	" Place signs for bookmarks
 	if exists("s:BookmarkSigns") &&
