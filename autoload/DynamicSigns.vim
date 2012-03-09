@@ -802,10 +802,20 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	if !s:AlternatingSigns
 		return 0
 	endif
-	let sign = printf('sign place %d%d line=%d name=%s buffer=%d',
-				\ s:sign_prefix, a:line, a:line,
-				\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr('.'))
-	exe sign
+	let oldSign = match(s:Signs, 'line='. a:line.
+			\ '\D.*name=Sign'. (a:line % 2 ? 'Odd': 'Even')
+	let oldSign1 = match(s:Signs, 'line='. a:line.
+			\ '\D.*name=Sign')
+	if oldSign == -1
+		if oldSign1 > -1
+			" unplace previously place sign first
+			call <sid>UnplaceSignSingle(a:line)
+		endif
+		let sign = printf('sign place %d%d line=%d name=%s buffer=%d',
+					\ s:sign_prefix, a:line, a:line,
+					\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr('.'))
+		exe sign
+	endif
 	return 1
 endfu
 
