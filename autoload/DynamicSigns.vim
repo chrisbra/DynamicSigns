@@ -1,5 +1,7 @@
 	" Signs.vim - Using Signs
+	"
 " ---------------------------------------------------------------
+"
 " Version:	0.1
 " Authors:	Christian Brabandt <cb@256bit.org>
 " Last Change: Tue, 19 July 2010 21:16:28 +0200
@@ -456,8 +458,8 @@ fu! <sid>DefineSigns() "{{{1
 	endif
 
 	" Alternating Colors
-	exe "sign define SignEven text=! linehl=". s:id_hl.LineEven
-	exe "sign define SignOdd text=! linehl=".  s:id_hl.LineOdd
+	exe "sign define SignEven linehl=". s:id_hl.LineEven
+	exe "sign define SignOdd linehl=".  s:id_hl.LineOdd
 endfu
 
 fu! <sid>ReturnDiffSigns() "{{{1
@@ -632,7 +634,7 @@ fu! <sid>DoSigns() "{{{1
 	endif
 endfu
 
-fu <sid>DoSignBookmarks() "{{{1
+fu! <sid>DoSignBookmarks() "{{{1
 	if s:BookmarkSigns != get(s:CacheOpts, 'BookmarkSigns', 0)
 		let index = match(s:Signs,
 			\'id='.s:sign_prefix.'\d\+.*name=SignBookmark')
@@ -802,10 +804,10 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	if !s:AlternatingSigns
 		return 0
 	endif
-	let oldSign = match(s:Signs, 'line='. a:line.
-			\ '\D.*name=Sign'. (a:line % 2 ? 'Odd': 'Even')
-	let oldSign1 = match(s:Signs, 'line='. a:line.
-			\ '\D.*name=Sign')
+	let oldSign = match(s:Signs, 'line='. a:line. '\s*id='. s:sign_prefix
+			\ . a:line. '\s*name=Sign'. (a:line % 2 ? 'Odd': 'Even'))
+	let oldSign1 = match(s:Signs, 'line='. a:line. '\s*id='. s:sign_prefix
+			\ . a:line. '\s*name=Sign')
 	if oldSign == -1
 		if oldSign1 > -1
 			" unplace previously place sign first
