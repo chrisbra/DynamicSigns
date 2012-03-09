@@ -374,6 +374,15 @@ fu! <sid>PlaceSigns(...) "{{{1
 	call <sid>BufferConfigCache()
 endfu
 
+fu! <sid>DefineSignsIcons(def) "{{{1
+	try
+		exe a:def
+	catch /^Vim\%((\a\+)\)\=:E255/
+		" gvim can't read the icon
+		exe substitute(a:def, 'icon=.*$', '', '')
+	endtry
+endfu
+
 fu! <sid>DefineSigns() "{{{1
 	let icon = 0
 	if (has("gui_gtk") || has("gui_win32") || has("win32") || has("win64"))
@@ -386,53 +395,55 @@ fu! <sid>DefineSigns() "{{{1
 	endfor
 
 	" Indentlevel > 9
-	exe "sign define 10" 	"text=>".item . " texthl=" . s:id_hl.Error
-				\ icon ? " icon=". s:i_path . "error.png" : ''
+	let def = printf("sign define 10 text=>9 texthl=%s %s",
+				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.png" : ''))
+	call <sid>DefineSignsIcons(def)
 
 	" Mixed Indentation Error
 	let utf8signs = (&enc=='utf-8' || (exists("g:NoUtf8Signs") &&
 		\ !g:NoUtf8Signs) ? 1 : 0)
-	exe "sign define SignWSError text=X texthl=" . s:id_hl.Error . 
-		\ " linehl=" . s:id_hl.Error 
-		\ icon ? " icon=". s:i_path . "error.png" : ''
+	let def = printf("sign define SignWSError text=X texthl=%s linehl=%s %s",
+				\ s:id_hl.Error, s:id_hl.Error,
+				\ (icon ? "icon=". s:i_path. "error.png" : ''))
+	call <sid>DefineSignsIcons(def)
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
 		\ 'Delete', 'Stop']
-		let icn  = (icon ? s:i_path : '')
+		let icn  = (icon ? 'icon='. s:i_path : '')
 		let text = ""
 		if sign ==     'OK'
 			let text = (utf8signs ? '✓' : 'OK')
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'checkmark.png')
+			let icn  = (empty(icn) ? '' : icn . 'checkmark.png')
 		elseif sign == 'Warning'
 			let text = (utf8signs ? '⚠' : '!')
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'warning.png')
+			let icn  = (empty(icn) ? '' : icn . 'warning.png')
 		elseif sign == 'Error'
 			let text = 'X'
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'error.png')
+			let icn  = (empty(icn) ? '' : icn . 'error.png')
 		elseif sign == 'Info'
 			let text = (utf8signs ? 'ℹ' : 'I')
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'thumbtack-yellow.png')
+			let icn  = (empty(icn) ? '' : icn . 'thumbtack-yellow.png')
 		elseif sign == 'Add'
 			let text = '+'
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'add.png')
+			let icn  = (empty(icn) ? '' : icn . 'add.png')
 		elseif sign == 'Arrow'
 			let text = (utf8signs ? '→' : '->')
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'arrow-right.png')
+			let icn  = (empty(icn) ? '' : icn . 'arrow-right.png')
 		elseif sign == 'Flag'
 			let text = (utf8signs ? '⚑' : 'F')
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'flag-yellow.png')
+			let icn  = (empty(icn) ? '' : icn . 'flag-yellow.png')
 		elseif sign == 'Delete'
 			let text = (utf8signs ? '‒' : '-')
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'delete.png')
+			let icn  = (empty(icn) ? '' : icn . 'delete.png')
 		elseif sign == 'Stop'
 			let text = 'ST'
-			let icn  = (empty(icn) ? '' : "icon=". icn . 'stop.png')
+			let icn  = (empty(icn) ? '' : icn . 'stop.png')
 		endif
 
 		let def = printf("sign define SignCustom%s text=%s texthl=%s " .
 			\ "%s", sign, text, s:id_hl.Error, icn)
-		exe def
+		call <sid>DefineSignsIcons(def)
 	endfor
 
 	" Bookmark Signs
@@ -444,17 +455,21 @@ fu! <sid>DefineSigns() "{{{1
 	endif
 
 	" Make Errors (quickfix list)
-	exe "sign define SignQF text=! texthl=" . s:id_hl.Check
-		\ icon ? " icon=". s:i_path . "arrow-right.png" : ''
+	let def = printf("sign define SignQF text=! texthl=%s %s",
+			\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.png" : ''))
+	call <sid>DefineSignsIcons(def)
 
 	" Diff Signs
 	if has("diff")
-		exe "sign define SignAdded text=+ texthl=DiffAdd"
-					\ icon ? " icon=". s:i_path . "add.png" : ''
-		exe "sign define SignChanged text=M texthl=DiffChange"
-					\ icon ? " icon=". s:i_path . "warning.png" : ''
-		exe "sign define SignDeleted text=- texthl=DiffDelete"
-					\ icon ? " icon=". s:i_path . "delete.png" : ''
+		let def = printf("sign define SignAdded text=+ texthl=DiffAdd %s",
+					\ (icon ? " icon=". s:i_path . "add.png" : ''))
+		call <sid>DefineSignsIcons(def)
+		let def = printf("sign define SignChanged text=M texthl=DiffChange %s",
+					\ (icon ? " icon=". s:i_path . "warning.png" : ''))
+		call <sid>DefineSignsIcons(def)
+		let def = printf("sign define SignDeleted text=- texthl=DiffDelete %s",
+					\ (icon ? " icon=". s:i_path . "delete.png" : ''))
+		call <sid>DefineSignsIcons(def)
 	endif
 
 	" Alternating Colors
