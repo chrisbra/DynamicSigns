@@ -44,11 +44,16 @@ call DynamicSigns#MapKey()
 		\ call DynamicSigns#Run(1)
 
 if  exists("g:Signs_QFList") && g:Signs_QFList
+	" prevent loading autoload file too early
+	call <sid>ActivateAuCmds()
+endif
+
+fu! <sid>ActivateAuCmds()
 	augroup Signs
 			autocmd!
 			au QuickFixCmdPost * :call DynamicSigns#QFSigns()
 	augroup END
-endif
+endfu
 
 " Restore: "{{{1
 let &cpo=s:cpo
