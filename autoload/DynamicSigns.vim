@@ -8,10 +8,10 @@
 "Last Change: Tue, 19 July 2010 21:16:28 +0200
 "GetLatestVimScripts:  XXX 1 :AutoInstall: DynamicSigns.vim
 
-
 " Check preconditions
 scriptencoding utf-8
-let s:i_path = fnamemodify(expand("<sfile>"), ':p:h') . '/Signs/'
+let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
+let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
 
 fu! <sid>Check() "{{{1
 	" Check for the existence of unsilent
@@ -474,14 +474,17 @@ fu! <sid>DefineSigns() "{{{1
 endfu
 
 fu! <sid>ReturnDiffSigns() "{{{1
-	if !executable("diff") ||
-		\ empty(expand("%")) ||
-		\ !has("diff")
+	let fname = expand('%')
+	if !executable("diff")	||
+		\ empty(fname)		||
+		\ !has("diff")		||
+		\ !filereadable(fname) 
 		" nothing to do
 		call add(s:msg, 'Diff not possible:' . 
 			\ (!executable("diff") ? ' No diff executable found!' :
-			\ empty(expand("%")) ? ' Current file has never been written!' :
-			\ 'Vim was compiled without diff feature!'))
+			\ empty(fname) ? ' Current file has never been written!' :
+			\ !filereadable(fname) ? ' '. fname. ' not readable!' :
+			\ ' Vim was compiled without diff feature!'))
 		throw "DiffError"
 	endif
 	let new_file = tempname()
@@ -826,7 +829,7 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 		endif
 		let sign = printf('sign place %d%d line=%d name=%s buffer=%d',
 					\ s:sign_prefix, a:line, a:line,
-					\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr('.'))
+					\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr(''))
 		exe sign
 	endif
 	return 1
