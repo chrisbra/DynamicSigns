@@ -1,7 +1,7 @@
 *DynamicSigns.txt* - Using Signs for different things
 
 Author:  Christian Brabandt <cb@256bit.org>
-Version: 0.1 Fri, 13 Jan 2012 21:30:54 +0100
+Version: 0.2 Thu, 15 Mar 2012 23:37:37 +0100
                                                         *SignsCopyright*
 Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
            The VIM LICENSE applies to improved_ft.vim and improved_ft.txt
@@ -216,6 +216,8 @@ site and application GUI designs. All icons in this set are 32 x 32 pixel PNG
 image files. You may freely use these icons in your commercial or personal
 projects without attribution."
 
+The icons have been taken as is and only converted to a .bmp fileformat, so
+that the gtk and Windows built of gVim can display those icons.
 
 ==============================================================================
 6. Feedback                                                  *Signs-Feedback*
@@ -225,7 +227,7 @@ vim-page:
 http://www.vim.org/scripts/script.php?script_id=
 
 You can also follow the development of the plugin at github:
-http://github.com/chrisbra/Signs
+http://github.com/chrisbra/DynamicSigns
 
 Please don't hesitate to report any bugs to the maintainer, mentioned in the
 third line of this document.

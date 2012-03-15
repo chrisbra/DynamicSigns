@@ -1,8 +1,8 @@
 " DynamicSigns.vim - Using Signs 
 " -----------------------------
-" Version:	   0.1
+" Version:	   0.2
 " Maintainer:  Christian Brabandt <cb@256bit.org>
-" Last Change: Fri, 13 Jan 2012 21:30:54 +0100
+" Last Change: Thu, 15 Mar 2012 23:37:37 +0100
 " Script: 
 " Copyright:   (c) 2009, 2010, 2011, 2012  by Christian Brabandt
 "			   The VIM LICENSE applies to histwin.vim 
@@ -10,7 +10,7 @@
 "			   instead of "Vim".
 "			   No warranty, express or implied.
 "	 *** ***   Use At-Your-Own-Risk!   *** ***
-" GetLatestVimScripts: 3877 2 :AutoInstall: ft_improved.vim
+" GetLatestVimScripts: 3877 3 :AutoInstall: ft_improved.vim
 "
 " Init: {{{1
 let s:cpo= &cpo

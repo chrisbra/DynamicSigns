@@ -1,7 +1,7 @@
 *DynamicSigns.txt* - Using Signs for different things
 
 Author:  Christian Brabandt <cb@256bit.org>
-Version: 0.1 Fri, 13 Jan 2012 21:30:54 +0100
+Version: 0.2 Thu, 15 Mar 2012 23:37:37 +0100
                                                         *SignsCopyright*
 Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
            The VIM LICENSE applies to improved_ft.vim and improved_ft.txt
