@@ -1,17 +1,13 @@
-	" Signs.vim - Using Signs
-	"
+" DynamicSigns.vim - Using Signs for different things
 " ---------------------------------------------------------------
-"
-" Version:	0.1
-" Authors:	Christian Brabandt <cb@256bit.org>
-" Last Change: Tue, 19 July 2010 21:16:28 +0200
-" Script:  
-" License: VIM License
-" Documentation: N/A
-" GetLatestVimScripts: 
-" Documentation: N/A
+"Author:		Christian Brabandt <cb@256bit.org>
+"License:		VIM License (see :h license)
+"URL:			http://www.github.com/chrisbra/DynamicSigns
+"Documentation:	DynamicSigns.txt
+"Version:		0.1
+"Last Change: Tue, 19 July 2010 21:16:28 +0200
+"GetLatestVimScripts:  XXX 1 :AutoInstall: DynamicSigns.vim
 
-" Init Folkore  -- not needed for autoload script
 
 " Check preconditions
 scriptencoding utf-8
@@ -396,7 +392,7 @@ fu! <sid>DefineSigns() "{{{1
 
 	" Indentlevel > 9
 	let def = printf("sign define 10 text=>9 texthl=%s %s",
-				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.png" : ''))
+				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 
 	" Mixed Indentation Error
@@ -404,7 +400,7 @@ fu! <sid>DefineSigns() "{{{1
 		\ !g:NoUtf8Signs) ? 1 : 0)
 	let def = printf("sign define SignWSError text=X texthl=%s linehl=%s %s",
 				\ s:id_hl.Error, s:id_hl.Error,
-				\ (icon ? "icon=". s:i_path. "error.png" : ''))
+				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 	"
 	" Custom Signs Hooks
@@ -414,31 +410,31 @@ fu! <sid>DefineSigns() "{{{1
 		let text = ""
 		if sign ==     'OK'
 			let text = (utf8signs ? '✓' : 'OK')
-			let icn  = (empty(icn) ? '' : icn . 'checkmark.png')
+			let icn  = (empty(icn) ? '' : icn . 'checkmark.bmp')
 		elseif sign == 'Warning'
 			let text = (utf8signs ? '⚠' : '!')
-			let icn  = (empty(icn) ? '' : icn . 'warning.png')
+			let icn  = (empty(icn) ? '' : icn . 'warning.bmp')
 		elseif sign == 'Error'
 			let text = 'X'
-			let icn  = (empty(icn) ? '' : icn . 'error.png')
+			let icn  = (empty(icn) ? '' : icn . 'error.bmp')
 		elseif sign == 'Info'
 			let text = (utf8signs ? 'ℹ' : 'I')
-			let icn  = (empty(icn) ? '' : icn . 'thumbtack-yellow.png')
+			let icn  = (empty(icn) ? '' : icn . 'thumbtack-yellow.bmp')
 		elseif sign == 'Add'
 			let text = '+'
-			let icn  = (empty(icn) ? '' : icn . 'add.png')
+			let icn  = (empty(icn) ? '' : icn . 'add.bmp')
 		elseif sign == 'Arrow'
 			let text = (utf8signs ? '→' : '->')
-			let icn  = (empty(icn) ? '' : icn . 'arrow-right.png')
+			let icn  = (empty(icn) ? '' : icn . 'arrow-right.bmp')
 		elseif sign == 'Flag'
 			let text = (utf8signs ? '⚑' : 'F')
-			let icn  = (empty(icn) ? '' : icn . 'flag-yellow.png')
+			let icn  = (empty(icn) ? '' : icn . 'flag-yellow.bmp')
 		elseif sign == 'Delete'
 			let text = (utf8signs ? '‒' : '-')
-			let icn  = (empty(icn) ? '' : icn . 'delete.png')
+			let icn  = (empty(icn) ? '' : icn . 'delete.bmp')
 		elseif sign == 'Stop'
 			let text = 'ST'
-			let icn  = (empty(icn) ? '' : icn . 'stop.png')
+			let icn  = (empty(icn) ? '' : icn . 'stop.bmp')
 		endif
 
 		let def = printf("sign define SignCustom%s text=%s texthl=%s " .
@@ -456,19 +452,19 @@ fu! <sid>DefineSigns() "{{{1
 
 	" Make Errors (quickfix list)
 	let def = printf("sign define SignQF text=! texthl=%s %s",
-			\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.png" : ''))
+			\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 
 	" Diff Signs
 	if has("diff")
 		let def = printf("sign define SignAdded text=+ texthl=DiffAdd %s",
-					\ (icon ? " icon=". s:i_path . "add.png" : ''))
+					\ (icon ? " icon=". s:i_path . "add.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
 		let def = printf("sign define SignChanged text=M texthl=DiffChange %s",
-					\ (icon ? " icon=". s:i_path . "warning.png" : ''))
+					\ (icon ? " icon=". s:i_path . "warning.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
 		let def = printf("sign define SignDeleted text=- texthl=DiffDelete %s",
-					\ (icon ? " icon=". s:i_path . "delete.png" : ''))
+					\ (icon ? " icon=". s:i_path . "delete.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
 	endif
 
