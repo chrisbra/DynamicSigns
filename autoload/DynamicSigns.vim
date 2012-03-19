@@ -770,7 +770,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 			endif
 		endfor
 		if did_place_sign
-			continue
+			return 1
 		endif
 
 		" Changed Lines
@@ -787,7 +787,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 			endif
 		endfor
 		if did_place_sign
-			continue
+			return 1
 		endif
 
 		" Deleted Lines
