@@ -42,9 +42,8 @@ $(PLUGIN).zip:
 	ln -f $(PLUGIN).zip $(PLUGIN)-$(VERSION).zip
 
 $(PLUGIN).vmb:
-	rm -f $(PLUGIN)-$(VERSION).vmb
-	vim -N -c 'ru! vimballPlugin.vim' -c ':call append("0", [ "$(SCRIPT)", "$(AUTOL)", "$(DOC)"])' -c '$$d' -c ":%MkVimball $(PLUGIN)-$(VERSION)  ." -c':q!'
-	ln -f $(PLUGIN)-$(VERSION).vmb $(PLUGIN).vmb
+	rm -f $(PLUGIN).vmb
+	vim -N -c 'ru! vimballPlugin.vim' -c ':call append("0", [ "$(SCRIPT)", "$(AUTOL)", "$(DOC)"])' -c '$$d' -c ":%MkVimball $(PLUGIN)  ." -c':q!'
      
 release: version all
 
