@@ -6,7 +6,9 @@ VERSION=$(shell sed -n '/Version:/{s/^.*\(\S\.\S\+\)$$/\1/;p}' $(SCRIPT))
 
 .PHONY: $(PLUGIN).vmb README $(PLUGIN).zip
 
-all: uninstall archive install README
+all: vimball install
+
+release: uninstall archive install README
 
 vimball: $(PLUGIN).vmb
 
