@@ -131,6 +131,9 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignDiff = exists("g:Signs_Diff") ? g:Signs_Diff : 0
 
+	let s:ignore   = exists("g:Signs_Ignore") ?
+				   \ split(g:Signs_Ignore, ',')  : []
+
 	if !exists("s:gui_running") 
 		let s:gui_running = has("gui_running")
 	endif
@@ -184,66 +187,24 @@ endfu
 
 
 fu! <sid>AuCmd(arg) "{{{1
+	" Don't update signs for 
+	" marks and diffs on insertleave
+	let ignore = 'marks,diff'
 	if a:arg
 		augroup Signs
 			autocmd!
-			au InsertLeave * :call <sid>UpdateView(0)
-			au GUIEnter,BufWritePost * :call <sid>UpdateView(1)
-			exe s:SignQF ? "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
+			exe "au InsertLeave * :call <sid>UpdateWindowSigns('".
+				\ ignore. "')"
+			exe "au GUIEnter,BufWritePost * :call <sid>UpdateWindowSigns('".
+				\ ignore. "')"
+			exe s:SignQF ?
+				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
 		augroup END
 	else
 		augroup Signs
 			autocmd!
 		augroup END
 		augroup! Signs
-	endif
-endfu
-
-fu! DynamicSigns#SignsQFList(local) "{{{1
-	if !has("quickfix")
-		return
-	endif
-	call <sid>Init()
-	let qflist = []
-	redir => a| exe "sil sign place" |redir end
-	for sign in split(a, "\n")
-		if match(sign, '^Signs for \(.*\):$') >= 0
-			let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
-			let file  = readfile(fname)
-		elseif match(sign, '^\s\+line=\d\+\s') >= 0
-			let line = matchstr(sign, 'line=\zs\d\+\ze\s')
-			call add(qflist, {'filename': fname, 'lnum': line,
-				\ 'text': file[line-1]})
-		else
-			continue
-		endif
-	endfor
-	if a:local
-		let func = 'setloclist'
-		let args = [0, qflist]
-	else
-		let func = 'setqflist'
-		let args = [qflist]
-	endif
-	let s:no_qf_autocmd = 1
-	call call(func, args)
-	unlet s:no_qf_autocmd 
-	copen
-endfu
-
-fu! DynamicSigns#QFSigns() "{{{1
-	if has("quickfix")
-		if exists("s:no_qf_autocmd") && s:no_qf_autocmd
-			" Don't run the autocommand
-			return
-		endif
-		call <sid>Init()
-		" Remove all previously placed QF Signs
-		exe "sign unplace " s:sign_prefix . '0'
-		for item in getqflist()
-			exe "sign place" s:sign_prefix . '0' . " line=" . item.lnum .
-				\ " name=SignQF buffer=" . item.bufnr
-		endfor
 	endif
 endfu
 
@@ -273,19 +234,6 @@ endfu
 
 fu! <sid>UnplaceSignID(id) "{{{1
 	exe "sil sign unplace ". a:id. " buffer=".bufnr('')
-endfu
-
-fu! DynamicSigns#UpdateWindowSigns() "{{{1
-	" Only update all signs in the current window viewport
-	try
-		call <sid>Init()
-	catch
-		call <sid>WarningMsg()
-		return
-	endtry
-	call <sid>PlaceSigns(line('w0'), line('w$'))
-	" Redraw Screen
-	exe "norm! \<C-L>"
 endfu
 
 fu! <sid>GetMarks() "{{{1
@@ -325,7 +273,8 @@ fu! <sid>PlaceSigns(...) "{{{1
 		let did_place_sign = 0
 		" Place alternating Signs "{{{3
 		" don't skip folded lines
-		if <sid>PlaceAlternatingSigns(line)
+		if match(s:ignore, 'alternate') == -1 &&
+			\ <sid>PlaceAlternatingSigns(line)
 			continue
 		endif
 
@@ -336,32 +285,38 @@ fu! <sid>PlaceSigns(...) "{{{1
 		endif
 
 		" Place Diff Signs "{{{3
-		if <sid>PlaceDiffSigns(line, DiffSigns)
+		if match(s:ignore, 'diff') == -1 && 
+			\ <sid>PlaceDiffSigns(line, DiffSigns)
 			continue
 		endif
 
 		" Place marks "{{{3
-		if <sid>PlaceBookmarks(line)
+		if match(s:ignore, 'marks') == -1 && 
+			\ <sid>PlaceBookmarks(line)
 			continue
 		endif
 
 		" Custom Sign Hooks "{{{3
-		let i = <sid>PlaceSignHook(line)
-		if i > 0
-			continue
-		elseif i < 0
-			" Evaluating expression failed, don't avoid generating more errors
-			" for the rest of the lines
-			return
+		if match(s:ignore, 'expression') == -1
+			let i = <sid>PlaceSignHook(line)
+			if i > 0
+				continue
+			elseif i < 0
+				" Evaluating expression failed, don't avoid
+				" generating more errors for the rest of the lines
+				return
+			endif
 		endif
 
 		" Place signs for mixed indentation rules "{{{3
-		if <sid>PlaceMixedWhitespaceSign(line)
+		if match(s:ignore, 'whitespace') == -1  &&
+			\ <sid>PlaceMixedWhitespaceSign(line)
 			continue
 		endif
 
 		" Place signs for Indentation Level {{{3
-		if <sid>PlaceIndentationSign(line)
+		if match(s:ignore, 'indentation') == -1 &&
+			\ <sid>PlaceIndentationSign(line)
 			continue
 		endif
 
@@ -537,56 +492,6 @@ fu! <sid>UpdateView(force) "{{{1
 		let b:changes_chg_tick = b:changedtick
 	endif
 endfu
-
-fu! DynamicSigns#Run(...) "{{{1
-	set lz
-	let _a = winsaveview()
-	try
-		if exists("a:1") && a:1 == 1
-			unlet! s:precheck
-		endif
-		call <sid>Init()
-		catch /^Signs:/
-			call <sid>WarningMsg()
-		return
-	endtry
-	call <sid>PlaceSigns()
-	set nolz
-	call winrestview(_a)
-endfu
-
-fu! DynamicSigns#CleanUp() "{{{1
-	" only delete signs, that have been set by this plugin
-	call <sid>UnPlaceSigns()
-	for item in range(1,10)
-		exe "sil! sign undefine " item
-	endfor
-	" Remove SignWSError Sign
-	sil! sign undefine SignWSError
-	" Remove Custom Signs
-	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
-		\ 'Delete', 'Stop']
-		exe "sil! sign undefine SignCustom". sign
-	endfor
-	for sign in s:Bookmarks
-		exe "sil! sign undefine SignBookmark".sign
-	endfor
-	for sign in ['SignQF', 'SignAdded', 'SignChanged', 'SignDeleted']
-		exe "sil! sign undefine" sign
-	endfor
-	call <sid>AuCmd(0)
-	unlet! s:precheck
-endfu
-
-fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
-	let g:Signs_Hook = a:arg
-	call DynamicSigns#Run()
-endfu
-
-fu! <sid>MySortBookmarks(a, b) "{{{¹
-	return a:a+0 == a:b+0 ? 0 : a:a+0 > a:b+0 ? 1: -1
-endfu
-
 
 fu! <sid>DoSigns() "{{{1
 	if !s:MixedIndentation &&
@@ -858,6 +763,29 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 	return 0
 endfu
 
+fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
+	" Only update all signs in the current window viewport
+	if !exists("b:changes_chg_tick")
+		let b:changes_chg_tick = 0
+	endif
+	try
+		call <sid>Init()
+		let s:old_ignore = s:ignore
+		let s:ignore += split(a:ignorepat, ',')
+	catch
+		call <sid>WarningMsg()
+		return
+	endtry
+	" Only update, if there have been changes to the buffer
+	if b:changes_chg_tick != b:changedtick || a:force
+		let b:changes_chg_tick = b:changedtick
+		call <sid>PlaceSigns(line('w0'), line('w$'))
+		" Redraw Screen
+		"exe "norm! \<C-L>"
+	endif
+	let s:ignore = s:old_ignore
+endfu
+
 fu! DynamicSigns#MapBookmark() "{{{1
 	let a = getchar()
 	if type(a) == type(0)
@@ -899,5 +827,103 @@ fu! DynamicSigns#MapKey()
 		nnoremap <expr> m DynamicSigns#MapBookmark()
 	endif
 endfu
+fu! DynamicSigns#Run(...) "{{{1
+	set lz
+	let _a = winsaveview()
+	try
+		if exists("a:1") && a:1 == 1
+			unlet! s:precheck
+		endif
+		call <sid>Init()
+		catch /^Signs:/
+			call <sid>WarningMsg()
+		return
+	endtry
+	call <sid>PlaceSigns()
+	set nolz
+	call winrestview(_a)
+endfu
+
+fu! DynamicSigns#CleanUp() "{{{1
+	" only delete signs, that have been set by this plugin
+	call <sid>UnPlaceSigns()
+	for item in range(1,10)
+		exe "sil! sign undefine " item
+	endfor
+	" Remove SignWSError Sign
+	sil! sign undefine SignWSError
+	" Remove Custom Signs
+	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
+		\ 'Delete', 'Stop']
+		exe "sil! sign undefine SignCustom". sign
+	endfor
+	for sign in s:Bookmarks
+		exe "sil! sign undefine SignBookmark".sign
+	endfor
+	for sign in ['SignQF', 'SignAdded', 'SignChanged', 'SignDeleted']
+		exe "sil! sign undefine" sign
+	endfor
+	call <sid>AuCmd(0)
+	unlet! s:precheck
+endfu
+
+fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
+	let g:Signs_Hook = a:arg
+	call DynamicSigns#Run()
+endfu
+
+fu! <sid>MySortBookmarks(a, b) "{{{¹
+	return a:a+0 == a:b+0 ? 0 : a:a+0 > a:b+0 ? 1: -1
+endfu
+
+
+fu! DynamicSigns#SignsQFList(local) "{{{1
+	if !has("quickfix")
+		return
+	endif
+	call <sid>Init()
+	let qflist = []
+	redir => a| exe "sil sign place" |redir end
+	for sign in split(a, "\n")
+		if match(sign, '^Signs for \(.*\):$') >= 0
+			let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
+			let file  = readfile(fname)
+		elseif match(sign, '^\s\+line=\d\+\s') >= 0
+			let line = matchstr(sign, 'line=\zs\d\+\ze\s')
+			call add(qflist, {'filename': fname, 'lnum': line,
+				\ 'text': file[line-1]})
+		else
+			continue
+		endif
+	endfor
+	if a:local
+		let func = 'setloclist'
+		let args = [0, qflist]
+	else
+		let func = 'setqflist'
+		let args = [qflist]
+	endif
+	let s:no_qf_autocmd = 1
+	call call(func, args)
+	unlet s:no_qf_autocmd 
+	copen
+endfu
+
+fu! DynamicSigns#QFSigns() "{{{1
+	if has("quickfix")
+		if exists("s:no_qf_autocmd") && s:no_qf_autocmd
+			" Don't run the autocommand
+			return
+		endif
+		call <sid>Init()
+		" Remove all previously placed QF Signs
+		exe "sign unplace " s:sign_prefix . '0'
+		for item in getqflist()
+			exe "sign place" s:sign_prefix . '0' . " line=" . item.lnum .
+				\ " name=SignQF buffer=" . item.bufnr
+		endfor
+	endif
+endfu
+
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4
