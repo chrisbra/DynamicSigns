@@ -22,10 +22,10 @@ clean:
 dist-clean: clean
 
 install:
-	vim -N -c':so %' -c':q!' $(PLUGIN)-$(VERSION).vmb
+	vim -N -c':so %' -c':q!' $(PLUGIN).vmb
 
 uninstall:
-	vim -N -c':RmVimball' -c':q!' $(PLUGIN)-$(VERSION).vmb
+	vim -N -c':RmVimball' -c':q!' $(PLUGIN).vmb
 
 undo:
 	for i in */*.orig; do mv -f "$$i" "$${i%.*}"; done
