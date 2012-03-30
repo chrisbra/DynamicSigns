@@ -224,7 +224,7 @@ that the gtk and Windows built of gVim can display those icons.
 -----------
 Feedback is always welcome. If you like the plugin, please rate it at the
 vim-page:
-http://www.vim.org/scripts/script.php?script_id=
+http://www.vim.org/scripts/script.php?script_id=3877
 
 You can also follow the development of the plugin at github:
 http://github.com/chrisbra/DynamicSigns
@@ -240,13 +240,12 @@ third line of this document.
 - Performance improvements to make updating the signs faster
   (could slow down saving considerably for large files)
 
-0.1: Mar 02, 2012 {{{1
+0.1: Mar 15, 2012 {{{1
 
 - Initial upload
 - development versions are available at the github repository
 - put plugin on a public repository (http://github.com/chrisbra/Signs)
   }}}
-
 ==============================================================================
 Modeline:
 vim:tw=78:ts=8:ft=help:et:fdm=marker:fdl=0:norl
