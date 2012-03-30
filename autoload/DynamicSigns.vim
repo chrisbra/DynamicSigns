@@ -4,9 +4,9 @@
 "License:		VIM License (see :h license)
 "URL:			http://www.github.com/chrisbra/DynamicSigns
 "Documentation:	DynamicSigns.txt
-"Version:		0.2
+"Version:		0.1
 "Last Change: Thu, 15 Mar 2012 23:37:37 +0100
-"GetLatestVimScripts:  XXX 2 :AutoInstall: DynamicSigns.vim
+"GetLatestVimScripts:  XXX 1 :AutoInstall: DynamicSigns.vim
 
 " Check preconditions
 scriptencoding utf-8

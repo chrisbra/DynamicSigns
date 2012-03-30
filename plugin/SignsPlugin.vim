@@ -1,6 +1,6 @@
 " DynamicSigns.vim - Using Signs 
 " -----------------------------
-" Version:	   0.2
+" Version:	   0.1
 " Maintainer:  Christian Brabandt <cb@256bit.org>
 " Last Change: Thu, 15 Mar 2012 23:37:37 +0100
 " Script: 
@@ -10,7 +10,7 @@
 "			   instead of "Vim".
 "			   No warranty, express or implied.
 "	 *** ***   Use At-Your-Own-Risk!   *** ***
-" GetLatestVimScripts: 3877 3 :AutoInstall: ft_improved.vim
+" GetLatestVimScripts: 3877 1 :AutoInstall: ft_improved.vim
 "
 " Init: {{{1
 let s:cpo= &cpo
