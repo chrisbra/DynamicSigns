@@ -6,11 +6,11 @@
 " Script: 
 " Copyright:   (c) 2009, 2010, 2011, 2012  by Christian Brabandt
 "			   The VIM LICENSE applies to histwin.vim 
-"			   (see |copyright|) except use "ft_improved.vim" 
+"			   (see |copyright|) except use "DynamicSigns" 
 "			   instead of "Vim".
 "			   No warranty, express or implied.
 "	 *** ***   Use At-Your-Own-Risk!   *** ***
-" GetLatestVimScripts: 3877 1 :AutoInstall: ft_improved.vim
+" GetLatestVimScripts: 3877 1 :AutoInstall: DynamicSigns.vim
 "
 " Init: {{{1
 let s:cpo= &cpo
