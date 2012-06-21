@@ -777,7 +777,7 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 		return
 	endtry
 	" Only update, if there have been changes to the buffer
-	if b:changes_chg_tick != b:changedtick || a:force
+	if b:changes_chg_tick != b:changedtick
 		let b:changes_chg_tick = b:changedtick
 		call <sid>PlaceSigns(line('w0'), line('w$'))
 		" Redraw Screen
