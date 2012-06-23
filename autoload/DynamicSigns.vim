@@ -8,10 +8,18 @@
 "Last Change: Thu, 15 Mar 2012 23:37:37 +0100
 "GetLatestVimScripts:  XXX 1 :AutoInstall: DynamicSigns.vim
 
+fu! <sid>GetSID()
+	return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_GetSID$')
+endfu
+
 " Check preconditions
 scriptencoding utf-8
 let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
+
+
+let s:sid    = <sid>GetSID()
+delf <sid>GetSID "not needed anymore
 
 fu! <sid>Check() "{{{1
 	" Check for the existence of unsilent
@@ -29,7 +37,7 @@ fu! <sid>Check() "{{{1
 		throw 'Signs:abort'
 	endif
 
-	let s:sign_prefix = 99
+	let s:sign_prefix = s:sid
 	let s:id_hl       = {}
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
@@ -156,7 +164,7 @@ fu! <sid>Init(...) "{{{1
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
-	let s:signs={}
+	let s:Signs={}
 
 	let s:Signs = <sid>ReturnSigns(bufnr(''))
 	call <sid>AuCmd(1)
