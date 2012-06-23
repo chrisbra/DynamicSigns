@@ -164,14 +164,22 @@ fu! <sid>Init(...) "{{{1
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
-	let s:Signs={}
-
 	let s:Signs = <sid>ReturnSigns(bufnr(''))
+	let s:SignDef = <sid>ReturnSignDef()
 	call <sid>AuCmd(1)
 endfu
 
 fu! <sid>IndentFactor() "{{{1
 	return &l:sts>0 ? &l:sts : &ts
+endfu
+
+fu! <sid>ReturnSignDef() "{{{1
+	redir => a
+		sil sign list
+	redir END
+	let b = split(a, "\n")[2:]
+	call map(b, 'split(v:val)[1]')
+	return b
 endfu
 
 fu! <sid>ReturnSigns(buffer) "{{{1
@@ -803,7 +811,8 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	endif
 	" Initilize variables
 	call <sid>Init()
-	if <sid>DoSignBookmarks()
+	if <sid>DoSignBookmarks() &&
+		\ match(s:SignDef, 'SignBookmark'.char) >= 0  " there was a sign defined for the mark
 		" unplace previous mark for this sign
 		" not necessary, has already been dony by DoSignBookmarks
 		let line = line('.')
