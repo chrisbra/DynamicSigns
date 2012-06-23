@@ -6,7 +6,7 @@
 "Documentation:	DynamicSigns.txt
 "Version:		0.1
 "Last Change: Thu, 15 Mar 2012 23:37:37 +0100
-"GetLatestVimScripts:  XXX 1 :AutoInstall: DynamicSigns.vim
+"GetLatestVimScripts:  3965 1 :AutoInstall: DynamicSigns.vim
 
 fu! <sid>GetSID()
 	return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_GetSID$')
