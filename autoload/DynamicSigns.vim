@@ -139,6 +139,8 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignDiff = exists("g:Signs_Diff") ? g:Signs_Diff : 0
 
+	let s:SignScrollbar = exists("g:Signs_Scrollbar") ? g:Signs_Scrollbar : 0
+
 	let s:ignore   = exists("g:Signs_Ignore") ?
 				   \ split(g:Signs_Ignore, ',')  : []
 
@@ -161,6 +163,12 @@ fu! <sid>Init(...) "{{{1
 	if !exists("s:CacheOpts")
 		let s:CacheOpts = {}
 	endif
+
+	" Create CursorMoved autocommands
+	if s:SignScrollbar
+		call <sid>DoSignScrollbarAucmd(1)
+	endif
+
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
@@ -223,6 +231,21 @@ fu! <sid>AuCmd(arg) "{{{1
 		augroup! Signs
 	endif
 endfu
+
+fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
+	if a:arg
+		augroup SignsScrollbar
+			autocmd!
+			au CursorMoved,CursorMovedI * :call <sid>UpdateScrollbarSigns()
+		augroup END
+	else
+		augroup SignsScrollbar
+			autocmd!
+		augroup END
+		augroup! SignsScrollbar
+	endif
+endfu
+
 
 fu! <sid>UnPlaceSigns() "{{{1
 	redir => a
@@ -373,6 +396,10 @@ fu! <sid>DefineSigns() "{{{1
 				\ s:id_hl.Error, s:id_hl.Error,
 				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
+	
+	" Scrollbar
+	exe printf("sign define SignScrollbar text=%s texthl=%s",
+				\ (utf8signs ? '█': '[]'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
@@ -543,6 +570,18 @@ fu! <sid>DoSigns() "{{{1
 				\ '\d\+.*name=SignCustom') 
 		endw
 
+	elseif !s:SignScrollbar &&
+		\ get(s:CacheOpts, 'SignScrollbar', 0) > 0
+		let index = match(s:Signs, 'id='s:sign_prefix.
+			\ '\d\+.*name=SignScrollbar')
+		while index > -1
+			let line = matchstr(s:Signs[index], 'line='\zs\d\+\ze\D')
+			call <sid>UnplaceSignId(s:sign_prefix.line)
+			call remove(s:Signs, index)
+			let index = match(s:Signs, 'id='.s:sign_prefix.
+				\ '\d\+.*name=SignScrollbar')
+		endw
+
 	elseif !s:SignDiff &&
 		\ get(s:CacheOpts, 'SignDiff', 0) > 0
 		let index = match(s:Signs, 'id='.s:sign_prefix.
@@ -561,6 +600,7 @@ fu! <sid>DoSigns() "{{{1
 		\ !s:IndentationLevel  &&
 		\ !s:BookmarkSigns	   &&
 		\ !s:SignHook		   &&
+		\ !s:SignScrollbar     &&
 		\ !s:SignDiff )
 		unlet! s:CacheOpts
 		return 0
@@ -615,6 +655,24 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 			call <sid>UnplaceSignSingle(a:line)
 		endif
 	endif 
+	return 0
+endfu
+
+fu! <sid>PlaceScrollbarSigns() "{{{1
+	call <sid>Init()
+	if exists("s:SignScrollbar") && has('float')
+		let curline  = line('.')  + 0.0
+		let lastline = line('$')  + 0.0
+		let wheight  = winheight(0) + 0.0
+		let curperc  = curline/lastline
+		let tline    = round(wheight * curperc) + line('w0')
+		let tline    = (line('$') < tline ? line('$') : tline)
+
+		call <sid>UnplaceSignID(s:sign_prefix. '0')
+		exe "sign place " s:sign_prefix . "0 line=" . string(tline) .
+			\ " name=SignScrollbar buffer=" . bufnr('')
+		return 1
+	endif
 	return 0
 endfu
 
@@ -800,6 +858,10 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 		"exe "norm! \<C-L>"
 	endif
 	let s:ignore = s:old_ignore
+endfu
+
+fu! <sid>UpdateScrollbarSigns() "{{{1
+	call <sid>PlaceScrollbarSigns()
 endfu
 
 fu! DynamicSigns#MapBookmark() "{{{1
