@@ -236,7 +236,8 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 	if a:arg
 		augroup SignsScrollbar
 			autocmd!
-			au CursorMoved,CursorMovedI * :call <sid>UpdateScrollbarSigns()
+			au CursorMoved,CursorMovedI * 
+				\ :call DynamicSigns#UpdateScrollbarSigns()
 		augroup END
 	else
 		augroup SignsScrollbar
@@ -399,7 +400,7 @@ fu! <sid>DefineSigns() "{{{1
 	
 	" Scrollbar
 	exe printf("sign define SignScrollbar text=%s texthl=%s",
-				\ (utf8signs ? '█': '[]'), s:id_hl.Check)
+				\ (utf8signs ? '██': '[]'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
@@ -659,18 +660,38 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 endfu
 
 fu! <sid>PlaceScrollbarSigns() "{{{1
+	" doesn't work well with folded lines, unfortunately
 	call <sid>Init()
 	if exists("s:SignScrollbar") && has('float')
+		if !&lz
+			let do_unset_lz = 1
+			setl lz
+		endif
+		if !exists("b:SignScrollbarState")
+			let b:SignScrollbarState = 0
+		endif
 		let curline  = line('.')  + 0.0
 		let lastline = line('$')  + 0.0
-		let wheight  = winheight(0) + 0.0
+		let wheight  = line('w$') - line('w0') + 0.0 
 		let curperc  = curline/lastline
 		let tline    = round(wheight * curperc) + line('w0')
 		let tline    = (line('$') < tline ? line('$') : tline)
+		let nline    = (line('.') > line('$')/2 ? tline-1 : tline+1)
 
-		call <sid>UnplaceSignID(s:sign_prefix. '0')
-		exe "sign place " s:sign_prefix . "0 line=" . string(tline) .
-			\ " name=SignScrollbar buffer=" . bufnr('')
+		" Place 2 Signs, so the scrollbar looks better
+		for line in [tline, nline]
+			exe "sign place " s:sign_prefix . b:SignScrollbarState . 
+				\ " line=" . string(line) .
+				\ " name=SignScrollbar buffer=" . bufnr('')
+		endfor
+		let b:SignScrollbarState = !b:SignScrollbarState
+		" unplace 2 old signs
+		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+		if exists("do_unset_lz") && do_unset_lz
+			setl nolz
+			unlet! do_unset_lz
+		endif
 		return 1
 	endif
 	return 0
@@ -860,7 +881,7 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 	let s:ignore = s:old_ignore
 endfu
 
-fu! <sid>UpdateScrollbarSigns() "{{{1
+fu! DynamicSigns#UpdateScrollbarSigns() "{{{1
 	call <sid>PlaceScrollbarSigns()
 endfu
 

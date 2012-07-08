@@ -48,6 +48,10 @@ if  exists("g:Signs_QFList") && g:Signs_QFList
 	call <sid>ActivateAuCmds()
 endif
 
+if exists("g:Signs_Scrollbar") && g:Signs_Scrollbar
+	call DynamicSigns#UpdateScrollbarSigns()
+endif
+
 fu! <sid>ActivateAuCmds()
 	augroup Signs
 			autocmd!
