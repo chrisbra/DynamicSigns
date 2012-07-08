@@ -21,6 +21,7 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
         2.5   Display Signs for Quickfix items.........: |Signs-QF|
         2.6   Display Signs to display changes.........: |Signs-Diff|
         2.7   Alternating colors.......................: |Signs-Alternate|
+        2.8   ASCII Scrollbar..........................: |Signs-Scrollbar|
         3.  Autocommands...............................: |Signs-Autocommands|
         4.  Commands...................................: |Signs-Commands|
         5.  Icons......................................: |Signs-Icons|
@@ -142,6 +143,22 @@ This will display each even line nummer in one color and each odd line number
 in a different color.
 
 Run |:UpdateSigns| or |:Signs| to update displaying the signs in your buffer.
+
+2.8 ASCII Scrollbar                                          *Signs-Scrollbar*
+-------------------
+The DynamicSigns plugin can also emulate an ascii scrollbar. This is useful in
+terminal Vim, to visually indicate, where in the buffer on is.
+
+If you want to enable this, simply set the g:Signs_Scrollbar variable in your
+|.vimrc| like this: >
+
+    :let g:Signs_Scrollbar = 1
+
+This will enable the Scrollbar and disable all other Sign features.
+
+Unfortunately, this does not work well with |folds| and therefore the
+scrollbar can't be displayed on a folded line. Also Linewrapping 'wrap' can
+disturb the display of the scrollbar.
 
 ==============================================================================
 
