@@ -34,7 +34,7 @@ call DynamicSigns#MapKey()
 
 " Define Commands "{{{1
 :com! Signs :call DynamicSigns#Run()
-:com! UpdateSigns :call DynamicSigns#Run(1)
+:com! UpdateSigns :call DynamicSigns#Update()
 :com! DisableSigns :call DynamicSigns#CleanUp()
 :com! -bang SignQF :call DynamicSigns#SignsQFList(<bang>0)
 :com! -nargs=1 SignExpression
