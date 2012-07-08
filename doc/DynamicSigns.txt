@@ -9,8 +9,8 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
            NO WARRANTY, EXPRESS OR IMPLIED.  USE AT-YOUR-OWN-RISK.
 
 
-==============================================================================
-1. Contents                                                  *Signs-content*
+===========================================================================
+1. Contents                                                 *Signs-content*
 
         1.  Contents...................................: |Signs-content|
         2.  Manual.....................................: |Signs-manual|
@@ -28,22 +28,23 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
         6.  Feedback...................................: |Signs-feedback|
         7.  History....................................: |Signs-history|
 
-============================================================================
-2. Using the Signs Plugin                                       *Signs-manual*
+==========================================================================
+2. Using the Signs Plugin                                    *Signs-manual*
 
 Functionality
 
-This plugin enables you to use signs |sign-support| for different things. For
-example you can use signs to display Indentation-Levels, display line
+This plugin enables you to use signs |sign-support| for different things.
+For example you can use signs to display Indentation-Levels, display line
 whitespace errors, display marks |mark-motion|, display the differences
 between the current editing file and the file on disk or whenever an
-expression evalutates true (similar to how fold-expressions work |fold-expr|)
+expression evalutates true (similar to how fold-expressions work
+|fold-expr|)
 
 All you need to do, is configure the plugin by setting some configuration
 variables and run |:Signs|
 
 
-2.1 Display Indentation Level                            *Signs-Indentation*
+2.1 Display Indentation Level                           *Signs-Indentation*
 -----------------------------
 
 If you want the plugin to display the numeric indentation level, simply set
@@ -53,13 +54,13 @@ this: >
     let g:Signs_IndentationLevel = 1
 <
 
-By default, this displays the indentation level (e.g. the indentation divided
-by the 'tabstop' setting) as numeric values (actually it only displays levels
-1-9 or '>9' for a larger indent.
+By default, this displays the indentation level (e.g. the indentation
+divided by the 'tabstop' setting) as numeric values (actually it only
+displays levels 1-9 or '>9' for a larger indent.
 
 Run |:Signs| to display the signs for those lines.
 
-2.2 Display Whitespace Warnings                           *Signs-Whitespace*
+2.2 Display Whitespace Warnings                         *Signs-Whitespace*
 -------------------------------
 
 If you want the plugin to display the warnings for lines with whitespace
@@ -82,22 +83,24 @@ g:Signs_Bookmarks to 1 in your |.vimrc|, e.g. >
 
     :let g:Signs_Bookmarks = 1
 <
-This will display the marks a-z and A-Z, if they are in your current buffer. 
+This will display the marks a-z and A-Z, if they are in your current buffer.
 
 If this is enabled, |m| will be mapped to a function, that places the
 bookmarks in your buffer and sets the mark. (|:k| does not update the signs,
 Use |:Signs| or |:UpdateSigns| to manually update the view in case this is
 needed).
 
-2.4 Dynamicly display Signs                                      *Signs-Hook*
+2.4 Dynamicly display Signs                                     *Signs-Hook*
 ---------------------------
 
 You can let Vim have an expression evaluated for each line in your current
-buffer. On each line, where this expression is true, Vim will place a sign for
-your. This enables you, to put e.g. a Sign on each line, that contains 'TODO'.
-To do this, run the command |:IndentExpression| and give an expression as its
-argument, which will be evaluated for each line. Use the variable |v:lnum| in
-your expression for the current line.
+buffer. On each line, where this expression is true, Vim will place a sign
+for your. This enables you, to put e.g. a Sign on each line, that contains
+'TODO'.
+
+To do this, run the command |:IndentExpression| and give an expression as
+its argument, which will be evaluated for each line. Use the variable
+|v:lnum| in your expression for the current line.
 
 Say, you want to place a sign on each line, that contains 'TODO'. You simply
 enter >
@@ -117,40 +120,43 @@ This will hook up an autocommand, that fires whenever the quickfix command
 (|:helpgrep|, |:make|, |:vimgrep|, etc has been executed and places a small
 sign next to each match.
 
-2.6 Display Signs for viewing changes to the buffer              *Signs-Diff*
+2.6 Display Signs for viewing changes to the buffer             *Signs-Diff*
 ---------------------------------------------------
-You can also set up the plugin to display small signs, that indicate, whether
-the current line has been modified/deleted/added compared to the version
-stored on disk. To enable this feature, set the g:Signs_Diff variable in your
-|.vimrc| like this: >
+You can also set up the plugin to display small signs, that indicate,
+whether the current line has been modified/deleted/added compared to the
+version stored on disk. To enable this feature, set the g:Signs_Diff
+variable in your |.vimrc| like this: >
 
     :let g:Signs_Diff = 1
 <
-This will run a diff of your buffer and the version stored on disk and place a
-sign on each line that was modified.
+This will run a diff of your buffer and the version stored on disk and place
+a sign on each line that was modified.
 
-Run |:UpdateSigns| or |:Signs| to update displaying the signs in your buffer.
+Run |:UpdateSigns| or |:Signs| to update displaying the signs in your
+buffer.
 
-2.7 Alternating colors                                       *Signs-Alternate*
+2.7 Alternating colors                                     *Signs-Alternate*
 ----------------------
+
 You can also set up the plugin to color the lines in your buffer in
-alternating colors.
-To do so, set the g:Signs_Alternate variable in your |.vimrc| like this: >
+alternating colors. To do so, set the g:Signs_Alternate variable in your
+|.vimrc| like this: >
 
     :let g:Signs_Alternate = 1
 <
-This will display each even line nummer in one color and each odd line number
-in a different color.
+This will display each even line nummer in one color and each odd line
+number in a different color.
 
-Run |:UpdateSigns| or |:Signs| to update displaying the signs in your buffer.
+Run |:UpdateSigns| or |:Signs| to update displaying the signs in your
+buffer.
 
-2.8 ASCII Scrollbar                                          *Signs-Scrollbar*
+2.8 ASCII Scrollbar                                        *Signs-Scrollbar*
 -------------------
-The DynamicSigns plugin can also emulate an ascii scrollbar. This is useful in
-terminal Vim, to visually indicate, where in the buffer on is.
+The DynamicSigns plugin can also emulate an ascii scrollbar. This is useful
+in terminal Vim, to visually indicate, where in the buffer on is.
 
-If you want to enable this, simply set the g:Signs_Scrollbar variable in your
-|.vimrc| like this: >
+If you want to enable this, simply set the g:Signs_Scrollbar variable in
+your |.vimrc| like this: >
 
     :let g:Signs_Scrollbar = 1
 
@@ -160,27 +166,27 @@ Unfortunately, this does not work well with |folds| and therefore the
 scrollbar can't be displayed on a folded line. Also Linewrapping 'wrap' can
 disturb the display of the scrollbar.
 
-==============================================================================
+===========================================================================
 
-3.0 Autocommands                                          *:Signs-Autocommands*
+3.0 Autocommands                                      *:Signs-Autocommands*
 ----------------
 This plugin installs some autocommands to update the signs dynamically.
 Basically it uses |BufWritePost| and |InsertLeave| autocommands to update
 displaying the signs.
 
-Theoretically, it could also use |CursorHold| and |CursorHoldI| autocommands,
-but that seems to slow down Vim a lot, when working with long buffers and also
-seems to interrupt the workflow too much. When switching to the |:gui|, Vim
-will also updates the signs, so the gui version can use some nice lookings
-|Signs-Icons|.
+Theoretically, it could also use |CursorHold| and |CursorHoldI|
+autocommands, but that seems to slow down Vim a lot, when working with long
+buffers and also seems to interrupt the workflow too much. When switching to
+the |:gui|, Vim will also updates the signs, so the gui version can use some
+nice lookings |Signs-Icons|.
 
 Last, when the using the quickfix feature together with the Signs
 (|Signs-QF|), this plugin also installs an |QuickFixCmdPost| autocommand, to
 be able to put signs on each line, where a warning/error is.
 
-==============================================================================
+===========================================================================
 
-4.0 Commands                                                   *:Signs-Commands*
+4.0 Commands                                              *:Signs-Commands*
 ------------
 
 The plugin introduces the following commands:
@@ -219,8 +225,8 @@ Display a sign on each line, where expr evaluates to true |Signs-Hook|
 Run a diff of the buffer and the file on disk and display signs for the
 changes |Signs-Diff|
 
-==============================================================================
-5. Icons                                                          *Signs-Icons*
+============================================================================
+5. Icons                                                       *Signs-Icons*
 --------
 
 The GTK version of Vim (and possibly also the Windows version) can also
@@ -229,15 +235,15 @@ looking icons, that have been provided by
 http://www.designkode.com/blog/free-developer-icons
 
 "DesignKode is releasing this set of 40 free high quality icons for your web
-site and application GUI designs. All icons in this set are 32 x 32 pixel PNG
-image files. You may freely use these icons in your commercial or personal
-projects without attribution."
+site and application GUI designs. All icons in this set are 32 x 32 pixel
+PNG image files. You may freely use these icons in your commercial or
+personal projects without attribution."
 
 The icons have been taken as is and only converted to a .bmp fileformat, so
 that the gtk and Windows built of gVim can display those icons.
 
-==============================================================================
-6. Feedback                                                  *Signs-Feedback*
+===========================================================================
+6. Feedback                                                *Signs-Feedback*
 -----------
 Feedback is always welcome. If you like the plugin, please rate it at the
 vim-page:
@@ -249,20 +255,20 @@ http://github.com/chrisbra/DynamicSigns
 Please don't hesitate to report any bugs to the maintainer, mentioned in the
 third line of this document.
 
-==============================================================================
+==========================================================================
 4. History                                              *Signs-history*
 
 0.2: (unreleased) {{{1
 
 - Performance improvements to make updating the signs faster
   (could slow down saving considerably for large files)
-
+- Implement a Scrollbar |Signs-Scrollbar|
 0.1: Mar 15, 2012 {{{1
 
 - Initial upload
 - development versions are available at the github repository
 - put plugin on a public repository (http://github.com/chrisbra/Signs)
   }}}
-==============================================================================
+===========================================================================
 Modeline:
 vim:tw=78:ts=8:ft=help:et:fdm=marker:fdl=0:norl
