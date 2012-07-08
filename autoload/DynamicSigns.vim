@@ -400,7 +400,7 @@ fu! <sid>DefineSigns() "{{{1
 	
 	" Scrollbar
 	exe printf("sign define SignScrollbar text=%s texthl=%s",
-				\ (utf8signs ? '██': '[]'), s:id_hl.Check)
+				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
@@ -678,16 +678,28 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		let tline    = (line('$') < tline ? line('$') : tline)
 		let nline    = (line('.') > line('$')/2 ? tline-1 : tline+1)
 
-		" Place 2 Signs, so the scrollbar looks better
+		if &wrap && search('\%>'.&tw.'c', 'nW') > 0
+			" Wrapping occurs, don't display 2 signs
+			let wrap = 1
+		else
+			let wrap = 0
+		endif
+		" Place 2 Signs if no wrapping occurs,
+		" so the scrollbar looks better
 		for line in [tline, nline]
 			exe "sign place " s:sign_prefix . b:SignScrollbarState . 
 				\ " line=" . string(line) .
 				\ " name=SignScrollbar buffer=" . bufnr('')
+			if wrap
+				break
+			endif
 		endfor
 		let b:SignScrollbarState = !b:SignScrollbarState
 		" unplace 2 old signs
 		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
-		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+		if wrap
+			call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+		endif
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
 			unlet! do_unset_lz
@@ -927,6 +939,15 @@ fu! DynamicSigns#MapKey()
 		nnoremap <expr> m DynamicSigns#MapBookmark()
 	endif
 endfu
+
+fu! DynamicSigns#Update() "{{{1
+	if s:SignScrollbar
+		call DynamicSigns#UpdateScrollbarSigns()
+	else
+		call DynamicSigns#Run(1)
+	endif
+endfu
+
 fu! DynamicSigns#Run(...) "{{{1
 	set lz
 	let _a = winsaveview()
