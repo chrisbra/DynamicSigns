@@ -160,9 +160,10 @@ fu! <sid>Init(...) "{{{1
 	endif
 
 	" Cache Configuration
-	if !exists("s:CacheOpts")
-		let s:CacheOpts = {}
-	endif
+	" will be automatically created
+	"if !exists("s:CacheOpts")
+	"	let s:CacheOpts = {}
+	"endif
 
 	" Create CursorMoved autocommands
 	if s:SignScrollbar
@@ -400,7 +401,7 @@ fu! <sid>DefineSigns() "{{{1
 	
 	" Scrollbar
 	exe printf("sign define SignScrollbar text=%s texthl=%s",
-				\ (utf8signs) ? '██': '>>'), s:id_hl.Check)
+				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
@@ -632,6 +633,7 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.MixedIndentation = s:MixedIndentation
 	let s:CacheOpts.IndentationLevel = s:IndentationLevel
 	let s:CacheOpts.BookmarkSigns    = s:BookmarkSigns
+	let s:CacheOpts.SignScrollbar    = s:SignScrollbar
 	let s:CacheOpts.SignHook		 = s:SignHook
 	let s:CacheOpts.SignDiff		 = s:SignDiff
 endfu
@@ -676,22 +678,31 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		let lastline = line('$')  + 0.0
 		let wheight  = line('w$') - line('w0') + 0.0 
 		let curperc  = curline/lastline
-		let tline    = round(wheight * curperc) + line('w0')
+		let tline    = round(wheight * curperc)
+		if  tline < line('w0')
+			let tline += line('w0')-1
+		endif
+		let tline    = float2nr(tline)
 
-		if line('$') < tline
-			let tline= line('$')
+		" safety check
+		if line('$')  < tline
+			let tline = line('$')
 		elseif line('w0') > tline
-			let tline= line('w0')
+			let tline = line('w0')
 		endif
 
 		let nline    = (line('.') > line('$')/2 ? tline-1 : tline+1)
 
+		let _pos     = getpos('.')
+		call cursor(1,1)
 		if &wrap && search('\%>'.&tw.'c', 'nW') > 0
 			" Wrapping occurs, don't display 2 signs
 			let wrap = 1
 		else
 			let wrap = 0
 		endif
+		call setpos('.', _pos)
+
 		" Place 2 Signs if no wrapping occurs,
 		" so the scrollbar looks better
 		for line in [tline, nline]
@@ -703,10 +714,13 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 			endif
 		endfor
 		let b:SignScrollbarState = !b:SignScrollbarState
-		" unplace 2 old signs
-		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
-		" Shouldn't do harm, to unplace twice
-		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+		while (match(s:Signs, 'id='. s:sign_prefix.
+				\ b:SignScrollbarState. '.*name=SignScrollbar')) > -1
+			" unplace old signs
+			call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+			" update s:Signs
+			let s:Signs = <sid>ReturnSigns(bufnr(''))
+		endw
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
 			unlet! do_unset_lz
