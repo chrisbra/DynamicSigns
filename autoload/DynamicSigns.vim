@@ -139,7 +139,12 @@ fu! <sid>Init(...) "{{{1
 
 	let s:SignDiff = exists("g:Signs_Diff") ? g:Signs_Diff : 0
 
-	let s:SignScrollbar = exists("g:Signs_Scrollbar") ? g:Signs_Scrollbar : 0
+	" Don't draw an ascii scrollbar in the gui, because it does not look nice
+	" and the gui can display its own scrollbar
+	let s:SignScrollbar = exists("g:Signs_Scrollbar") ?
+				\ (g:Signs_Scrollbar && !has("gui_running")) : 0
+
+	let s:debug    = exists("g:Signs_Debug") ? g:Signs_Debug : 0
 
 	let s:ignore   = exists("g:Signs_Ignore") ?
 				   \ split(g:Signs_Ignore, ',')  : []
@@ -218,8 +223,8 @@ endfu
 
 fu! <sid>AuCmd(arg) "{{{1
 	" Don't update signs for 
-	" marks and diffs on insertleave
-	let ignore = 'marks,diff'
+	" marks on insertleave
+	let ignore = 'marks'
 	if a:arg
 		augroup Signs
 			autocmd!
@@ -242,7 +247,7 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 	if a:arg
 		augroup SignsScrollbar
 			autocmd!
-			au CursorMoved,CursorMovedI,VimResized,GuiEnter,BufEnter * 
+			au CursorMoved,CursorMovedI,VimResized,BufEnter * 
 				\ :call DynamicSigns#UpdateScrollbarSigns()
 		augroup END
 	else
@@ -252,7 +257,6 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 		augroup! SignsScrollbar
 	endif
 endfu
-
 
 fu! <sid>UnPlaceSigns() "{{{1
 	redir => a
@@ -376,6 +380,9 @@ fu! <sid>DefineSignsIcons(def) "{{{1
 		exe a:def
 	catch /^Vim\%((\a\+)\)\=:E255/
 		" gvim can't read the icon
+		" first undefine the sign
+		exe "sign undefine" matchstr(a:def, '^sign define \zs\S\+\ze')
+		" redefine the sign without an icon
 		exe substitute(a:def, 'icon=.*$', '', '')
 	endtry
 endfu
@@ -394,6 +401,11 @@ fu! <sid>DefineSigns() "{{{1
 	" Indentlevel > 9
 	let def = printf("sign define 10 text=>9 texthl=%s %s",
 				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.bmp" : ''))
+	call <sid>DefineSignsIcons(def)
+	
+	" Indentlevel < 1
+	let def = printf("sign define 0 text=<1 texthl=%s %s",
+				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "warning.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 
 	let utf8signs = (exists("g:NoUtf8Signs") ? !g:NoUtf8Signs : 1)
@@ -583,7 +595,7 @@ fu! <sid>DoSigns() "{{{1
 
 	elseif !s:SignScrollbar &&
 		\ get(s:CacheOpts, 'SignScrollbar', 0) > 0
-		let index = match(s:Signs, 'id='s:sign_prefix.
+		let index = match(s:Signs, 'id='. s:sign_prefix.
 			\ '\d\+.*name=SignScrollbar')
 		while index > -1
 			let line = matchstr(s:Signs[index], 'line='\zs\d\+\ze\D')
@@ -659,9 +671,17 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 			\ '.*name=SignWSError')
 		if div > 0 && indent > 0 
 			if oldSign < 0
-				exe "sign place " s:sign_prefix . a:line . " line=" . a:line .
-					\ " name=" . (indent/div < 10 ? indent/div : '10').
-					\ " buffer=" . bufnr('')
+				try
+					exe "sign place " s:sign_prefix . a:line . " line=" .
+						\ 	a:line.  " name=".
+						\ (indent/div < 10 ? indent/div : '10').
+						\ " buffer=" . bufnr('')
+				catch
+					call add(s:msg, "Error at line: " . a:line)
+					if s:debug
+						call add(s:msg, v:exception)
+					endif
+				endtry
 			endif
 			return 1
 		elseif oldSign >= 0
@@ -674,10 +694,9 @@ endfu
 
 fu! <sid>PlaceScrollbarSigns() "{{{1
 	" doesn't work well with folded lines, unfortunately
-	call <sid>Init()
-	" Disabled in the gui, only works with +float and when s:SignScrollbar has
-	" been configured.
-	if exists("s:SignScrollbar") && has('float') && !has("gui_running")
+	" Disabled in the gui, only works with +float and when s:SignScrollbar
+	" has been configured.
+	if exists("s:SignScrollbar") && s:SignScrollbar && has('float')
 		if !&lz
 			let do_unset_lz = 1
 			setl lz
@@ -725,12 +744,15 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 			endif
 		endfor
 		let b:SignScrollbarState = !b:SignScrollbarState
-		while (match(s:Signs, 'id='. s:sign_prefix.
-				\ b:SignScrollbarState. '.*name=SignScrollbar')) > -1
+		let idx=match(s:Signs, 'id='. s:sign_prefix.
+				\ b:SignScrollbarState. '.*name=SignScrollbar')
+		while idx > -1
 			" unplace old signs
 			call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
 			" update s:Signs
-			let s:Signs = <sid>ReturnSigns(bufnr(''))
+			call remove(s:Signs, idx)
+			let idx=match(s:Signs, 'id='. s:sign_prefix.
+					\ b:SignScrollbarState. '.*name=SignScrollbar')
 		endw
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
@@ -920,14 +942,20 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 	" Only update, if there have been changes to the buffer
 	if b:changes_chg_tick != b:changedtick
 		let b:changes_chg_tick = b:changedtick
-		call <sid>PlaceSigns(line('w0'), line('w$'))
+		if !s:SignScrollbar
+			call <sid>PlaceSigns(line('w0'), line('w$'))
+		endif
 		" Redraw Screen
 		"exe "norm! \<C-L>"
 	endif
+	call DynamicSigns#UpdateScrollbarSigns()
 	let s:ignore = s:old_ignore
 endfu
 
 fu! DynamicSigns#UpdateScrollbarSigns() "{{{1
+	" When GuiEnter fires, we need to disable the scrollbar signs
+	call <sid>Init()
+	call <sid>DoSigns()
 	call <sid>PlaceScrollbarSigns()
 endfu
 
