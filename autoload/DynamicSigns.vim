@@ -236,7 +236,7 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 	if a:arg
 		augroup SignsScrollbar
 			autocmd!
-			au CursorMoved,CursorMovedI * 
+			au CursorMoved,CursorMovedI,VimResized,GuiEnter,BufEnter * 
 				\ :call DynamicSigns#UpdateScrollbarSigns()
 		augroup END
 	else
@@ -400,7 +400,7 @@ fu! <sid>DefineSigns() "{{{1
 	
 	" Scrollbar
 	exe printf("sign define SignScrollbar text=%s texthl=%s",
-				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
+				\ (utf8signs) ? '██': '>>'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
@@ -662,7 +662,9 @@ endfu
 fu! <sid>PlaceScrollbarSigns() "{{{1
 	" doesn't work well with folded lines, unfortunately
 	call <sid>Init()
-	if exists("s:SignScrollbar") && has('float')
+	" Disabled in the gui, only works with +float and when s:SignScrollbar has
+	" been configured.
+	if exists("s:SignScrollbar") && has('float') && !has("gui_running")
 		if !&lz
 			let do_unset_lz = 1
 			setl lz
@@ -675,7 +677,13 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		let wheight  = line('w$') - line('w0') + 0.0 
 		let curperc  = curline/lastline
 		let tline    = round(wheight * curperc) + line('w0')
-		let tline    = (line('$') < tline ? line('$') : tline)
+
+		if line('$') < tline
+			let tline= line('$')
+		elseif line('w0') > tline
+			let tline= line('w0')
+		endif
+
 		let nline    = (line('.') > line('$')/2 ? tline-1 : tline+1)
 
 		if &wrap && search('\%>'.&tw.'c', 'nW') > 0
@@ -697,7 +705,7 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		let b:SignScrollbarState = !b:SignScrollbarState
 		" unplace 2 old signs
 		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
-		" Shouldn't do harm, do unplace twice
+		" Shouldn't do harm, to unplace twice
 		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
