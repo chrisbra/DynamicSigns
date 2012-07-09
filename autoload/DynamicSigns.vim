@@ -697,9 +697,8 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		let b:SignScrollbarState = !b:SignScrollbarState
 		" unplace 2 old signs
 		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
-		if wrap
-			call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
-		endif
+		" Shouldn't do harm, do unplace twice
+		call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
 			unlet! do_unset_lz
