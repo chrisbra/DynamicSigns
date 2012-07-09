@@ -160,16 +160,21 @@ fu! <sid>Init(...) "{{{1
 	endif
 
 	" Cache Configuration
-	" will be automatically created
-	"if !exists("s:CacheOpts")
-	"	let s:CacheOpts = {}
-	"endif
+	if !exists("s:CacheOpts")
+		let s:CacheOpts = {}
+	endif
+
+	" Need to redefine existing Signs?
+	if exists("g:NoUtf8Signs") &&
+	 \ g:NoUtf8Signs != get(s:CacheOpts, 'NoUtf8Signs', -1)
+		call DynamicSigns#CleanUp()
+		call <sid>DefineSigns()
+	endif
 
 	" Create CursorMoved autocommands
 	if s:SignScrollbar
 		call <sid>DoSignScrollbarAucmd(1)
 	endif
-
 
 	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
@@ -391,9 +396,13 @@ fu! <sid>DefineSigns() "{{{1
 				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 
+	let utf8signs = (exists("g:NoUtf8Signs") ? !g:NoUtf8Signs : 1)
+
+	if utf8signs && &enc != 'utf-8'
+		let utf8signs = 0
+	endif
+
 	" Mixed Indentation Error
-	let utf8signs = (&enc=='utf-8' || (exists("g:NoUtf8Signs") &&
-		\ !g:NoUtf8Signs) ? 1 : 0)
 	let def = printf("sign define SignWSError text=X texthl=%s linehl=%s %s",
 				\ s:id_hl.Error, s:id_hl.Error,
 				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
@@ -602,9 +611,10 @@ fu! <sid>DoSigns() "{{{1
 		\ !s:IndentationLevel  &&
 		\ !s:BookmarkSigns	   &&
 		\ !s:SignHook		   &&
-		\ !s:SignScrollbar     &&
-		\ !s:SignDiff )
-		unlet! s:CacheOpts
+		\ !s:SignDiff		   &&
+		\ s:SignScrollbar)  "return false, when s:SignScrollbar is set
+		" update cache
+		call <sid>BufferConfigCache()
 		return 0
 	else
 		return 1
@@ -636,6 +646,7 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.SignScrollbar    = s:SignScrollbar
 	let s:CacheOpts.SignHook		 = s:SignHook
 	let s:CacheOpts.SignDiff		 = s:SignDiff
+	let s:CacheOpts.NoUtf8Signs      = exists("g:NoUtf8Signs") ? g:NoUtf8Signs : 0
 endfu
 
 fu! <sid>PlaceIndentationSign(line) "{{{1
@@ -680,7 +691,7 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		let curperc  = curline/lastline
 		let tline    = round(wheight * curperc)
 		if  tline < line('w0')
-			let tline += line('w0')-1
+			let tline += line('w0')
 		endif
 		let tline    = float2nr(tline)
 
@@ -724,7 +735,9 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
 			unlet! do_unset_lz
+			redraw
 		endif
+		call <sid>BufferConfigCache()
 		return 1
 	endif
 	return 0
