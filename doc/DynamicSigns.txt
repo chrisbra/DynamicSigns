@@ -67,7 +67,7 @@ If you want the plugin to display the warnings for lines with whitespace
 errors, simply set the variable g:Signs_MixedIndentation like this in your
 |.vimrc|, e.g. >
 
-    :let g:SignsMixedIndentation = 1
+    :let g:Signs_MixedIndentation = 1
 <
 
 By default, this display warning signs for each line where either the
