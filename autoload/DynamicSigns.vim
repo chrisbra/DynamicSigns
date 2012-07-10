@@ -518,7 +518,16 @@ fu! <sid>ReturnDiffSigns() "{{{1
 	endif
 	let cmd .=  shellescape(expand("%")) . " " .
 				\ shellescape(new_file, 1)
-	call writefile(getline(1,'$'), new_file)
+	let contents = getline(1,'$')
+	if &ff == 'dos'
+		" write dos-files
+		call map(contents, 'v:val . nr2char(13)')
+	endif
+	" Need to convert the data, so that diff won't complain
+	if &fenc != &enc && has("iconv")
+		call map(contents, 'iconv(v:val, &enc, &fenc)')
+	endif
+	call writefile(contents, new_file)
 	let result = split(system(cmd), "\n")
 
 	if v:shell_error == -1 || (v:shell_error && v:shell_error != 1)
