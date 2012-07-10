@@ -706,12 +706,14 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		endif
 		let curline  = line('.')  + 0.0
 		let lastline = line('$')  + 0.0
-		let wheight  = line('w$') - line('w0') + 0.0 
+		"let wheight  = line('w$') - line('w0') + 0.0 
+		let wheight  = winheight(0) + 0.0 
 		let curperc  = curline/lastline
 		let tline    = round(wheight * curperc)
-		if  tline < line('w0')
-			let tline += line('w0')
-		endif
+		"if  tline < line('w0')
+		"let tline += line('w0') - (curperc >= 0.95 ? 0 : 1)
+		let tline += line('w0') - 1
+		"endif
 		let tline    = float2nr(tline)
 
 		" safety check
