@@ -329,7 +329,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 		endif
 
 		" Skip folded lines
-		if foldclosed(line) != -1
+		if foldclosed(line) != -1 "{{{3
 			call <sid>SkipFoldedLines(foldclosedend(line), range)
 			continue
 		endif
@@ -835,7 +835,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	" Diff Signs
 	let did_place_sign = 0
 	if !empty(a:DiffSigns)
-		let oldSign = match(s:Signs, 'line='.a:line. '\D.*name=SignAdd')
+		let oldSign = match(s:Signs, 'line='.a:line. '\D.*name=SignAdded')
 
 		" Added Lines
 		for sign in sort(a:DiffSigns['a'])
@@ -854,7 +854,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 
 		" Changed Lines
 		let oldSign = match(s:Signs, 'line='. a:line. 
-				\ '\D.*name=SignChange')
+				\ '\D.*name=SignChanged')
 		for sign in sort(a:DiffSigns['c'])
 			if sign == a:line
 				if oldSign < 0
@@ -871,7 +871,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 
 		" Deleted Lines
 		let oldSign = match(s:Signs, 'line='. a:line.
-				\ '\D.*name=SignDelete')
+				\ '\D.*name=SignDeleted')
 		for sign in sort(a:DiffSigns['d'])
 			if sign == a:line
 				if oldSign < 0
@@ -960,9 +960,25 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 		"exe "norm! \<C-L>"
 	endif
 	call DynamicSigns#UpdateScrollbarSigns()
+	call <sid>UpdateDiffSigns(<sid>ReturnDiffSigns())
 	let s:ignore = s:old_ignore
 endfu
 
+fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
+	
+	let oldSign = match(s:Signs, 
+		\ '.*name=Sign\(Added\|Changed\|Deleted\)')
+	while oldSign > -1
+		call <sid>UnplaceSignSingle(matchstr(s:Signs[oldSign], 'line=\zs\d\+\ze'))
+		call remove(s:Signs, oldSign)
+		let oldSign = match(s:Signs, 
+			\ '.*name=Sign\(Added\|Changed\|Deleted\)')
+	endw
+	for line in a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d']
+		call <sid>PlaceDiffSigns(line, a:DiffSigns)
+	endfor
+	" TODO: unplace Old DiffSigns
+endfu
 fu! DynamicSigns#UpdateScrollbarSigns() "{{{1
 	" When GuiEnter fires, we need to disable the scrollbar signs
 	call <sid>Init()
