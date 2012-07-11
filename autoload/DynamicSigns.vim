@@ -291,7 +291,7 @@ fu! <sid>GetMarks() "{{{1
 	let t = []
 	for mark in s:Bookmarks
 		let t = getpos("'".mark)
-		if t[1] > 0
+		if t[1] > 0 && (t[0] == bufnr("%") || t[0] == 0)
 			let marks[t[1]] = mark
 		endif
 	endfor
