@@ -981,23 +981,40 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	call <sid>Init()
 	if <sid>DoSignBookmarks() &&
 		\ match(s:SignDef, 'SignBookmark'.char) >= 0  " there was a sign defined for the mark
-		" unplace previous mark for this sign
-		" not necessary, has already been dony by DoSignBookmarks
-		let line = line('.')
+		" First place the new sign
+		" don't unplace old signs first, that prevents flicker (e.g. first
+		" removing all signs, removes the sign column, than placing a sign adds
+		" the sign column again.
+		let cline = line('.')
 		let sign_cmd =
 			\ printf(":sign place %d%d line=%d name=SignBookmark%s buffer=%d",
-			\ s:sign_prefix, line, line, char, bufnr(''))
+			\ s:sign_prefix, cline, cline, char, bufnr(''))
 		exe sign_cmd
+		" unplace previous mark for this sign
+		let index = match(s:Signs,
+			\'id='.s:sign_prefix.'\d\+.*name=SignBookmark'.char)
+		while index > -1
+			let line = matchstr(s:Signs[index], 'line=\zs\d\+\ze\D')
+			call <sid>UnplaceSignID(s:sign_prefix.line)
+			call remove(s:Signs, index)
+			let index = match(s:Signs, 'id='.s:sign_prefix.
+				\ '\d\+.*name=SignBookmark'.char) 
+		endw
+
+
+		" Deactivated: should not be necessary, we have set all signs.
 		" Also place all signs, that are on the current buffer
-		" Only place them in the current window, this is faster than having to
+		" Only place them in the current window viewport, this is faster than having to
 		" iterate over the whole buffer
-	    for line in range(line('w0'), line('w$'))
-			" No signs are placed for folded lines
-			if foldclosed(line) != -1
-				continue
-			endif
-			call <sid>PlaceBookmarks(line)
-		endfor
+		if 0
+			for line in range(line('w0'), line('w$'))
+				" No signs are placed for folded lines
+				if foldclosed(line) != -1
+					continue
+				endif
+				call <sid>PlaceBookmarks(line)
+			endfor
+		endif
 	endif
 	call <sid>BufferConfigCache()
 	return 'm'.char
