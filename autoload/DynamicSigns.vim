@@ -266,11 +266,23 @@ fu! <sid>UnPlaceSigns() "{{{1
 	if empty(b)
 		return
 	endif
-	let b=filter(b, 'v:val =~ "id=".s:sign_prefix')
-	let b=map(b, 'matchstr(v:val, ''id=\zs\d\+'')')
-	for id in b
-		exe "sign unplace" id
-	endfor
+	let c=filter(copy(b), 'v:val !~ "id=". s:sign_prefix')
+	if empty(c)
+		" Can unplace all signs
+		if v:version > 703 || (v:version = 703 && has("patch596"))
+			exe "sign unplace * bufnr=". bufnr('%')
+		else
+			for id in b
+				exe "sign unplace" id
+			endfor
+		endif
+	else
+		let b=filter(b, 'v:val =~ "id=".s:sign_prefix')
+		let b=map(b, 'matchstr(v:val, ''id=\zs\d\+'')')
+		for id in b
+			exe "sign unplace" id
+		endfor
+	endif
 endfu
 
 fu! <sid>UnplaceSignSingle(item) "{{{1
