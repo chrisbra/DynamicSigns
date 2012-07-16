@@ -143,6 +143,8 @@ fu! <sid>Init(...) "{{{1
 	" and the gui can display its own scrollbar
 	let s:SignScrollbar = exists("g:Signs_Scrollbar") ?
 				\ (g:Signs_Scrollbar && !has("gui_running")) : 0
+	
+	let s:Sign_CursorHold = exists("g:Signs_CursorHold") ? g:Signs_CursorHold : 0
 
 	let s:debug    = exists("g:Signs_Debug") ? g:Signs_Debug : 0
 
@@ -235,6 +237,10 @@ fu! <sid>AuCmd(arg) "{{{1
 			exe s:SignQF ?
 				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
 			au BufWinEnter,VimEnter * :call DynamicSigns#Update()
+			if exists("s:Sign_CursorHold") && s:Sign_CursorHold
+				exe "au CursorHold,CursorHoldI * call <sid>UpdateWindowSigns('".
+						\ ignore. "')"
+			endif
 		augroup END
 	else
 		augroup Signs

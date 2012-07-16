@@ -166,8 +166,6 @@ Unfortunately, this does not work well with |folds| and therefore the
 scrollbar can't be displayed on a folded line. Also Linewrapping 'wrap' can
 disturb the display of the scrollbar.
 
-===========================================================================
-
 3.0 Autocommands                                      *:Signs-Autocommands*
 ----------------
 This plugin installs some autocommands to update the signs dynamically.
@@ -176,9 +174,15 @@ displaying the signs.
 
 Theoretically, it could also use |CursorHold| and |CursorHoldI|
 autocommands, but that seems to slow down Vim a lot, when working with long
-buffers and also seems to interrupt the workflow too much. When switching to
-the |:gui|, Vim will also updates the signs, so the gui version can use some
-nice lookings |Signs-Icons|.
+buffers and also seems to interrupt the workflow too much. You can however
+force Vim to update the signs on those autocommands, by setting the variable
+g:Signs_CursorHold to 1, e.g. put >
+    let g:Signs_CursorHold = 1
+<
+in your .vimrc
+
+When switching to the |:gui|, Vim will also updates the signs, so the gui
+version can use some nice lookings |Signs-Icons|.
 
 Last, when the using the quickfix feature together with the Signs
 (|Signs-QF|), this plugin also installs an |QuickFixCmdPost| autocommand, to
