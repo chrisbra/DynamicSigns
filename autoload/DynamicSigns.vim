@@ -513,11 +513,13 @@ fu! <sid>ReturnDiffSigns() "{{{1
 		\ !has("diff")		||
 		\ !filereadable(fname) 
 		" nothing to do
-		call add(s:msg, 'Diff not possible:' . 
-			\ (!executable("diff") ? ' No diff executable found!' :
-			\ empty(fname) ? ' Current file has never been written!' :
-			\ !filereadable(fname) ? ' '. fname. ' not readable!' :
-			\ ' Vim was compiled without diff feature!'))
+		if &verbose > 0
+			call add(s:msg, 'Diff not possible:' . 
+				\ (!executable("diff") ? ' No diff executable found!' :
+				\ empty(fname) ? ' Current file has never been written!' :
+				\ !filereadable(fname) ? ' '. fname. ' not readable!' :
+				\ ' Vim was compiled without diff feature!'))
+		endif
 		throw "DiffError"
 	endif
 	let new_file = tempname()
