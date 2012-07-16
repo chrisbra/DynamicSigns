@@ -234,6 +234,7 @@ fu! <sid>AuCmd(arg) "{{{1
 				\ ignore. "')"
 			exe s:SignQF ?
 				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
+			au BufWinEnter,VimEnter * :call DynamicSigns#Update()
 		augroup END
 	else
 		augroup Signs
@@ -627,6 +628,8 @@ fu! <sid>DoSigns() "{{{1
 			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=SignScrollbar')
 		endw
+		" remove autocommand
+		call <sid>DoSignScrollbarAucmd(0)
 
 	elseif !s:SignDiff &&
 		\ get(s:CacheOpts, 'SignDiff', 0) > 0
