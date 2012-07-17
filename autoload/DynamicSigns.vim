@@ -985,7 +985,12 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 		"exe "norm! \<C-L>"
 	endif
 	call DynamicSigns#UpdateScrollbarSigns()
-	call <sid>UpdateDiffSigns(<sid>ReturnDiffSigns())
+	try
+		let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
+		call <sid>UpdateDiffSigns(DiffSigns)
+	catch /DiffError/
+		call <sid>WarningMsg()
+	endtry
 	let s:ignore = s:old_ignore
 	call winrestview(_a)
 endfu
