@@ -962,6 +962,7 @@ endfu
 
 fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 	" Only update all signs in the current window viewport
+	let _a = winsaveview()
 	if !exists("b:changes_chg_tick")
 		let b:changes_chg_tick = 0
 	endif
@@ -971,6 +972,7 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 		let s:ignore += split(a:ignorepat, ',')
 	catch
 		call <sid>WarningMsg()
+		call winrestview(_a)
 		return
 	endtry
 	" Only update, if there have been changes to the buffer
@@ -985,6 +987,7 @@ fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
 	call DynamicSigns#UpdateScrollbarSigns()
 	call <sid>UpdateDiffSigns(<sid>ReturnDiffSigns())
 	let s:ignore = s:old_ignore
+	call winrestview(_a)
 endfu
 
 fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
