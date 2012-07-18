@@ -230,16 +230,14 @@ fu! <sid>AuCmd(arg) "{{{1
 	if a:arg
 		augroup Signs
 			autocmd!
-			exe "au InsertLeave * :call <sid>UpdateWindowSigns('".
-				\ ignore. "')"
-			exe "au GUIEnter,BufWritePost * :call <sid>UpdateWindowSigns('".
-				\ ignore. "')"
+			au InsertLeave * :call <sid>UpdateWindowSigns(ignore)
+			au GUIEnter,BufWritePost,BufWinEnter,VimEnter *
+				\ call <sid>UpdateWindowSigns(ignore)
 			exe s:SignQF ?
 				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
-			au BufWinEnter,VimEnter * :call DynamicSigns#Update()
 			if exists("s:Sign_CursorHold") && s:Sign_CursorHold
-				exe "au CursorHold,CursorHoldI * call <sid>UpdateWindowSigns('".
-						\ ignore. "')"
+				au CursorHold,CursorHoldI * 
+					\ call <sid>UpdateWindowSigns(ignore)
 			endif
 		augroup END
 	else
