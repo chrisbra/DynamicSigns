@@ -335,6 +335,10 @@ fu! <sid>PlaceSigns(...) "{{{1
 	if !<sid>DoSigns()
 		return
 	endif
+	let bookmarks =  {}
+	if s:BookmarkSigns
+		let bookmarks = <sid>GetMarks()
+	endif
 	let first = !exists("a:1") ? 1 : a:1
 	let last  = !exists("a:2") ? line('$') : a:2
 	let range = range(first, last)
@@ -361,7 +365,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 
 		" Place marks "{{{3
 		if match(s:ignore, 'marks') == -1 && 
-			\ <sid>PlaceBookmarks(line)
+			\ <sid>PlaceBookmarks(line, get(bookmarks, line, '-1'))
 			continue
 		endif
 
@@ -948,19 +952,17 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	return 1
 endfu
 
-fu! <sid>PlaceBookmarks(line) "{{{1
+fu! <sid>PlaceBookmarks(line, mark) "{{{1
 	" Place signs for bookmarks
 	if exists("s:BookmarkSigns") &&
-				\ s:BookmarkSigns == 1
+		\ a:mark != '-1' &&  s:BookmarkSigns == 1
 		let oldSign = match(s:Signs, 'line='. a:line.
 				\ '\D.*name=SignBookmark')
 		
 		if oldSign < 0
-			let bookmarks   = <sid>GetMarks()
-			if get(bookmarks, a:line, -1) > -1
-				exe "sign place " s:sign_prefix. a:line. " line=". a:line.
-					\ " name=SignBookmark". bookmarks[a:line]. " buffer=".
-					\ bufnr('')
+			exe "sign place " s:sign_prefix. a:line. " line=". a:line.
+				\ " name=SignBookmark". a:mark. " buffer=".
+				\ bufnr('')
 			endif
 			return 1
 		elseif oldSign >= 0
