@@ -200,7 +200,7 @@ fu! <sid>ReturnSignDef() "{{{1
 	redir END
 	let b = split(a, "\n")[2:]
 	call map(b, 'split(v:val)[1]')
-	return b
+	return filter(b, 'v:val=~''^\(Sign\)\|\(\d\+$\)''')
 endfu
 
 fu! <sid>ReturnSigns(buffer) "{{{1
@@ -1105,20 +1105,8 @@ endfu
 fu! DynamicSigns#CleanUp() "{{{1
 	" only delete signs, that have been set by this plugin
 	call <sid>UnPlaceSigns()
-	for item in range(1,10)
-		exe "sil! sign undefine " item
-	endfor
-	" Remove SignWSError Sign
-	sil! sign undefine SignWSError
-	" Remove Custom Signs
-	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
-		\ 'Delete', 'Stop']
-		exe "sil! sign undefine SignCustom". sign
-	endfor
-	for sign in s:Bookmarks
-		exe "sil! sign undefine SignBookmark".sign
-	endfor
-	for sign in ['SignQF', 'SignAdded', 'SignChanged', 'SignDeleted']
+	" undefine all signs
+	for sign in s:SignDef
 		exe "sil! sign undefine" sign
 	endfor
 	call <sid>AuCmd(0)
