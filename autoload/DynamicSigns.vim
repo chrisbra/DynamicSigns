@@ -434,8 +434,8 @@ fu! <sid>DefineSigns() "{{{1
 	endif
 
 	" Mixed Indentation Error
-	let def = printf("sign define SignWSError text=X texthl=%s linehl=%s %s",
-				\ s:id_hl.Error, s:id_hl.Error,
+	let def = printf("sign define SignWSError text=X texthl=%s %s",
+				\ s:id_hl.Error, 
 				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 	
@@ -592,6 +592,9 @@ endfu
 fu! <sid>DoSigns() "{{{1
 	if !s:MixedIndentation &&
 		\ get(s:CacheOpts, 'MixedIndentation', 0) > 0
+		if exists("s:MixedIndentationHL")
+			call matchdelete(s:MixedIndentationHL)
+		endif
 		let index = match(s:Signs,
 			\ 'id='.s:sign_prefix.'\d\+.*name=SignWSError')
 		while index > -1
@@ -803,12 +806,20 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 	if exists("s:MixedIndentation") &&
 				\ s:MixedIndentation == 1
 
-		let a=matchstr(getline(a:line), '^\s\+\ze\S')
+		let line = getline(a:line)
+		let pat1 = '\%(^\s\+\%(\t \)\|\%( \t\)\)'
+		let pat2 = '\%(\S\zs\s\+$\)'
+		"highlight non-breaking space, etc...
+		let pat3 = '\%([\x0b\x0c\u00a0\u1680\u180e\u2000-\u200a\u2028\u202f\u205f\u3000\ufeff]\)'
+		
+		let pat = pat1. '\|'. pat2. '\|'. pat3
+		if !exists("s:MixedIndentationHL")
+			let s:MixedIndentationHL = 
+			\ matchadd('Error', pat)
+		endif
 		let oldSign = match(s:Signs, 'line='.a:line.
 					\ '.*name=SignWSError')
-		if (match(a, '\%(\t \)\|\%( \t\)') > -1
-			\ || match(getline(a:line), '\s\+$') > -1)
-
+		if match(line, pat) > -1 
 			if oldSign < 0
 				exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 					\ " name=SignWSError buffer=" . bufnr('')
@@ -944,9 +955,9 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 		let oldSign = match(s:Signs, 'line='. a:line.
 				\ '\D.*name=SignBookmark')
 		
-		let bookmarks   = <sid>GetMarks()
-		if get(bookmarks, a:line, -1) > -1
-			if oldSign < 0
+		if oldSign < 0
+			let bookmarks   = <sid>GetMarks()
+			if get(bookmarks, a:line, -1) > -1
 				exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 					\ " name=SignBookmark". bookmarks[a:line]. " buffer=".
 					\ bufnr('')
