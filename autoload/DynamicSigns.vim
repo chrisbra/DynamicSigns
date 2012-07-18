@@ -155,6 +155,11 @@ fu! <sid>Init(...) "{{{1
 		let s:gui_running = has("gui_running")
 	endif
 
+	" Highlighting for the bookmarks
+	if !exists("s:BookmarkSignsHL")
+		let s:BookmarkSignsHL = {}
+	endif
+
 	" Only check the first time this file is loaded
 	" or Signs shall be cleared first or
 	" GUI has started (use icons then)
@@ -224,18 +229,17 @@ endfu
 fu! <sid>AuCmd(arg) "{{{1
 	" Don't update signs for 
 	" marks on insertleave
-	let ignore = 'marks'
 	if a:arg
 		augroup Signs
 			autocmd!
-			au InsertLeave * :call <sid>UpdateWindowSigns(ignore)
+			au InsertLeave * :call <sid>UpdateWindowSigns('marks')
 			au GUIEnter,BufWritePost,BufWinEnter,VimEnter *
-				\ call <sid>UpdateWindowSigns(ignore)
+				\ call <sid>UpdateWindowSigns('marks')
 			exe s:SignQF ?
 				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
 			if exists("s:Sign_CursorHold") && s:Sign_CursorHold
 				au CursorHold,CursorHoldI * 
-					\ call <sid>UpdateWindowSigns(ignore)
+					\ call <sid>UpdateWindowSigns('marks')
 			endif
 		augroup END
 	else
@@ -689,6 +693,12 @@ fu! <sid>DoSignBookmarks() "{{{1
 			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=SignBookmark') 
 		endw
+		if exists("s:BookmarkSignsHL")
+			for value in values(s:BookmarkSignsHL)
+				call matchdelete(value)
+				call remove(s:BookmarkSignsHL, value)
+			endfor
+		endif
 	endif
 	return s:BookmarkSigns
 endfu
@@ -840,6 +850,9 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 			call <sid>UnplaceSignSingle(a:line)
 		endif
 	endif
+	if !s:MixedIndentation
+		unlet! s:MixedIndentationHL
+	endif
 	return 0
 endfu
 fu! <sid>PlaceSignHook(line) "{{{1
@@ -970,13 +983,29 @@ fu! <sid>PlaceBookmarks(line, mark) "{{{1
 				\ " name=SignBookmark". a:mark. " buffer=".
 				\ bufnr('')
 			endif
+			let s:BookmarkSignsHL[a:mark] = matchadd('WildMenu', <sid>GetPattern(a:mark))
 			return 1
 		elseif oldSign >= 0
 			" Bookmark Sign no longer needed, remove it
 			call <sid>UnplaceSignSingle(a:line)
+			if has_key(s:BookmarkSignsHL, a:mark, 0)
+				call remove(s:BookmarkSignsHL, a:mark)
+			endif
 		endif
 	endif
 	return 0
+endfu
+
+fu! <sid>GetPattern(mark) "{{{1
+	let mark = a:mark
+	if mark != '.'
+		let mark = "'". a:mark
+	endif
+	let pos = getpos(mark)
+	if pos[0] == 0 || pos[0] == bufnr('%')
+		return '\%'.pos[1]. 'l\%'.pos[2].'c'
+	endif
+	return ''
 endfu
 
 fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
@@ -1062,11 +1091,16 @@ fu! DynamicSigns#MapBookmark() "{{{1
 		while index > -1
 			let line = matchstr(s:Signs[index], 'line=\zs\d\+\ze\D')
 			call <sid>UnplaceSignID(s:sign_prefix.line)
+			let mark = matchstr(s:Signs[index], 'name=Bookmark\zs.\ze')
+			sil! call matchdelete(s:BookmarkSignsHL[mark])
+			sil! call matchdelete(s:BookmarkSignsHL[char])
+
 			call remove(s:Signs, index)
 			let index = match(s:Signs, 'id='.s:sign_prefix.
 				\ '\d\+.*name=SignBookmark'.char) 
 		endw
-
+		" Mark hasn't been placed yet, so take cursor position
+		let s:BookmarkSignsHL[char] = matchadd('WildMenu', <sid>GetPattern('.'))
 
 		" Deactivated: should not be necessary, we have set all signs.
 		" Also place all signs, that are on the current buffer
