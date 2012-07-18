@@ -183,10 +183,8 @@ fu! <sid>Init(...) "{{{1
 		call <sid>DoSignScrollbarAucmd(1)
 	endif
 
-	" This variable is a prefix for all placed signs.
 	" This is needed, to not mess with signs placed by the user
 	let s:Signs = <sid>ReturnSigns(bufnr(''))
-	let s:SignDef = <sid>ReturnSignDef()
 	call <sid>AuCmd(1)
 endfu
 
@@ -415,8 +413,16 @@ fu! <sid>DefineSigns() "{{{1
 		let icon = 1
 	endif
 
+	let utf8signs = (exists("g:NoUtf8Signs") ? !g:NoUtf8Signs : 1)
+
+	if utf8signs && &enc != 'utf-8'
+		let utf8signs = 0
+	endif
+
 	for item in range(1,9)
-		exe "sign define" item	"text=".item . " texthl=" . s:id_hl.Line
+		let def = printf("sign define %d text=%d texthl=%d %s",
+			\	item, item, s:id_hl.Line, (icon ? 'icon='.s:i_path.item.'.bmp' : ''))
+		call <sid>DefineSignsIcons(def)
 	endfor
 
 	" Indentlevel > 9
@@ -428,12 +434,6 @@ fu! <sid>DefineSigns() "{{{1
 	let def = printf("sign define 0 text=<1 texthl=%s %s",
 				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "warning.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
-
-	let utf8signs = (exists("g:NoUtf8Signs") ? !g:NoUtf8Signs : 1)
-
-	if utf8signs && &enc != 'utf-8'
-		let utf8signs = 0
-	endif
 
 	" Mixed Indentation Error
 	let def = printf("sign define SignWSError text=X texthl=%s %s",
@@ -485,17 +485,23 @@ fu! <sid>DefineSigns() "{{{1
 	endfor
 
 	" Bookmark Signs
-	if has("quickfix")
-		for item in s:Bookmarks
-			exe "sign define SignBookmark". item	"text='".item .
-				\ " texthl=" . s:id_hl.Line
-		endfor
-	endif
+	for item in s:Bookmarks
+		let icn = ''
+		if item =~# "[a-z0-9]" && icon
+			let icn = s:i_path.toupper(item).".bmp"
+		endif
+
+		let def = printf("sign define SignBookmark%s text='%s texthl=%s %s",
+					\ item, item, s:id_hl.Line, ( empty(icn) ? '' : 'icon='.icn))
+		call <sid>DefineSignsIcons(def)
+	endfor
 
 	" Make Errors (quickfix list)
-	let def = printf("sign define SignQF text=! texthl=%s %s",
-			\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.bmp" : ''))
-	call <sid>DefineSignsIcons(def)
+	if has("quickfix")
+		let def = printf("sign define SignQF text=! texthl=%s %s",
+				\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.bmp" : ''))
+		call <sid>DefineSignsIcons(def)
+	endif
 
 	" Diff Signs
 	if has("diff")
@@ -513,6 +519,8 @@ fu! <sid>DefineSigns() "{{{1
 	" Alternating Colors
 	exe "sign define SignEven linehl=". s:id_hl.LineEven
 	exe "sign define SignOdd linehl=".  s:id_hl.LineOdd
+
+	let s:SignDef = <sid>ReturnSignDef()
 endfu
 
 fu! <sid>ReturnDiffSigns() "{{{1
@@ -1117,11 +1125,13 @@ fu! DynamicSigns#CleanUp() "{{{1
 	" only delete signs, that have been set by this plugin
 	call <sid>UnPlaceSigns()
 	" undefine all signs
-	for sign in s:SignDef
-		exe "sil! sign undefine" sign
-	endfor
+	if exists("s:SignDef")
+		for sign in s:SignDef
+			exe "sil! sign undefine" sign
+		endfor
+	endif
 	call <sid>AuCmd(0)
-	unlet! s:precheck
+	unlet! s:precheck s:SignDef
 endfu
 
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
