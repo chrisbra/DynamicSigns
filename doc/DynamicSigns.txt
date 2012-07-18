@@ -243,8 +243,14 @@ site and application GUI designs. All icons in this set are 32 x 32 pixel
 PNG image files. You may freely use these icons in your commercial or
 personal projects without attribution."
 
-The icons have been taken as is and only converted to a .bmp fileformat, so
-that the gtk and Windows built of gVim can display those icons.
+
+The Bookmark icons are "Red Orb Alphabet Icons" and have been take from
+http://www.iconarchive.com/show/red-orb-alphabet-icons-by-iconarchive.html
+
+Those are licensed under a Creative Commons Attribution 3.0 License.
+
+The icons have been taken as is and only converted to a .bmp fileformat and a
+size of 16x16, so that the gtk and Windows built of gVim can display them.
 
 ===========================================================================
 6. Feedback                                                *Signs-Feedback*
