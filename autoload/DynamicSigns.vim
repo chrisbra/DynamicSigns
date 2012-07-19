@@ -50,8 +50,6 @@ fu! <sid>Check() "{{{1
 	
 	hi SignColumn guibg=black
 
-	call <sid>UnPlaceSigns()
-	call <sid>UnMatchHL()
 	" Undefine Signs
 	call DynamicSigns#CleanUp()
 	" Define Signs
