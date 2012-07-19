@@ -8,6 +8,9 @@ VERSION=$(shell sed -n '/Version:/{s/^.*\(\S\.\S\+\)$$/\1/;p}' $(SCRIPT))
 
 all: vimball install
 
+convert-images:
+	for item in autoload/DynamicSigns/*.bmp; do mogrify "$$item" -type palette -colors 256; done
+
 release: uninstall archive install README
 
 vimball: $(PLUGIN).vmb
