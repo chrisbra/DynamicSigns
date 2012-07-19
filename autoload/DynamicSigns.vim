@@ -1045,6 +1045,10 @@ endfu
 
 fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 	
+	if empty(a:DiffSigns)
+		" nothing to do
+		return
+	endif
 	let oldSign = match(s:Signs, 
 		\ '.*name=Sign\(Added\|Changed\|Deleted\)')
 	while oldSign > -1
