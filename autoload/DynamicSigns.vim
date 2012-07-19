@@ -424,7 +424,7 @@ fu! <sid>DefineSigns() "{{{1
 	endif
 
 	for item in range(1,9)
-		let def = printf("sign define %d text=%d texthl=%d %s",
+		let def = printf("sign define %d text=%d texthl=%s %s",
 			\	item, item, s:id_hl.Line, (icon ? 'icon='.s:i_path.item.'.bmp' : ''))
 		call <sid>DefineSignsIcons(def)
 	endfor
