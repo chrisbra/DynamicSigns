@@ -273,7 +273,7 @@ fu! <sid>UnPlaceSigns() "{{{1
 	if empty(b)
 		return
 	endif
-	let c=filter(copy(b), 'v:val !~ "id=". s:sign_prefix')
+	let c=filter(copy(b), 'v:val !~ "id=". s:sign_prefix || v:val =~ ''Deleted'' ')
 	if empty(c)
 		" Can unplace all signs
 		if v:version > 703 || (v:version = 703 && has("patch596"))
@@ -973,8 +973,9 @@ endfu
 
 fu! <sid>PlaceBookmarks(line, mark) "{{{1
 	" Place signs for bookmarks
-	if exists("s:BookmarkSigns") &&
-		\ a:mark != '-1' &&  s:BookmarkSigns == 1
+	if exists("s:BookmarkSigns")
+		\ && s:BookmarkSigns == 1
+		\ && a:mark != '-1'
 		let oldSign = match(s:Signs, 'line='. a:line.
 				\ '\D.*name=SignBookmark')
 		
@@ -982,7 +983,6 @@ fu! <sid>PlaceBookmarks(line, mark) "{{{1
 			exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 				\ " name=SignBookmark". a:mark. " buffer=".
 				\ bufnr('')
-			endif
 			let s:BookmarkSignsHL[a:mark] = matchadd('WildMenu', <sid>GetPattern(a:mark))
 			return 1
 		elseif oldSign >= 0
