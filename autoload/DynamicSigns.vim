@@ -51,6 +51,7 @@ fu! <sid>Check() "{{{1
 	hi SignColumn guibg=black
 
 	call <sid>UnPlaceSigns()
+	call <sid>UnMatchHL()
 	" Undefine Signs
 	call DynamicSigns#CleanUp()
 	" Define Signs
@@ -291,6 +292,20 @@ fu! <sid>UnPlaceSigns() "{{{1
 		endfor
 	endif
 endfu
+
+fu! <sid>UnMatchHL() "{{{1
+	if exists("s:BookmarkSignsHL")
+		for value in values(s:BookmarkSignsHL)
+			sil! call matchdelete(value)
+		endfor
+	endif
+
+	if exists("s:MixedIndentationHL")
+		sil! call matchdelete(s:MixedIndentationHL
+	endif
+	unlet! s:BookmarkSignsHL
+endfu
+
 
 fu! <sid>UnplaceSignSingle(item) "{{{1
 	if a:item < 0
@@ -1167,6 +1182,8 @@ endfu
 fu! DynamicSigns#CleanUp() "{{{1
 	" only delete signs, that have been set by this plugin
 	call <sid>UnPlaceSigns()
+	" remove placed highlighting
+	call <sid>UnMatchHL()
 	" undefine all signs
 	if exists("s:SignDef")
 		for sign in s:SignDef
