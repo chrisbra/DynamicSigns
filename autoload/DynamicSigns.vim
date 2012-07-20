@@ -1002,7 +1002,7 @@ fu! <sid>PlaceBookmarks(line, mark) "{{{1
 		elseif oldSign >= 0
 			" Bookmark Sign no longer needed, remove it
 			call <sid>UnplaceSignSingle(a:line)
-			if has_key(s:BookmarkSignsHL, a:mark, 0)
+			if has_key(s:BookmarkSignsHL, a:mark)
 				call remove(s:BookmarkSignsHL, a:mark)
 			endif
 		endif
