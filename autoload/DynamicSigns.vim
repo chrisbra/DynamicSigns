@@ -301,7 +301,7 @@ fu! <sid>UnMatchHL() "{{{1
 	if exists("s:MixedIndentationHL")
 		sil! call matchdelete(s:MixedIndentationHL
 	endif
-	unlet! s:BookmarkSignsHL
+	let s:BookmarkSignsHL = {}
 endfu
 
 
@@ -376,7 +376,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 			continue
 		endif
 
-		" Place marks "{{{3
+		" Place Bookmarks "{{{3
 		if match(s:ignore, 'marks') == -1 && 
 			\ <sid>PlaceBookmarks(line, get(bookmarks, line, '-1'))
 			continue
@@ -1146,7 +1146,7 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	return 'm'.char
 endfu
 
-fu! DynamicSigns#MapKey()
+fu! DynamicSigns#MapKey() "{{{1
 	" Does not work: Error
 	" E15: Invalid expression: <80><fd>SDynamicSignsMapBookmark
 	" This looks like a bug in vim
