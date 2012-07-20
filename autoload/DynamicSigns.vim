@@ -996,7 +996,8 @@ fu! <sid>PlaceBookmarks(line, mark) "{{{1
 			exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 				\ " name=SignBookmark". a:mark. " buffer=".
 				\ bufnr('')
-			let s:BookmarkSignsHL[a:mark] = matchadd('WildMenu', <sid>GetPattern(a:mark))
+			let s:BookmarkSignsHL[a:mark] = matchadd('WildMenu',
+				\ <sid>GetPattern(a:mark))
 			return 1
 		elseif oldSign >= 0
 			" Bookmark Sign no longer needed, remove it
@@ -1106,19 +1107,22 @@ fu! DynamicSigns#MapBookmark() "{{{1
 				\ printf(":sign place %d%d line=%d name=SignBookmark%s buffer=%d",
 				\ s:sign_prefix, cline, cline, char, bufnr(''))
 			exe sign_cmd
+			let indx = []
 			" unplace previous mark for this sign
-			let index = match(s:Signs,
-				\'id='.s:sign_prefix.'\d\+.*name=SignBookmark'.char)
-			while index > -1
-				let line = matchstr(s:Signs[index], 'line=\zs\d\+\ze\D')
-				call <sid>UnplaceSignID(s:sign_prefix.line)
-				let mark = matchstr(s:Signs[index], 'name=Bookmark\zs.\ze')
-				sil! call matchdelete(s:BookmarkSignsHL[mark])
-				sil! call matchdelete(s:BookmarkSignsHL[char])
+			let pat = 'id='.s:sign_prefix.'\(\d\+\)[^=]*=SignBookmark\('.char.'\)'
+			let indx = matchlist(s:Signs, pat)
+			while !empty(indx)
+				let line = indx[1]
+				let mark = indx[2]
+				if getpos('.') != getpos(mark)
+					call <sid>UnplaceSignID(s:sign_prefix.line)
+					sil! call matchdelete(s:BookmarkSignsHL[mark])
+					sil! call matchdelete(s:BookmarkSignsHL[char])
+				endif
 
+				let index = match(s:Signs, pat)
 				call remove(s:Signs, index)
-				let index = match(s:Signs, 'id='.s:sign_prefix.
-					\ '\d\+.*name=SignBookmark'.char) 
+				let indx = matchlist(s:Signs, pat)
 			endw
 			" Mark hasn't been placed yet, so take cursor position
 			let s:BookmarkSignsHL[char] = matchadd('WildMenu', <sid>GetPattern('.'))
