@@ -231,14 +231,16 @@ fu! <sid>AuCmd(arg) "{{{1
 	if a:arg
 		augroup Signs
 			autocmd!
-			au InsertLeave * :call <sid>UpdateWindowSigns('marks')
-			au GUIEnter,BufWritePost,BufWinEnter,VimEnter *
-				\ call <sid>UpdateWindowSigns('marks')
+			au InsertLeave * :call DynamicSigns#UpdateWindowSigns('marks')
+			au GUIEnter,BufWinEnter,VimEnter *
+				\ call DynamicSigns#UpdateWindowSigns('')
+			au BufWritePost *
+				\ call DynamicSigns#UpdateWindowSigns('marks')
 			exe s:SignQF ?
 				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
 			if exists("s:Sign_CursorHold") && s:Sign_CursorHold
 				au CursorHold,CursorHoldI * 
-					\ call <sid>UpdateWindowSigns('marks')
+					\ call DynamicSigns#UpdateWindowSigns('marks')
 			endif
 		augroup END
 	else
@@ -324,7 +326,7 @@ fu! <sid>GetMarks() "{{{1
 	for mark in s:Bookmarks
 		let t = getpos("'".mark)
 		if t[1] > 0 && (t[0] == bufnr("%") || t[0] == 0)
-			let marks[t[1]] = mark
+			let marks[mark] = t[1]
 		endif
 	endfor
 	return marks
@@ -348,9 +350,9 @@ fu! <sid>PlaceSigns(...) "{{{1
 	if !<sid>DoSigns()
 		return
 	endif
-	let bookmarks =  {}
+	let s:bookmarks =  {}
 	if s:BookmarkSigns
-		let bookmarks = <sid>GetMarks()
+		let s:bookmarks = <sid>GetMarks()
 	endif
 	let first = !exists("a:1") ? 1 : a:1
 	let last  = !exists("a:2") ? line('$') : a:2
@@ -378,7 +380,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 
 		" Place Bookmarks "{{{3
 		if match(s:ignore, 'marks') == -1 && 
-			\ <sid>PlaceBookmarks(line, get(bookmarks, line, '-1'))
+			\ <sid>PlaceBookmarks(line)
 			continue
 		endif
 
@@ -984,30 +986,40 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	return 1
 endfu
 
-fu! <sid>PlaceBookmarks(line, mark) "{{{1
+fu! <sid>PlaceBookmarks(line) "{{{1
 	" Place signs for bookmarks
 	if exists("s:BookmarkSigns")
 		\ && s:BookmarkSigns == 1
-		\ && a:mark != '-1'
-		let oldSign = match(s:Signs, 'line='. a:line.
-				\ '\D.*name=SignBookmark')
+		let pat = 'id='.s:sign_prefix.'\('.a:line.'\)[^0-9=]*=SignBookmark\(.\)'
+		let oldSign = matchlist(s:Signs, pat)
 		
-		if oldSign < 0
-			exe "sign place " s:sign_prefix. a:line. " line=". a:line.
-				\ " name=SignBookmark". a:mark. " buffer=".
-				\ bufnr('')
-			let s:BookmarkSignsHL[a:mark] = matchadd('WildMenu',
-				\ <sid>GetPattern(a:mark))
+		let MarksOnLine = <sid>GetMarksOnLine(a:line)
+		if empty(oldSign)
+			if !empty(MarksOnLine)
+				" Take the first bookmark, that is on that line
+				let line = s:bookmarks[MarksOnLine[0]]
+				exe "sign place " s:sign_prefix. line.
+					\ " line=". line. " name=SignBookmark".
+					\ MarksOnLine[0]. " buffer=". bufnr('')
+				let s:BookmarkSignsHL[MarksOnLine[0]] = matchadd('WildMenu',
+					\ <sid>GetPattern(MarksOnLine[0]))
 			return 1
-		elseif oldSign >= 0
+		else
 			" Bookmark Sign no longer needed, remove it
 			call <sid>UnplaceSignSingle(a:line)
-			if has_key(s:BookmarkSignsHL, a:mark)
-				call remove(s:BookmarkSignsHL, a:mark)
-			endif
+			for mark in <sid>GetMarksOnLine(a:line)
+				if has_key(s:BookmarkSignsHL, mark)
+					call matchdelete(s:BookmarkSignsHL[mark])
+					call remove(s:BookmarkSignsHL, mark)
+				endif
+			endfor
 		endif
 	endif
 	return 0
+endfu
+
+fu! <sid>GetMarksOnLine(line) "{{{1
+	return sort(keys(filter(copy(s:bookmarks), 'v:val==a:line')))
 endfu
 
 fu! <sid>GetPattern(mark) "{{{1
@@ -1022,9 +1034,11 @@ fu! <sid>GetPattern(mark) "{{{1
 	return ''
 endfu
 
-fu! <sid>UpdateWindowSigns(ignorepat) "{{{1
+fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	" Only update all signs in the current window viewport
 	let _a = winsaveview()
+	" remove old matches first...
+	call <sid>UnMatchHL()
 	if !exists("b:changes_chg_tick")
 		let b:changes_chg_tick = 0
 	endif
