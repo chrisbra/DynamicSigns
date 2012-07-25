@@ -306,6 +306,24 @@ fu! <sid>UnMatchHL() "{{{1
 	let s:BookmarkSignsHL = {}
 endfu
 
+fu! <sid>DoBookmarkHL() "{{{1
+	if exists("s:BookmarkSigns")
+		\ && s:BookmarkSigns == 1
+		let PlacedSigns = copy(s:Signs)
+		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=SignBookmark\(.\)'
+		let Sign = matchlist(PlacedSigns, pat)
+		if !exists("s:BookmarkSignsHL")
+			let s:BookmarkSignsHL = {}
+		endif
+		while (!empty(Sign))
+			let s:BookmarkSignsHL[Sign[1]] = matchadd('WildMenu',
+						\ <sid>GetPattern(Sign[1]))
+			call remove(PlacedSigns, match(PlacedSigns, pat))
+			let Sign = matchlist(PlacedSigns, pat)
+		endw
+	endif
+endfu
+
 
 fu! <sid>UnplaceSignSingle(item) "{{{1
 	if a:item < 0
@@ -1035,6 +1053,25 @@ fu! <sid>GetPattern(mark) "{{{1
 	return ''
 endfu
 
+fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
+	
+	if empty(a:DiffSigns)
+		" nothing to do
+		return
+	endif
+	let oldSign = match(s:Signs, 
+		\ '.*name=Sign\(Added\|Changed\|Deleted\)')
+	while oldSign > -1
+		call <sid>UnplaceSignSingle(matchstr(s:Signs[oldSign], 'line=\zs\d\+\ze'))
+		call remove(s:Signs, oldSign)
+		let oldSign = match(s:Signs, 
+			\ '.*name=Sign\(Added\|Changed\|Deleted\)')
+	endw
+	for line in a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d']
+		call <sid>PlaceDiffSigns(line, a:DiffSigns)
+	endfor
+	" TODO: unplace Old DiffSigns
+endfu
 fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	" Only update all signs in the current window viewport
 	let _a = winsaveview()
@@ -1061,36 +1098,24 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 		" Redraw Screen
 		"exe "norm! \<C-L>"
 	endif
-	call DynamicSigns#UpdateScrollbarSigns()
-	try
-		let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
-		call <sid>UpdateDiffSigns(DiffSigns)
-	catch /DiffError/
-		call <sid>WarningMsg()
-	endtry
+	if s:SignScrollbar
+		call DynamicSigns#UpdateScrollbarSigns()
+	endif
+	if s:BookmarkSigns
+		call <sid>DoBookmarkHL()
+	endif
+	if s:SignDiff
+		try
+			let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
+			call <sid>UpdateDiffSigns(DiffSigns)
+		catch /DiffError/
+			call <sid>WarningMsg()
+		endtry
+	endif
 	let s:ignore = s:old_ignore
 	call winrestview(_a)
 endfu
 
-fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
-	
-	if empty(a:DiffSigns)
-		" nothing to do
-		return
-	endif
-	let oldSign = match(s:Signs, 
-		\ '.*name=Sign\(Added\|Changed\|Deleted\)')
-	while oldSign > -1
-		call <sid>UnplaceSignSingle(matchstr(s:Signs[oldSign], 'line=\zs\d\+\ze'))
-		call remove(s:Signs, oldSign)
-		let oldSign = match(s:Signs, 
-			\ '.*name=Sign\(Added\|Changed\|Deleted\)')
-	endw
-	for line in a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d']
-		call <sid>PlaceDiffSigns(line, a:DiffSigns)
-	endfor
-	" TODO: unplace Old DiffSigns
-endfu
 fu! DynamicSigns#UpdateScrollbarSigns() "{{{1
 	" When GuiEnter fires, we need to disable the scrollbar signs
 	call <sid>Init()
