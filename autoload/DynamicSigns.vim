@@ -1003,6 +1003,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 					\ MarksOnLine[0]. " buffer=". bufnr('')
 				let s:BookmarkSignsHL[MarksOnLine[0]] = matchadd('WildMenu',
 					\ <sid>GetPattern(MarksOnLine[0]))
+			endif
 			return 1
 		else
 			" Bookmark Sign no longer needed, remove it
@@ -1138,6 +1139,8 @@ fu! DynamicSigns#MapBookmark() "{{{1
 				call remove(s:Signs, index)
 				let indx = matchlist(s:Signs, pat)
 			endw
+			" Unplace anyhow (in case the while loop didn't run)
+			sil! call matchdelete(s:BookmarkSignsHL[char])
 			" Mark hasn't been placed yet, so take cursor position
 			let s:BookmarkSignsHL[char] = matchadd('WildMenu', <sid>GetPattern('.'))
 
@@ -1171,7 +1174,7 @@ fu! DynamicSigns#MapKey() "{{{1
 endfu
 
 fu! DynamicSigns#Update() "{{{1
-	if s:SignScrollbar
+	if exists("s:SignScrollbar") && s:SignScrollbar
 		call DynamicSigns#UpdateScrollbarSigns()
 	else
 		call DynamicSigns#Run(1)
