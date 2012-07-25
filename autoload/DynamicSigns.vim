@@ -1154,7 +1154,7 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			while !empty(indx)
 				let line = indx[1]
 				let mark = indx[2]
-				if getpos('.') != getpos(mark)
+				if getpos('.') != getpos(mark) && mark != char
 					call <sid>UnplaceSignID(s:sign_prefix.line)
 					sil! call matchdelete(s:BookmarkSignsHL[mark])
 					sil! call matchdelete(s:BookmarkSignsHL[char])
@@ -1169,19 +1169,6 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			" Mark hasn't been placed yet, so take cursor position
 			let s:BookmarkSignsHL[char] = matchadd('WildMenu', <sid>GetPattern('.'))
 
-			" Deactivated: should not be necessary, we have set all signs.
-			" Also place all signs, that are on the current buffer
-			" Only place them in the current window viewport, this is faster than having to
-			" iterate over the whole buffer
-			if 0
-				for line in range(line('w0'), line('w$'))
-					" No signs are placed for folded lines
-					if foldclosed(line) != -1
-						continue
-					endif
-					call <sid>PlaceBookmarks(line)
-				endfor
-			endif
 		endif
 		call <sid>BufferConfigCache()
 	endif
