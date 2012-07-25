@@ -59,6 +59,16 @@ fu! <sid>ActivateAuCmds()
 	augroup END
 endfu
 
+if (exists("g:Signs_MixedIndentation")	&& g:Signs_MixedIndentation) ||
+		\ (exists("g:Signs_IndentationLevel") && g:Signs_IndentationLevel) ||
+		\ (exists("g:Signs_Bookmarks")	&& g:Signs_Bookmarks) ||
+		\ (exists("g:Signs_Alternate")	&& g:Signs_Alternate) ||
+		\ (exists("g:Signs_Hook")		&& g:Signs_Hook) ||
+		\ (exists("g:Signs_QFList")		&& g:Signs_QFList)  ||
+		\ (exists("g:Signs_Diff")		&& g:Signs_Diff)
+	call DynamicSigns#Update()
+endif
+
 " Restore: "{{{1
 let &cpo=s:cpo
 unlet s:cpo
