@@ -1021,8 +1021,9 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 					\ MarksOnLine[0]. " buffer=". bufnr('')
 				let s:BookmarkSignsHL[MarksOnLine[0]] = matchadd('WildMenu',
 					\ <sid>GetPattern(MarksOnLine[0]))
+				return 1
 			endif
-			return 1
+			return 0
 		else
 			" Bookmark Sign no longer needed, remove it
 			call <sid>UnplaceSignSingle(a:line)

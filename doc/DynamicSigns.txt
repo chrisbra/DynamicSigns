@@ -98,7 +98,7 @@ buffer. On each line, where this expression is true, Vim will place a sign
 for your. This enables you, to put e.g. a Sign on each line, that contains
 'TODO'.
 
-To do this, run the command |:IndentExpression| and give an expression as
+To do this, run the command |:SignExpression| and give an expression as
 its argument, which will be evaluated for each line. Use the variable
 |v:lnum| in your expression for the current line.
 
