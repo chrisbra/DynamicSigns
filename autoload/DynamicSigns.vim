@@ -626,13 +626,13 @@ fu! <sid>ReturnDiffSigns() "{{{1
 endfu
 
 fu! <sid>UpdateView(force) "{{{1
-	if !exists("b:changes_chg_tick")
-		let b:changes_chg_tick = 0
+	if !exists("b:dynamicsigns_tick")
+		let b:dynamicsigns_tick = 0
 	endif
 	" Only update, if there have been changes to the buffer
-	if b:changes_chg_tick != b:changedtick || a:force
+	if b:dynamicsigns_tick != b:changedtick || a:force
 		call DynamicSigns#Run()
-		let b:changes_chg_tick = b:changedtick
+		let b:dynamicsigns_tick = b:changedtick
 	endif
 endfu
 
@@ -1078,8 +1078,8 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	let _a = winsaveview()
 	" remove old matches first...
 	call <sid>UnMatchHL()
-	if !exists("b:changes_chg_tick")
-		let b:changes_chg_tick = 0
+	if !exists("b:dynamicsigns_tick")
+		let b:dynamicsigns_tick = 0
 	endif
 	try
 		call <sid>Init()
@@ -1091,8 +1091,8 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 		return
 	endtry
 	" Only update, if there have been changes to the buffer
-	if b:changes_chg_tick != b:changedtick
-		let b:changes_chg_tick = b:changedtick
+	if b:dynamicsigns_tick != b:changedtick
+		let b:dynamicsigns_tick = b:changedtick
 		if !s:SignScrollbar
 			call <sid>PlaceSigns(line('w0'), line('w$'))
 		endif
