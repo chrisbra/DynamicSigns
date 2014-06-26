@@ -20,6 +20,13 @@ endif
 set cpo&vim
 let g:loaded_Signs = 1
 
+fu! <sid>ActivateAuCmds()
+	augroup Signs
+			autocmd!
+			au QuickFixCmdPost * :call DynamicSigns#QFSigns()
+	augroup END
+endfu
+
 " ----------------------------------------------------------------------------
 " Define the Mapping: "{{{2
 
@@ -51,13 +58,6 @@ endif
 if exists("g:Signs_Scrollbar") && g:Signs_Scrollbar
 	call DynamicSigns#UpdateScrollbarSigns()
 endif
-
-fu! <sid>ActivateAuCmds()
-	augroup Signs
-			autocmd!
-			au QuickFixCmdPost * :call DynamicSigns#QFSigns()
-	augroup END
-endfu
 
 if (exists("g:Signs_MixedIndentation")	&& g:Signs_MixedIndentation) ||
 		\ (exists("g:Signs_IndentationLevel") && g:Signs_IndentationLevel) ||

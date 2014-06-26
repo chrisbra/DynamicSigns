@@ -273,6 +273,9 @@ third line of this document.
 - Performance improvements to make updating the signs faster
   (could slow down saving considerably for large files)
 - Implement a Scrollbar |Signs-Scrollbar|
+- Function was called too early issue #2
+  (https://github.com/chrisbra/DynamicSigns/issues/2, reported by
+  Charles, thanks!)
 0.1: Mar 15, 2012 {{{1
 
 - Initial upload
