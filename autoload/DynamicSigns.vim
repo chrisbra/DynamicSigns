@@ -1,4 +1,3 @@
-
 " DynamicSigns.vim - Using Signs for different things
 " ---------------------------------------------------------------
 "Author:		Christian Brabandt <cb@256bit.org>
