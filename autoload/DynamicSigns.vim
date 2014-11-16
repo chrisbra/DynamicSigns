@@ -1237,6 +1237,7 @@ fu! DynamicSigns#CleanUp() "{{{1
 	endif
 	call <sid>AuCmd(0)
 	unlet! s:precheck s:SignDef
+	redraw!
 endfu
 
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
