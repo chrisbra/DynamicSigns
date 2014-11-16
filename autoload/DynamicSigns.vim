@@ -1,3 +1,4 @@
+
 " DynamicSigns.vim - Using Signs for different things
 " ---------------------------------------------------------------
 "Author:		Christian Brabandt <cb@256bit.org>
@@ -152,6 +153,10 @@ fu! <sid>Init(...) "{{{1
 
 	if !exists("s:gui_running") 
 		let s:gui_running = has("gui_running")
+	endif
+	" highlight line
+	if hlID("SignLine")
+		exe "hi SignLine ctermbg=238 guibg=403D3D"
 	endif
 
 	" Highlighting for the bookmarks
@@ -484,9 +489,11 @@ fu! <sid>DefineSigns() "{{{1
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
-		\ 'Delete', 'Stop']
+		\ 'Delete', 'Stop', 'Line']
 		let icn  = (icon ? 'icon='. s:i_path : '')
 		let text = ""
+		let texthl = ''
+		let line = 0
 		if sign ==     'OK'
 			let text = (utf8signs ? '✓' : 'OK')
 			let icn  = (empty(icn) ? '' : icn . 'checkmark.bmp')
@@ -514,10 +521,16 @@ fu! <sid>DefineSigns() "{{{1
 		elseif sign == 'Stop'
 			let text = 'ST'
 			let icn  = (empty(icn) ? '' : icn . 'stop.bmp')
+		elseif sign == 'Line'
+			let icn  = ''
+			let line = 1
+			let texthl = 'Normal'
 		endif
 
-		let def = printf("sign define SignCustom%s text=%s texthl=%s " .
-			\ "%s", sign, text, s:id_hl.Error, icn)
+		let def = printf("sign define SignCustom%s %s texthl=%s %s %s", 
+			\ sign, (!empty(text) ? "text=".text : ''),
+			\ empty(texthl) ? s:id_hl.Error : texthl, icn,
+			\ (line ? 'linehl=SignLine' : ''))
 		call <sid>DefineSignsIcons(def)
 	endfor
 
@@ -895,13 +908,13 @@ fu! <sid>PlaceSignHook(line) "{{{1
 			let a = eval(expr)
 			let result = matchstr(a,
 				\'Warning\|OK\|Error\|Info\|Add\|Arrow\|Flag\|'.
-				\ 'Delete\|Stop')
+				\ 'Delete\|Stop\|Line')
 			if empty(result)
 				let result = 'Info'
 			endif
 			let oldSign = match(s:Signs, 'line='. a:line.
 					\ '\D.*name=SignCustom'.result)
-			if a
+			if a || !empty(a)
 				if oldSign == -1
 					exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 						\ " name=SignCustom". result. " buffer=". bufnr('')
