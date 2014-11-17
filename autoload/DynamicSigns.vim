@@ -155,7 +155,7 @@ fu! <sid>Init(...) "{{{1
 	endif
 	" highlight line
 	if hlID("SignLine")
-		exe "hi SignLine ctermbg=238 guibg=403D3D"
+		exe "hi SignLine ctermbg=238 guibg=#403D3D"
 	endif
 
 	" Highlighting for the bookmarks
@@ -900,6 +900,15 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 	endif
 	return 0
 endfu
+fu! <sid>UpdateSignHookViewport(start, end) "{{{1
+	if get(b:, 'dynamic_sign_tick', 0) < b:changedtick
+		let _wvs = winsaveview()
+		exe printf(":%d,%dfolddoopen :call <snr>%d_PlaceSignHook(line('.'))",
+				\ line('w0'), line('w$'), s:sid)
+		call winrestview(_wvs)
+		let b:dynamic_sign_tick = b:changedtick
+	endif
+endfu
 fu! <sid>PlaceSignHook(line) "{{{1
 	if exists("s:SignHook") && !empty(s:SignHook)
 		try
@@ -912,11 +921,22 @@ fu! <sid>PlaceSignHook(line) "{{{1
 				let result = 'Info'
 			endif
 			let oldSign = match(s:Signs, 'line='. a:line.
-					\ '\D.*name=SignCustom'.result)
+					\ '\D.*name=SignCustom')
 			if a || !empty(a)
 				if oldSign == -1
 					exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 						\ " name=SignCustom". result. " buffer=". bufnr('')
+					" make sure, sign expression is reevaluated on changes to
+					" the buffer
+					if !exists("#SignHook#TextChanged")
+						augroup SignHook
+							au!
+							exe "au TextChanged <buffer> call <snr>".s:sid.
+							\ "_UpdateSignHookViewport(line('w0'),line('w$'))"
+							exe "au TextChanged <buffer> call <snr>".s:sid.
+							\ "_UpdateSignHookViewport(1,line('$'))"
+						augroup end
+					endif
 				endif
 				return 1
 			elseif oldSign >= 0
@@ -926,7 +946,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 			return 0
 		catch
 			let s:SignHook = ''
-			call add(s:msg, 'Error evaluating SignExpression at '. line)
+			call add(s:msg, 'Error evaluating SignExpression at '. a:line)
 			call add(s:msg, v:exception)
 			call <sid>WarningMsg()
 			return -1
@@ -1241,7 +1261,11 @@ endfu
 
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
 	let g:Signs_Hook = a:arg
+	let old_ignore = s:ignore
+	" only update the sign expression
+	let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
 	call DynamicSigns#Run()
+	let s:ignore = old_ignore
 endfu
 
 fu! <sid>MySortBookmarks(a, b) "{{{¹

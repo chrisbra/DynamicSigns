@@ -109,6 +109,32 @@ enter >
 
 This will place a sign on each line, that contains the word TODO
 
+As a special return value for the expression, you can return the type of sign
+that should be placed. Currently the following sign types are understood: >
+
+    Warning
+    OK
+    Error
+    Info
+    Add
+    Arrow
+    Flag
+    Delete
+    Stop
+    Line
+<
+All except for "Line" only draw a flag in the sign column while the sign
+"Line" highlights the complete line without displaying anything in the Sign
+Column. It uses the SignLine highlighting group for highlighting those lines.
+
+For example you want to highlight all Lines that contain the word 'TODO' with
+the todo sign. Therefore you call the command: >
+
+    :SignExpression getline(v:lnum)=~'TODO'?'Todo':0
+
+Note, the Expression will be re-evaluated for that buffer on Changes to the
+buffer.
+
 2.5 Display signs for quickfix items                            *Signs-QF*
 ------------------------------------
 If you want the plugin to display signs next to each match when using the
@@ -276,6 +302,7 @@ third line of this document.
 - Function was called too early issue #2
   (https://github.com/chrisbra/DynamicSigns/issues/2, reported by
   Charles, thanks!)
+- Update SignExpressions on Changes to buffer or when switching to the gui
 0.1: Mar 15, 2012 {{{1
 
 - Initial upload
