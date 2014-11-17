@@ -246,6 +246,9 @@ fu! <sid>AuCmd(arg) "{{{1
 				au CursorHold,CursorHoldI * 
 					\ call DynamicSigns#UpdateWindowSigns('marks')
 			endif
+			" make sure, sign expression is reevaluated on changes to
+			" the buffer
+			au TextChanged * call DynamicSigns#UpdateWindowSigns('alternate,diff,marks,whitespace,indentation')
 		augroup END
 	else
 		augroup Signs
@@ -900,15 +903,6 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 	endif
 	return 0
 endfu
-fu! <sid>UpdateSignHookViewport(start, end) "{{{1
-	if get(b:, 'dynamic_sign_tick', 0) < b:changedtick
-		let _wvs = winsaveview()
-		exe printf(":%d,%dfolddoopen :call <snr>%d_PlaceSignHook(line('.'))",
-				\ line('w0'), line('w$'), s:sid)
-		call winrestview(_wvs)
-		let b:dynamic_sign_tick = b:changedtick
-	endif
-endfu
 fu! <sid>PlaceSignHook(line) "{{{1
 	if exists("s:SignHook") && !empty(s:SignHook)
 		try
@@ -926,17 +920,6 @@ fu! <sid>PlaceSignHook(line) "{{{1
 				if oldSign == -1
 					exe "sign place " s:sign_prefix. a:line. " line=". a:line.
 						\ " name=SignCustom". result. " buffer=". bufnr('')
-					" make sure, sign expression is reevaluated on changes to
-					" the buffer
-					if !exists("#SignHook#TextChanged")
-						augroup SignHook
-							au!
-							exe "au TextChanged <buffer> call <snr>".s:sid.
-							\ "_UpdateSignHookViewport(line('w0'),line('w$'))"
-							exe "au TextChanged <buffer> call <snr>".s:sid.
-							\ "_UpdateSignHookViewport(1,line('$'))"
-						augroup end
-					endif
 				endif
 				return 1
 			elseif oldSign >= 0
@@ -1134,6 +1117,11 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	if s:SignScrollbar
 		call DynamicSigns#UpdateScrollbarSigns()
 	endif
+	if s:SignHook
+		let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
+		exe printf(":%d,%dfolddoopen :call <snr>%d_PlaceSignHook(line('.'))",
+			\ line('w0'), line('w$'), s:sid)
+	endif
 	if s:BookmarkSigns
 		call <sid>DoBookmarkHL()
 	endif
@@ -1264,6 +1252,7 @@ fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
 	let old_ignore = s:ignore
 	" only update the sign expression
 	let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
+	call <sid>Init()
 	call DynamicSigns#Run()
 	let s:ignore = old_ignore
 endfu
