@@ -51,7 +51,10 @@ fu! <sid>Check() "{{{1
 	hi SignColumn guibg=black
 
 	" Undefine Signs
-	call DynamicSigns#CleanUp()
+	if exists("s:precheck")
+		" just started up, there shouldn't be any signs yet
+		call DynamicSigns#CleanUp()
+	endif
 	" Define Signs
 	call <sid>DefineSigns()
 endfu

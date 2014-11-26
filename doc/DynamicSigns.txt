@@ -303,6 +303,7 @@ third line of this document.
   (https://github.com/chrisbra/DynamicSigns/issues/2, reported by
   Charles, thanks!)
 - Update SignExpressions on Changes to buffer or when switching to the gui
+- Do not clean the signs, when starting up
 0.1: Mar 15, 2012 {{{1
 
 - Initial upload
