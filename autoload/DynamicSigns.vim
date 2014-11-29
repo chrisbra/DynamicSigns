@@ -1252,10 +1252,10 @@ endfu
 
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
 	let g:Signs_Hook = a:arg
+	call <sid>Init()
 	let old_ignore = s:ignore
 	" only update the sign expression
 	let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
-	call <sid>Init()
 	call DynamicSigns#Run()
 	let s:ignore = old_ignore
 endfu
