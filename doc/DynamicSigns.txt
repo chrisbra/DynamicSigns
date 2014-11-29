@@ -121,11 +121,15 @@ that should be placed. Currently the following sign types are understood: >
     Flag
     Delete
     Stop
-    Line
+    Line1
+    Line2
+    Line3
+    Line4
+    Line5
 <
-All except for "Line" only draw a flag in the sign column while the sign
-"Line" highlights the complete line without displaying anything in the Sign
-Column. It uses the SignLine highlighting group for highlighting those lines.
+All except for "Line" only draw a flag in the sign column while the sign types
+"Line1"-"Line5" highlights the complete line without displaying anything in the Sign
+Column. It uses the SignLine1-SignLine5 highlighting group for highlighting those lines.
 
 For example you want to highlight all Lines that contain the word 'TODO' with
 the todo sign. Therefore you call the command: >

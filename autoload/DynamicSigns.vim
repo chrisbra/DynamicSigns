@@ -158,8 +158,20 @@ fu! <sid>Init(...) "{{{1
 		let s:gui_running = has("gui_running")
 	endif
 	" highlight line
-	if hlID("SignLine")
-		exe "hi SignLine ctermbg=238 guibg=#403D3D"
+	if !hlexists("SignLine1") || empty(synIDattr(hlID("SignLine1"), "ctermbg"))
+		exe "hi SignLine1 ctermbg=238 guibg=#403D3D"
+	endif
+	if !hlexists("SignLine2") || empty(synIDattr(hlID("SignLine2"), "ctermbg"))
+		exe "hi SignLine2 ctermbg=208 guibg=#FD971F"
+	endif
+	if !hlexists("SignLine3") || empty(synIDattr(hlID("SignLine3"), "ctermbg"))
+		exe "hi SignLine3 ctermbg=24  guibg=#13354A"
+	endif
+	if !hlexists("SignLine4") || empty(synIDattr(hlID("SignLine4"), "ctermbg"))
+		exe "hi SignLine4 ctermbg=1  guibg=Red"
+	endif
+	if !hlexists("SignLine5") || empty(synIDattr(hlID("SignLine5"), "ctermbg"))
+		exe "hi SignLine5 ctermbg=190 guibg=#DFFF00"
 	endif
 
 	" Highlighting for the bookmarks
@@ -499,7 +511,7 @@ fu! <sid>DefineSigns() "{{{1
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
-		\ 'Delete', 'Stop', 'Line']
+		\ 'Delete', 'Stop', 'Line1', 'Line2', 'Line3', 'Line4', 'Line5']
 		let icn  = (icon ? 'icon='. s:i_path : '')
 		let text = ""
 		let texthl = ''
@@ -531,16 +543,16 @@ fu! <sid>DefineSigns() "{{{1
 		elseif sign == 'Stop'
 			let text = 'ST'
 			let icn  = (empty(icn) ? '' : icn . 'stop.bmp')
-		elseif sign == 'Line'
+		elseif sign =~# 'Line\d'
 			let icn  = ''
-			let line = 1
+			let line = matchstr(sign, 'Line\zs\d')+0
 			let texthl = 'Normal'
 		endif
 
 		let def = printf("sign define SignCustom%s %s texthl=%s %s %s", 
 			\ sign, (!empty(text) ? "text=".text : ''),
 			\ empty(texthl) ? s:id_hl.Error : texthl, icn,
-			\ (line ? 'linehl=SignLine' : ''))
+			\ (line ? 'linehl=SignLine'.line : ''))
 		call <sid>DefineSignsIcons(def)
 	endfor
 
@@ -918,7 +930,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 			let a = eval(expr)
 			let result = matchstr(a,
 				\'Warning\|OK\|Error\|Info\|Add\|Arrow\|Flag\|'.
-				\ 'Delete\|Stop\|Line')
+				\ 'Delete\|Stop\|Line\d')
 			if empty(result)
 				let result = 'Info'
 			endif
