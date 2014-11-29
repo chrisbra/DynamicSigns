@@ -38,6 +38,7 @@ fu! <sid>Check() "{{{1
 	endif
 
 	let s:sign_prefix = s:sid
+	let s:sign_count  = '10'
 	let s:id_hl       = {}
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
@@ -198,7 +199,11 @@ fu! <sid>Init(...) "{{{1
 	let s:Signs = <sid>ReturnSigns(bufnr(''))
 	call <sid>AuCmd(1)
 endfu
-
+fu! <sid>NextID() "{{{1
+	let s:sign_count+=1
+	let s:Id = s:sign_prefix . s:sign_count
+	return s:Id
+endfu
 fu! <sid>IndentFactor() "{{{1
 	return &l:sts>0 ? &l:sts : &ts
 endfu
@@ -778,7 +783,7 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 		if div > 0 && indent > 0 
 			if oldSign < 0
 				try
-					exe "sign place " s:sign_prefix . a:line . " line=" .
+					exe "sign place ". <sid>NextID(). " line=" .
 						\ 	a:line.  " name=".
 						\ (indent/div < 10 ? indent/div : '10').
 						\ " buffer=" . bufnr('')
@@ -892,7 +897,7 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 					\ '.*=SignWSError')
 		if match(line, pat) > -1 
 			if oldSign < 0
-				exe "sign place " s:sign_prefix. a:line. " line=". a:line.
+				exe "sign place " . <sid>NextID(). " line=". a:line.
 					\ " name=SignWSError buffer=" . bufnr('')
 			endif
 			return 1
@@ -921,7 +926,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 					\ '\D.*=SignCustom')
 			if a || !empty(a)
 				if oldSign == -1
-					exe "sign place " s:sign_prefix. a:line. " line=". a:line.
+					exe "sign place ". <sid>NextID(). " line=". a:line.
 						\ " name=SignCustom". result. " buffer=". bufnr('')
 				endif
 				return 1
@@ -949,7 +954,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		for sign in sort(a:DiffSigns['a'])
 			if sign == a:line
 				if oldSign < 0
-					exe "sign place " s:sign_prefix. a:line. " line=".
+					exe "sign place ". <sid>NextID(). " line=".
 						\ a:line. " name=SignAdded buffer=". bufnr('')
 				endif
 				let did_place_sign = 1
@@ -966,7 +971,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		for sign in sort(a:DiffSigns['c'])
 			if sign == a:line
 				if oldSign < 0
-					exe "sign place " s:sign_prefix. a:line. " line=".
+					exe "sign place " . <sid>NextID(). " line=".
 						\ a:line. " name=SignChanged buffer=". bufnr('')
 				endif
 				let did_place_sign = 1
@@ -983,7 +988,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		for sign in sort(a:DiffSigns['d'])
 			if sign == a:line
 				if oldSign < 0
-					exe "sign place " s:sign_prefix. a:line. " line=".
+					exe "sign place " . <sid>NextID(). " line=".
 						\ a:line. " name=SignDeleted buffer=". bufnr('')
 				endif
 				let did_place_sign = 1
@@ -1014,8 +1019,8 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 			" unplace previously place sign first
 			call <sid>UnplaceSignSingle(a:line)
 		endif
-		let sign = printf('sign place %d%d line=%d name=%s buffer=%d',
-					\ s:sign_prefix, a:line, a:line,
+		let sign = printf('sign place %d line=%d name=%s buffer=%d',
+					\ <sid>NextID(), a:line,
 					\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr(''))
 		exe sign
 	endif
@@ -1034,7 +1039,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 			if !empty(MarksOnLine)
 				" Take the first bookmark, that is on that line
 				let line = s:bookmarks[MarksOnLine[0]]
-				exe "sign place " s:sign_prefix. line.
+				exe "sign place " . <sid>NextID().
 					\ " line=". line. " name=SignBookmark".
 					\ MarksOnLine[0]. " buffer=". bufnr('')
 				let s:BookmarkSignsHL[MarksOnLine[0]] = matchadd('WildMenu',
@@ -1168,8 +1173,8 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			" the sign column again.
 			let cline = line('.')
 			let sign_cmd =
-				\ printf(":sign place %d%d line=%d name=SignBookmark%s buffer=%d",
-				\ s:sign_prefix, cline, cline, char, bufnr(''))
+				\ printf(":sign place %d line=%d name=SignBookmark%s buffer=%d",
+				\ <sid>NextID(), cline, char, bufnr(''))
 			exe sign_cmd
 			let indx = []
 			" unplace previous mark for this sign
@@ -1307,7 +1312,7 @@ fu! DynamicSigns#QFSigns() "{{{1
 		" Remove all previously placed QF Signs
 		exe "sign unplace " s:sign_prefix . '0'
 		for item in getqflist()
-			exe "sign place" s:sign_prefix . '0' . " line=" . item.lnum .
+			exe "sign place ". <sid>NextID(). " line=" . item.lnum .
 				\ " name=SignQF buffer=" . item.bufnr
 		endfor
 	endif
