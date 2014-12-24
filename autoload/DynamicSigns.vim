@@ -435,7 +435,7 @@ fu! <sid>PlaceSigns(...) "{{{1
 			if i > 0
 				continue
 			elseif i < 0
-				" Evaluating expression failed, don't avoid
+				" Evaluating expression failed, avoid
 				" generating more errors for the rest of the lines
 				return
 			endif
