@@ -46,6 +46,7 @@ call DynamicSigns#MapKey()
 :com! -bang SignQF :call DynamicSigns#SignsQFList(<bang>0)
 :com! -nargs=1 SignExpression
 		\ :call DynamicSigns#PrepareSignExpression(<q-args>)
+:com! SignListExpression :echo get(w:, 'Signs_Hook', '<None>')
 
 :com! SignDiff :let g:Signs_Diff=1|
 		\ call DynamicSigns#Run(1)

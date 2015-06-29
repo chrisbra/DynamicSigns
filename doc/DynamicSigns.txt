@@ -90,6 +90,7 @@ bookmarks in your buffer and sets the mark. (|:k| does not update the signs,
 Use |:Signs| or |:UpdateSigns| to manually update the view in case this is
 needed).
 
+                                                          *:SignExpression*
 2.4 Dynamicly display Signs                                     *Signs-Hook*
 ---------------------------
 
@@ -108,6 +109,7 @@ enter >
     :SignExpression getline(v:lnum)=~'TODO'
 
 This will place a sign on each line, that contains the word TODO
+This expression is window-local.
 
 As a special return value for the expression, you can return the type of sign
 that should be placed. Currently the following sign types are understood: >
@@ -126,10 +128,12 @@ that should be placed. Currently the following sign types are understood: >
     Line3
     Line4
     Line5
+    0
 <
 All except for "Line" only draw a flag in the sign column while the sign types
 "Line1"-"Line5" highlights the complete line without displaying anything in the Sign
 Column. It uses the SignLine1-SignLine5 highlighting group for highlighting those lines.
+The special return value 0 is meant to not place a sign.
 
 For example you want to highlight all Lines that contain the word 'TODO' with
 the todo sign. Therefore you call the command: >
@@ -308,6 +312,7 @@ third line of this document.
   Charles, thanks!)
 - Update SignExpressions on Changes to buffer or when switching to the gui
 - Do not clean the signs, when starting up
+- Make the |:SignExpression| command window-local
 0.1: Mar 15, 2012 {{{1
 
 - Initial upload

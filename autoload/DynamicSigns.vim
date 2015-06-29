@@ -136,7 +136,7 @@ fu! <sid>Init(...) "{{{1
 	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyz" .
 				\ "ABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
 
-	let s:SignHook = exists("g:Signs_Hook") ? g:Signs_Hook : ''
+	let s:SignHook = exists("w:Signs_Hook") ? w:Signs_Hook : ''
 
 	let s:SignQF   = exists("g:Signs_QFList") ? g:Signs_QFList : 0
 
@@ -1268,7 +1268,7 @@ fu! DynamicSigns#CleanUp() "{{{1
 endfu
 
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
-	let g:Signs_Hook = a:arg
+	let w:Signs_Hook = a:arg
 	call <sid>Init()
 	let old_ignore = s:ignore
 	" only update the sign expression
