@@ -356,9 +356,11 @@ fu! <sid>UnplaceSignSingle(item) "{{{1
 	if a:item < 0
 		return
 	endif
+	let oldcursor = winsaveview()
 	call cursor(a:item,0)
 	" Vim errors, if the line does not contain a sign
 	sil! sign unplace
+	call winrestview(oldcursor)
 endfu
 
 fu! <sid>UnplaceSignID(id) "{{{1
@@ -511,12 +513,16 @@ fu! <sid>DefineSigns() "{{{1
 	"
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
-		\ 'Delete', 'Stop', 'Line1', 'Line2', 'Line3', 'Line4', 'Line5']
+		\ 'Delete', 'Stop', 'Line1', 'Line2', 'Line3', 'Line4', 'Line5'] + range(1,99)
 		let icn  = (icon ? 'icon='. s:i_path : '')
 		let text = ""
 		let texthl = ''
 		let line = 0
-		if sign ==     'OK'
+		if sign =~# '^\d\+$'
+			let icn  = ''
+			let text = sign
+			let texthl = 'Normal'
+		elseif sign ==     'OK'
 			let text = (utf8signs ? '✓' : 'OK')
 			let icn  = (empty(icn) ? '' : icn . 'checkmark.bmp')
 		elseif sign == 'Warning'
@@ -930,18 +936,24 @@ fu! <sid>PlaceSignHook(line) "{{{1
 			let a = eval(expr)
 			let result = matchstr(a,
 				\'Warning\|OK\|Error\|Info\|Add\|Arrow\|Flag\|'.
-				\ 'Delete\|Stop\|Line\d')
+				\ 'Delete\|Stop\|Line\d\|\d\+')
 			if empty(result)
 				let result = 'Info'
 			endif
 			let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
 					\ '\D.*=SignCustom')
 			if a || !empty(a)
-				if oldSign == -1
-					exe "sign place ". <sid>NextID(). " line=". a:line.
-						\ " name=SignCustom". result. " buffer=". bufnr('')
+				if oldSign >= 0
+					let oldSignname = matchstr(s:Signs[oldSign], 'SignCustom\zs\S\+\ze')
+					" need to unplace old signs
+					if oldSignname !=# result
+						call <sid>UnplaceSignSingle(a:line)
+					else
+						return 0
+					endif
 				endif
-				return 1
+				exe "sign place ". <sid>NextID(). " line=". a:line.
+					\ " name=SignCustom". result. " buffer=". bufnr('')
 			elseif oldSign >= 0
 				" Custom Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(a:line)
