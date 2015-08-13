@@ -145,6 +145,37 @@ the todo sign. Therefore you call the command: >
 Note, the Expression will be re-evaluated for that buffer on Changes to the
 buffer.
 
+Here is an example, on how to draw relative numbers but only every fifth line.
+First define a custom function like the following. You can usually just do
+that in your |.vimrc| >
+
+  fu! CustomSignExpression(lnum, div)
+      if a:lnum < line('w0') || a:lnum > line ('w$')
+          return 0
+      endif
+      if !exists("#SignExpression#CursorMoved")
+          augroup SignExpression
+              au!
+              au CursorMoved * :Signs
+          augroup end
+      endif
+      let part=abs(a:lnum - line('.'))
+      if part % a:div == 0
+          return part > 99 ? 99 : part
+      else
+          return 0
+      endif
+  endfu
+
+Then you simply call: >
+  :SignExpression CustomSignExpression(v:lnum, 5)
+
+This makes sure, the relative numbers will only be drawn on every fifth line.
+Adjust the second number if you want it at other intervals. The :autocommand
+is there to make sure, it will be re-evaluated on cursor changes. By default,
+custom sign expressions are only evaluated once the text changes, but this is
+needed here, or else the relative line numbering will get out of sync soon.
+
 2.5 Display signs for quickfix items                            *Signs-QF*
 ------------------------------------
 If you want the plugin to display signs next to each match when using the
