@@ -106,7 +106,7 @@ its argument, which will be evaluated for each line. Use the variable
 Say, you want to place a sign on each line, that contains 'TODO'. You simply
 enter >
 
-    :SignExpression getline(v:lnum)=~'TODO'
+    :SignExpression getline(v:lnum)=~'TODO'?'Warning':0
 
 This will place a sign on each line, that contains the word TODO
 This expression is window-local.
