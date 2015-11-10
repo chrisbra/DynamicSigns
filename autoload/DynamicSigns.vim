@@ -230,14 +230,19 @@ fu! <sid>ReturnSignDef() "{{{1
 endfu
 
 fu! <sid>ReturnSigns(buffer) "{{{1
-	redir => a 
-		exe "sil sign place buffer=". a:buffer 
-	redir end
+	let lang=v:lang
+	if lang isnot# 'C'
+		sil lang mess C
+	endif
+	redir => a | exe "sil sign place buffer=". a:buffer | redir end
 	let b = split(a, "\n")[2:]
 	" Remove old deleted Signs
 	call <sid>RemoveDeletedSigns(filter(copy(b),
 		\ 'matchstr(v:val, ''deleted'')'))
 	call filter(b, 'matchstr(v:val, ''id=\zs''.s:sign_prefix.''\d\+'')')
+	if lang != 'C'
+		exe "sil lang mess" lang
+	endif
 	return b
 endfu
 
@@ -256,7 +261,8 @@ fu! <sid>AuCmd(arg) "{{{1
 		augroup Signs
 			autocmd!
 			au InsertLeave * :call DynamicSigns#UpdateWindowSigns('marks')
-			au GUIEnter,BufWinEnter,VimEnter *
+			au GUIEnter * call DynamicSigns#ForceUpdate()
+			au BufWinEnter,VimEnter *
 				\ call DynamicSigns#UpdateWindowSigns('')
 			au BufWritePost *
 				\ call DynamicSigns#UpdateWindowSigns('marks')
@@ -1102,7 +1108,6 @@ fu! <sid>GetPattern(mark) "{{{1
 endfu
 
 fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
-	
 	if empty(a:DiffSigns)
 		" nothing to do
 		return
@@ -1138,6 +1143,7 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 		return
 	endtry
 	" Only update, if there have been changes to the buffer
+	" or force parameter is set
 	if b:dynamicsigns_tick != b:changedtick
 		let b:dynamicsigns_tick = b:changedtick
 		if !s:SignScrollbar
@@ -1164,6 +1170,13 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 		catch /DiffError/
 			call <sid>WarningMsg()
 		endtry
+	endif
+	if s:SignHook && !empty(get('w:', 'Signs_Hook', ''))
+		let old_ignore = s:ignore
+		" only update the sign expression
+		let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
+		call DynamicSigns#Run()
+		let s:ignore = old_ignore
 	endif
 	let s:ignore = s:old_ignore
 	call winrestview(_a)
@@ -1324,6 +1337,10 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	call call(func, args)
 	unlet s:no_qf_autocmd 
 	copen
+endfu
+
+fu! DynamicSigns#ForceUpdate() "{{{1
+	call <sid>UpdateView(1)
 endfu
 
 fu! DynamicSigns#QFSigns() "{{{1
