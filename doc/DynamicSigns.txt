@@ -155,8 +155,8 @@ that in your |.vimrc| >
       if a:lnum < line('w0') || a:lnum > line ('w$')
           return 0
       endif
-      if !exists("#SignExpression#CursorMoved")
-          augroup SignExpression
+      if !exists("#CustomSignExpression#CursorMoved")
+          augroup CustomSignExpression
               au!
               au CursorMoved * :Signs
               au VimResized  * :UpdateSigns
@@ -174,10 +174,13 @@ Then you simply call: >
   :SignExpression CustomSignExpression(v:lnum, 5)
 
 This makes sure, the relative numbers will only be drawn on every fifth line.
-Adjust the second number if you want it at other intervals. The :autocommand
+Adjust the second number if you want it at other intervals. The autocommand
 is there to make sure, it will be re-evaluated on cursor changes. By default,
 custom sign expressions are only evaluated once the text changes, but this is
 needed here, or else the relative line numbering will get out of sync soon.
+Note it is recommended to use the CustomSignExpression |augroup|, as this will
+be automatically cleaned up on the |:DisableSigns| command, if one exists,
+otherwise the autocommand will still trigger although it probably should not.
 
 2.5 Display signs for quickfix items                            *Signs-QF*
 ------------------------------------

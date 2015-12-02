@@ -281,6 +281,12 @@ fu! <sid>AuCmd(arg) "{{{1
 			autocmd!
 		augroup END
 		augroup! Signs
+		if exists("#CustomSignExpression")
+			augroup CustomSignExpression
+				au!
+			augroup end
+			augroup! CustomSignExpression
+		endif
 	endif
 endfu
 
