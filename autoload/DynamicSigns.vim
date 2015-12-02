@@ -1155,16 +1155,15 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 		if !s:SignScrollbar
 			call <sid>PlaceSigns(line('w0'), line('w$'))
 		endif
-		" Redraw Screen
-		"exe "norm! \<C-L>"
 	endif
 	if s:SignScrollbar
 		call DynamicSigns#UpdateScrollbarSigns()
 	endif
-	if s:SignHook
+	if s:SignHook && !empty(get(w:, 'Signs_Hook', ''))
 		let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
 		exe printf(":%d,%dfolddoopen :call <snr>%d_PlaceSignHook(line('.'))",
 			\ line('w0'), line('w$'), s:sid)
+		"call DynamicSigns#Run()
 	endif
 	if s:BookmarkSigns
 		call <sid>DoBookmarkHL()
@@ -1176,13 +1175,6 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 		catch /DiffError/
 			call <sid>WarningMsg()
 		endtry
-	endif
-	if s:SignHook && !empty(get('w:', 'Signs_Hook', ''))
-		let old_ignore = s:ignore
-		" only update the sign expression
-		let s:ignore = ['alternate', 'diff', 'marks', 'whitespace', 'indentation']
-		call DynamicSigns#Run()
-		let s:ignore = old_ignore
 	endif
 	let s:ignore = s:old_ignore
 	call winrestview(_a)
