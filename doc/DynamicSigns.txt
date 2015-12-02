@@ -145,6 +145,8 @@ the todo sign. Therefore you call the command: >
 Note, the Expression will be re-evaluated for that buffer on Changes to the
 buffer.
 
+                                                       *relativenumber_signs*
+
 Here is an example, on how to draw relative numbers but only every fifth line.
 First define a custom function like the following. You can usually just do
 that in your |.vimrc| >
@@ -157,6 +159,7 @@ that in your |.vimrc| >
           augroup SignExpression
               au!
               au CursorMoved * :Signs
+              au VimResized  * :UpdateSigns
           augroup end
       endif
       let part=abs(a:lnum - line('.'))
