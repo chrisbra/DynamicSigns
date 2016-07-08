@@ -16,6 +16,7 @@ endfu
 scriptencoding utf-8
 let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
+let s:evalcmd = exists("*evalcmd")
 
 
 let s:sid    = <sid>GetSID()
@@ -221,9 +222,7 @@ fu! <sid>IndentFactor() "{{{1
 endfu
 
 fu! <sid>ReturnSignDef() "{{{1
-	redir => a
-		sil sign list
-	redir END
+	let a = <sid>Redir(':sil sign list')
 	let b = split(a, "\n")[2:]
 	call map(b, 'split(v:val)[1]')
 	return filter(b, 'v:val=~''^\(Sign\)\|\(\d\+$\)''')
@@ -234,7 +233,7 @@ fu! <sid>ReturnSigns(buffer) "{{{1
 	if lang isnot# 'C'
 		sil lang mess C
 	endif
-	redir => a | exe "sil sign place buffer=". a:buffer | redir end
+	let a = <sid>Redir(':sil sign place buffer='.a:buffer)
 	let b = split(a, "\n")[2:]
 	" Remove old deleted Signs
 	call <sid>RemoveDeletedSigns(filter(copy(b),
@@ -304,11 +303,16 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 		augroup! SignsScrollbar
 	endif
 endfu
-
+fu! <sid>Redir(args) "{{{1
+	if s:evalcmd
+		let a=evalcmd(a:args)
+	else
+		redir => a | exe a:args |redir end
+	endif
+	return a
+endfu
 fu! <sid>UnPlaceSigns() "{{{1
-	redir => a
-	exe "silent sign place buffer=".bufnr('')
-	redir end
+	let a = <sid>Redir(':sil sign place buffer='.a:bufnr(''))
 	let b=split(a,"\n")[1:]
 	if empty(b)
 		return
@@ -1311,7 +1315,7 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	endif
 	call <sid>Init()
 	let qflist = []
-	redir => a| exe "sil sign place" |redir end
+	let a = <sid>Redir(':sil sign place')
 	for sign in split(a, "\n")
 		if match(sign, '^Signs for \(.*\):$') >= 0
 			let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
