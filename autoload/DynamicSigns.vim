@@ -16,7 +16,7 @@ endfu
 scriptencoding utf-8
 let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
-let s:evalcmd = exists("*evalcmd")
+let s:execute = exists("*execute")
 
 
 let s:sid    = <sid>GetSID()
@@ -304,8 +304,8 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 	endif
 endfu
 fu! <sid>Redir(args) "{{{1
-	if s:evalcmd
-		let a=evalcmd(a:args)
+	if s:execute
+		let a=execute(a:args)
 	else
 		redir => a | exe a:args |redir end
 	endif
