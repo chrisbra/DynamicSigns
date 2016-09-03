@@ -312,7 +312,7 @@ fu! <sid>Redir(args) "{{{1
 	return a
 endfu
 fu! <sid>UnPlaceSigns() "{{{1
-	let a = <sid>Redir(':sil sign place buffer='.a:bufnr(''))
+	let a = <sid>Redir(':sil sign place buffer='.bufnr(''))
 	let b=split(a,"\n")[1:]
 	if empty(b)
 		return
