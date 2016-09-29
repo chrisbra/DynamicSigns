@@ -1217,16 +1217,14 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			exe sign_cmd
 			let indx = []
 			" unplace previous mark for this sign
-			let pat = 'id='.s:sign_prefix.'\(\d\+\)[^=]*=SignBookmark\('.char.'\)'
+			let pat = 'line=\(\d\+\)\s\+id=\('.s:sign_prefix.'\d\+\)[^=]*=SignBookmark\('.char.'\)'
 			let indx = matchlist(s:Signs, pat)
 			while !empty(indx)
 				let line = indx[1]
-				let mark = indx[2]
-				if getpos('.') != getpos(mark) && mark != char
-					call <sid>UnplaceSignID(s:sign_prefix.line)
-					sil! call matchdelete(s:BookmarkSignsHL[mark])
-					sil! call matchdelete(s:BookmarkSignsHL[char])
-				endif
+				let id   = indx[2]
+				let mark = indx[3]
+				call <sid>UnplaceSignID(id)
+				sil! call matchdelete(s:BookmarkSignsHL[mark])
 
 				let index = match(s:Signs, pat)
 				call remove(s:Signs, index)
