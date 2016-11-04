@@ -217,8 +217,8 @@ alternating colors. To do so, set the g:Signs_Alternate variable in your
 
     :let g:Signs_Alternate = 1
 <
-This will display each even line nummer in one color and each odd line
-number in a different color.
+This will display each evenly numbered line in one color and each oddly
+numbered line in a different color.
 
 Run |:UpdateSigns| or |:Signs| to update displaying the signs in your
 buffer.
