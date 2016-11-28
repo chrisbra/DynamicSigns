@@ -528,8 +528,10 @@ fu! <sid>DefineSigns() "{{{1
 				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
-	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag',
-		\ 'Delete', 'Stop', 'Line1', 'Line2', 'Line3', 'Line4', 'Line5'] + range(1,99)
+	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag', 'Delete', 'Stop']
+				\ + ['Line1', 'Line2', 'Line3', 'Line4', 'Line5']
+				\ + ['Gutter1', 'Gutter2', 'Gutter3', 'Gutter4', 'Gutter5']
+				\ + range(1,99)
 		let icn  = (icon ? 'icon='. s:i_path : '')
 		let text = ""
 		let texthl = ''
@@ -569,6 +571,10 @@ fu! <sid>DefineSigns() "{{{1
 			let icn  = ''
 			let line = matchstr(sign, 'Line\zs\d')+0
 			let texthl = 'Normal'
+		elseif sign =~# 'Gutter\d'
+			let icn  = ''
+			let text = ' '
+			let texthl = 'SignLine'. matchstr(sign, 'Gutter\zs\d')+0
 		endif
 
 		let def = printf("sign define SignCustom%s %s texthl=%s %s %s", 
@@ -952,7 +958,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 			let a = eval(expr)
 			let result = matchstr(a,
 				\'Warning\|OK\|Error\|Info\|Add\|Arrow\|Flag\|'.
-				\ 'Delete\|Stop\|Line\d\|\d\+')
+				\ 'Delete\|Stop\|Line\d\|Gutter\d\|\d\+')
 			if empty(result)
 				let result = 'Info'
 			endif

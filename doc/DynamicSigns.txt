@@ -22,6 +22,7 @@ Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
         2.6   Display Signs to display changes.........: |Signs-Diff|
         2.7   Alternating colors.......................: |Signs-Alternate|
         2.8   ASCII Scrollbar..........................: |Signs-Scrollbar|
+        2.9   SignHighlighting.........................: |Signs-Highlight|
         3.  Autocommands...............................: |Signs-Autocommands|
         4.  Commands...................................: |Signs-Commands|
         5.  Icons......................................: |Signs-Icons|
@@ -128,12 +129,20 @@ that should be placed. Currently the following sign types are understood: >
     Line3
     Line4
     Line5
+    Gutter1
+    Gutter2
+    Gutter3
+    Gutter4
+    Gutter5
     1-99
     0
 <
 All except for "Line" only draw a flag in the sign column while the sign types
-"Line1"-"Line5" highlights the complete line without displaying anything in the Sign
-Column. It uses the SignLine1-SignLine5 highlighting group for highlighting those lines.
+"Line1"-"Line5" highlights the complete line without displaying anything in
+the Sign Column. "Gutter1"-"Gutter5" highlights only the gutter column, but
+does not draw anything inside it. It uses the SignLine1-SignLine5 highlighting
+groups for highlighting (|Signs-Highlight|)
+
 The special return value 0 is meant to not place a sign, all other numbers
 simply stand for themselves, e.g. will draw the corresponding number.
 
@@ -239,15 +248,6 @@ Unfortunately, this does not work well with |folds| and therefore the
 scrollbar can't be displayed on a folded line. Also Linewrapping 'wrap' can
 disturb the display of the scrollbar.
 
-3.0 Autocommands                                      *:Signs-Autocommands*
-----------------
-This plugin installs some autocommands to update the signs dynamically.
-Basically it uses |BufWritePost| and |InsertLeave| autocommands to update
-displaying the signs.
-
-Theoretically, it could also use |CursorHold| and |CursorHoldI|
-autocommands, but that seems to slow down Vim a lot, when working with long
-buffers and also seems to interrupt the workflow too much. You can however
 2.9 Sign Highlighting                                        *Signs-Highlight*
 ---------------------
 
@@ -262,6 +262,15 @@ By default the plugin defines the following highlighting groups: >
 You can however override those highlighting groups, by predefining them in
 your |.vimrc| to whatever you want.
 
+3.0 Autocommands                                      *:Signs-Autocommands*
+----------------
+This plugin installs some autocommands to update the signs dynamically.
+Basically it uses |BufWritePost| and |InsertLeave| autocommands to update
+displaying the signs.
+
+Theoretically, it could also use |CursorHold| and |CursorHoldI|
+autocommands, but that seems to slow down Vim a lot, when working with long
+buffers and also seems to interrupt the workflow too much. You can however
 force Vim to update the signs on those autocommands, by setting the variable
 g:Signs_CursorHold to 1, e.g. put >
     let g:Signs_CursorHold = 1
