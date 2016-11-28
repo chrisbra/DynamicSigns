@@ -160,19 +160,19 @@ fu! <sid>Init(...) "{{{1
 	endif
 	" highlight line
 	if !hlexists("SignLine1") || empty(synIDattr(hlID("SignLine1"), "ctermbg"))
-		exe "hi SignLine1 ctermbg=238 guibg=#403D3D"
+		exe "hi default SignLine1 ctermbg=238 guibg=#403D3D"
 	endif
 	if !hlexists("SignLine2") || empty(synIDattr(hlID("SignLine2"), "ctermbg"))
-		exe "hi SignLine2 ctermbg=208 guibg=#FD971F"
+		exe "hi default SignLine2 ctermbg=208 guibg=#FD971F"
 	endif
 	if !hlexists("SignLine3") || empty(synIDattr(hlID("SignLine3"), "ctermbg"))
-		exe "hi SignLine3 ctermbg=24  guibg=#13354A"
+		exe "hi default SignLine3 ctermbg=24  guibg=#13354A"
 	endif
 	if !hlexists("SignLine4") || empty(synIDattr(hlID("SignLine4"), "ctermbg"))
-		exe "hi SignLine4 ctermbg=1  guibg=Red"
+		exe "hi default SignLine4 ctermbg=1  guibg=Red"
 	endif
 	if !hlexists("SignLine5") || empty(synIDattr(hlID("SignLine5"), "ctermbg"))
-		exe "hi SignLine5 ctermbg=190 guibg=#DFFF00"
+		exe "hi default SignLine5 ctermbg=190 guibg=#DFFF00"
 	endif
 
 	" Highlighting for the bookmarks

@@ -248,6 +248,20 @@ displaying the signs.
 Theoretically, it could also use |CursorHold| and |CursorHoldI|
 autocommands, but that seems to slow down Vim a lot, when working with long
 buffers and also seems to interrupt the workflow too much. You can however
+2.9 Sign Highlighting                                        *Signs-Highlight*
+---------------------
+
+By default the plugin defines the following highlighting groups: >
+
+    SignLine1   - gray
+    SignLine2   - orange
+    SignLine3   - blue
+    SignLine4   - red
+    SignLine5   - yellow
+
+You can however override those highlighting groups, by predefining them in
+your |.vimrc| to whatever you want.
+
 force Vim to update the signs on those autocommands, by setting the variable
 g:Signs_CursorHold to 1, e.g. put >
     let g:Signs_CursorHold = 1
