@@ -1257,11 +1257,11 @@ fu! DynamicSigns#MapKey() "{{{1
 	endif
 endfu
 
-fu! DynamicSigns#Update() "{{{1
+fu! DynamicSigns#Update(...) "{{{1
 	if exists("s:SignScrollbar") && s:SignScrollbar
 		call DynamicSigns#UpdateScrollbarSigns()
 	else
-		call DynamicSigns#Run(1)
+		call DynamicSigns#Run(0, line('w0'), line('w$'))
 	endif
 endfu
 
@@ -1277,7 +1277,13 @@ fu! DynamicSigns#Run(...) "{{{1
 			call <sid>WarningMsg()
 		return
 	endtry
-	call <sid>PlaceSigns()
+	if exists("a:2") && exists("a:3")
+		" only update signs in current window
+		" e.g. :UpdateSigns has been called
+		call <sid>PlaceSigns(a:2, a:3)
+	else
+		call <sid>PlaceSigns()
+	endif
 	set nolz
 	call winrestview(_a)
 endfu
