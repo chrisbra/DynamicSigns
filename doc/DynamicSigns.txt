@@ -92,8 +92,8 @@ Use |:Signs| or |:UpdateSigns| to manually update the view in case this is
 needed).
 
                                                           *:SignExpression*
-2.4 Dynamicly display Signs                                     *Signs-Hook*
----------------------------
+2.4 SignExpressions                                        *Signs-Hook*
+-------------------
 
 You can let Vim have an expression evaluated for each line in your current
 buffer. On each line, where this expression is true, Vim will place a sign
