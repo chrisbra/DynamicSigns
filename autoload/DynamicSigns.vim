@@ -1162,7 +1162,8 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	" or force parameter is set
 	if b:dynamicsigns_tick != b:changedtick
 		let b:dynamicsigns_tick = b:changedtick
-		if !s:SignScrollbar
+        " only run for at max 200 lines
+		if !s:SignScrollbar && line('w$') - line('w0')  <= 200
 			call <sid>PlaceSigns(line('w0'), line('w$'))
 		endif
 	endif
