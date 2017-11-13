@@ -478,7 +478,12 @@ endfu
 
 fu! <sid>DefineSignsIcons(def) "{{{1
 	try
-		exe a:def
+        let def=a:def
+        let path=matchstr(def, 'icon=\zs\S\+')
+        if !empty(path) && filereadable(path)
+            let def=substitute(def, 'icon=\S\+', '', '')
+        endif
+		exe def
 	catch /^Vim\%((\a\+)\)\=:E255/
 		" gvim can't read the icon
 		" first undefine the sign
