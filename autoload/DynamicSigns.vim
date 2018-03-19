@@ -50,7 +50,8 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.LineOdd  = exists("g:DynamicSigns_Odd")  ? g:DynamicSigns_Odd	:
 				\ <sid>Color("Odd")
 	
-	hi SignColumn guibg=black
+    " do not reset SignColumn
+	"hi SignColumn guibg=black
 
 	" Undefine Signs
 	if exists("s:precheck")
