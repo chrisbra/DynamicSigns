@@ -579,7 +579,7 @@ fu! <sid>DefineSigns() "{{{1
 			let texthl = 'Normal'
 		elseif sign =~# 'Gutter\d'
 			let icn  = ''
-			let text = ' '
+			let text = "\u00a0"
 			let texthl = 'SignLine'. matchstr(sign, 'Gutter\zs\d')+0
 		endif
 
