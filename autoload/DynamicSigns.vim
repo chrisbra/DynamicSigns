@@ -1372,6 +1372,9 @@ fu! DynamicSigns#QFSigns() "{{{1
 		" Remove all previously placed QF Signs
 		exe "sign unplace " s:sign_prefix . '0'
 		for item in getqflist()
+			if item.bufnr == 0
+				continue
+			endif
 			exe "sign place ". <sid>NextID(). " line=" . item.lnum .
 				\ " name=SignQF buffer=" . item.bufnr
 		endfor
