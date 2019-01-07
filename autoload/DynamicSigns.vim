@@ -170,7 +170,7 @@ fu! <sid>Init(...) "{{{1
 	endif
 
 	" Need to redefine existing Signs?
-	if get(g:, "NoUtf8Signs", 0) != get(s:CacheOpts, 'NoUtf8Signs', -1)
+	if get(g:, "NoUtf8Signs", 0) != get(s:CacheOpts, 'NoUtf8Signs', 0)
 		call DynamicSigns#CleanUp()
 		call <sid>DefineSigns()
 	endif
