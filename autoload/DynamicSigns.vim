@@ -8,6 +8,8 @@
 "Last Change: Thu, 15 Mar 2012 23:37:37 +0100
 "GetLatestVimScripts:  3965 1 :AutoInstall: DynamicSigns.vim
 
+" TODO: Make use VimScript API for managing signs!
+
 fu! <sid>GetSID()
 	return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_GetSID$')
 endfu
