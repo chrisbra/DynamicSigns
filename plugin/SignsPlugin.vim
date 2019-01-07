@@ -31,13 +31,10 @@ endfu
 " Define the Mapping: "{{{2
 
 " marks:
-"noremap m call DynamicSigns#DoMarks()<cr>
-" Don't do this!
-"nnoremap <C-L> :call Signs#UpdateWindowSigns()<cr>
-
-" Map m key?
-"nnoremap <silent> <expr> <Plug>DynamicSignsMapBookmark DynamicSigns#MapBookmark()
-call DynamicSigns#MapKey()
+nnoremap <silent> <expr> <Plug>DynamicSignsMapBookmark DynamicSigns#MapBookmark()
+if !hasmapto('<Plug>DynamicSignsMapBookmark', 'n') && empty(maparg('m', 'n'))
+    nmap <silent> m <Plug>DynamicSignsMapBookmark
+endif
 
 " Define Commands "{{{1
 :com! Signs :call DynamicSigns#Run()
@@ -48,8 +45,7 @@ call DynamicSigns#MapKey()
 		\ :call DynamicSigns#PrepareSignExpression(<q-args>)
 :com! SignListExpression :echo get(w:, 'Signs_Hook', '<None>')
 
-:com! SignDiff :let g:Signs_Diff=1|
-		\ call DynamicSigns#Run(1)
+:com! SignDiff :let g:Signs_Diff=1| call DynamicSigns#Run(1)
 
 if get(g:, "Signs_QFList", 0)
 	" prevent loading autoload file too early

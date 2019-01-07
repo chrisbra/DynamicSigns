@@ -1254,16 +1254,6 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	return 'm'.char
 endfu
 
-fu! DynamicSigns#MapKey() "{{{1
-	" Does not work: Error
-	" E15: Invalid expression: <80><fd>SDynamicSignsMapBookmark
-	" This looks like a bug in vim
-	" nnoremap <silent> <expr> <Plug>DynamicSignsMapBookmark DynamicSigns#MapBookmark()
-	if !hasmapto('DynamicSigns#MapBookmark', 'n')
-		nnoremap <expr> m DynamicSigns#MapBookmark()
-	endif
-endfu
-
 fu! DynamicSigns#Update(...) "{{{1
 	if exists("s:SignScrollbar") && s:SignScrollbar
 		call DynamicSigns#UpdateScrollbarSigns()
