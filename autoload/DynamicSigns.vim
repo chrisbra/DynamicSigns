@@ -46,15 +46,9 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
 	let s:id_hl.Check = "User1"
-	let s:id_hl.LineEven = exists("g:DynamicSigns_Even") ? g:DynamicSigns_Even	: 
-				\ <sid>Color("Even")
-
-	let s:id_hl.LineOdd  = exists("g:DynamicSigns_Odd")  ? g:DynamicSigns_Odd	:
-				\ <sid>Color("Odd")
+	let s:id_hl.LineEven = get(g:, "g:DynamicSigns_Even", <sid>Color("Even"))
+	let s:id_hl.LineOdd  = get(g:, "g:DynamicSigns_Odd",  <sid>Color("Odd"))
 	
-    " do not reset SignColumn
-	"hi SignColumn guibg=black
-
 	" Undefine Signs
 	if exists("s:precheck")
 		" just started up, there shouldn't be any signs yet
@@ -66,38 +60,35 @@ endfu
 
 fu! <sid>Color(name) "{{{1
 	let definition = ''
+    let termmode=!empty(&t_Co) && &t_Co < 88 && !&tgc
 	if a:name == 'Even'
 		if &bg == 'dark'
-			if !empty(&t_Co) && &t_Co < 88
+			if termmode
 				let definition .= ' ctermbg=DarkGray'
 			else
-				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234') .
-					\ ' guibg=#292929'
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234'). ' guibg=#292929'
 			endif
 		else
-			if !empty(&t_Co) && &t_Co < 88
+			if termmode
 				let definition .= ' ctermbg=LightGrey'
 			else
-				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') .
-					\ ' guibg=#525252'
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') . ' guibg=#525252'
 			endif
 		endif
 		exe "hi LineEven" definition
 		return 'LineEven'
 	else
 		if &bg == 'dark'
-			if !empty(&t_Co) && &t_Co < 88
+			if termmode
 				let definition .= ' ctermbg=LightGray'
 			else
-				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') .
-					\ ' guibg=#525252'
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') . ' guibg=#525252'
 			endif
 		else
-			if !empty(&t_Co) && &t_Co < 88
+			if termmode
 				let definition .= ' ctermbg=LightGrey'
 			else
-				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234') .
-					\ ' guibg=#292929'
+				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234') . ' guibg=#292929'
 			endif
 		endif
 		exe "hi LineOdd" definition
@@ -108,14 +99,12 @@ endfu
 fu! <sid>WarningMsg() "{{{1
 	redraw!
 	if !empty(s:msg)
-		let msg=["Signs.vim: " . s:msg[0]] + s:msg[1:]
+		let msg=["Signs.vim: " . s:msg[0]] + len(s:msg) > 1 ? s:msg[1:] : []
 		echohl WarningMsg
 		for mess in msg
 			exe s:echo_cmd "mess"
 		endfor
-
 		echohl Normal
-		"let v:errmsg=msg[0]
 		let s:msg=[]
 	endif
 endfu
@@ -125,38 +114,24 @@ fu! <sid>Init(...) "{{{1
 	let s:msg  = []
 	
 	" Setup configuration variables:
-	let s:MixedIndentation = exists("g:Signs_MixedIndentation") ? 
-				\ g:Signs_MixedIndentation : 0
-
-	let s:IndentationLevel = exists("g:Signs_IndentationLevel") ?
-				\ g:Signs_IndentationLevel : 0
-
-	let s:BookmarkSigns   = exists("g:Signs_Bookmarks") ? 
-				\ g:Signs_Bookmarks : 0
-
-	let s:AlternatingSigns = exists("g:Signs_Alternate") ?
-				\ g:Signs_Alternate : 0
-
+	let s:MixedIndentation = get(g:, "Signs_MixedIndentation", 0)
+	let s:IndentationLevel = get(g:, "Signs_IndentationLevel", 0)
+	let s:BookmarkSigns    = get(g:, "Signs_Bookmarks", 0)
+	let s:AlternatingSigns = get(g:, "Signs_Alternate", 0)
+	let s:SignHook         = get(w:, "Signs_Hook", "")
+	let s:SignQF           = get(g:, "Signs_QFList", 0)
+	let s:SignDiff         = get(g:, "Signs_Diff", 0)
 	let s:Bookmarks = split("abcdefghijklmnopqrstuvwxyz" .
 				\ "ABCDEFGHIJKLMNOPQRSTUVWXYZ", '\zs')
-
-	let s:SignHook = exists("w:Signs_Hook") ? w:Signs_Hook : ''
-
-	let s:SignQF   = exists("g:Signs_QFList") ? g:Signs_QFList : 0
-
-	let s:SignDiff = exists("g:Signs_Diff") ? g:Signs_Diff : 0
 
 	" Don't draw an ascii scrollbar in the gui, because it does not look nice
 	" and the gui can display its own scrollbar
 	let s:SignScrollbar = exists("g:Signs_Scrollbar") ?
 				\ (g:Signs_Scrollbar && !has("gui_running")) : 0
 	
-	let s:Sign_CursorHold = exists("g:Signs_CursorHold") ? g:Signs_CursorHold : 0
-
-	let s:debug    = exists("g:Signs_Debug") ? g:Signs_Debug : 0
-
-	let s:ignore   = exists("g:Signs_Ignore") ?
-				   \ split(g:Signs_Ignore, ',')  : []
+	let s:Sign_CursorHold = get(g:, "Signs_CursorHold", 0)
+	let s:debug    = get(g:, "Signs_Debug", 0)
+    let s:ignore   = split(get(g:, 'Signs_Ignore', ''), ',')
 
 	if !exists("s:gui_running") 
 		let s:gui_running = has("gui_running")
@@ -200,8 +175,7 @@ fu! <sid>Init(...) "{{{1
 	endif
 
 	" Need to redefine existing Signs?
-	if exists("g:NoUtf8Signs") &&
-	 \ g:NoUtf8Signs != get(s:CacheOpts, 'NoUtf8Signs', -1)
+	if get(g:, "NoUtf8Signs", 0) != get(s:CacheOpts, 'NoUtf8Signs', -1)
 		call DynamicSigns#CleanUp()
 		call <sid>DefineSigns()
 	endif
