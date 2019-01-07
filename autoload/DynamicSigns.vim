@@ -13,13 +13,11 @@
 fu! <sid>GetSID()
 	return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_GetSID$')
 endfu
-
 " Check preconditions
 scriptencoding utf-8
 let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
 let s:execute = exists("*execute")
-
 
 let s:sid    = <sid>GetSID()
 delf <sid>GetSID "not needed anymore
@@ -57,7 +55,6 @@ fu! <sid>Check() "{{{1
 	" Define Signs
 	call <sid>DefineSigns()
 endfu
-
 fu! <sid>Color(name) "{{{1
 	let definition = ''
     let termmode=!empty(&t_Co) && &t_Co < 88 && !&tgc
@@ -95,7 +92,6 @@ fu! <sid>Color(name) "{{{1
 		return 'LineOdd'
 	endif
 endfu
-
 fu! <sid>WarningMsg() "{{{1
 	redraw!
 	if !empty(s:msg)
@@ -108,7 +104,6 @@ fu! <sid>WarningMsg() "{{{1
 		let s:msg=[]
 	endif
 endfu
-
 fu! <sid>Init(...) "{{{1
 	" Message queue, that will be displayed.
 	let s:msg  = []
@@ -194,17 +189,12 @@ fu! <sid>NextID() "{{{1
 	let s:Id = s:sign_prefix . s:sign_count
 	return s:Id
 endfu
-fu! <sid>IndentFactor() "{{{1
-	return &l:sts>0 ? &l:sts : &ts
-endfu
-
 fu! <sid>ReturnSignDef() "{{{1
 	let a = <sid>Redir(':sil sign list')
 	let b = split(a, "\n")[2:]
 	call map(b, 'split(v:val)[1]')
 	return filter(b, 'v:val=~''^\(Sign\)\|\(\d\+$\)''')
 endfu
-
 fu! <sid>ReturnSigns(buffer) "{{{1
 	let lang=v:lang
 	if lang isnot# 'C'
@@ -221,15 +211,12 @@ fu! <sid>ReturnSigns(buffer) "{{{1
 	endif
 	return b
 endfu
-
 fu! <sid>RemoveDeletedSigns(list) "{{{1
 	for sign in a:list
 		let id=matchstr(sign, 'id=\zs\d\+')
 		exe "sil sign unplace" id "buffer=". bufnr('')
 	endfor
 endfu
-
-
 fu! <sid>AuCmd(arg) "{{{1
 	" Don't update signs for 
 	" marks on insertleave
@@ -265,7 +252,6 @@ fu! <sid>AuCmd(arg) "{{{1
 		endif
 	endif
 endfu
-
 fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 	if a:arg
 		augroup SignsScrollbar
@@ -312,23 +298,19 @@ fu! <sid>UnPlaceSigns() "{{{1
 		endfor
 	endif
 endfu
-
 fu! <sid>UnMatchHL() "{{{1
 	if exists("s:BookmarkSignsHL")
 		for value in values(s:BookmarkSignsHL)
 			sil! call matchdelete(value)
 		endfor
 	endif
-
 	if exists("s:MixedIndentationHL")
-		sil! call matchdelete(s:MixedIndentationHL
+		sil! call matchdelete(s:MixedIndentationHL)
 	endif
 	let s:BookmarkSignsHL = {}
 endfu
-
 fu! <sid>DoBookmarkHL() "{{{1
-	if exists("s:BookmarkSigns")
-		\ && s:BookmarkSigns == 1
+	if get(s:, "BookmarkSigns", 0)
 		let PlacedSigns = copy(s:Signs)
 		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=SignBookmark\(.\)'
 		let Sign = matchlist(PlacedSigns, pat)
@@ -343,8 +325,6 @@ fu! <sid>DoBookmarkHL() "{{{1
 		endw
 	endif
 endfu
-
-
 fu! <sid>UnplaceSignSingle(item) "{{{1
 	if a:item < 0
 		return
@@ -355,11 +335,9 @@ fu! <sid>UnplaceSignSingle(item) "{{{1
 	sil! sign unplace
 	call winrestview(oldcursor)
 endfu
-
 fu! <sid>UnplaceSignID(id) "{{{1
 	exe "sil sign unplace ". a:id. " buffer=".bufnr('')
 endfu
-
 fu! <sid>GetMarks() "{{{1
 	let marks={}
 	let t = []
@@ -371,7 +349,6 @@ fu! <sid>GetMarks() "{{{1
 	endfor
 	return marks
 endfu
-
 fu! <sid>SkipFoldedLines(lineend, range) "{{{1
 	let range = a:range
 	if a:lineend == -1
@@ -379,7 +356,6 @@ fu! <sid>SkipFoldedLines(lineend, range) "{{{1
 	endif
 	call filter(range, 'v:val >= a:lineend')
 endfu
-
 fu! <sid>PlaceSigns(...) "{{{1
 	try
 		let DiffSigns   = (s:SignDiff ? <sid>ReturnDiffSigns() : {})
@@ -405,25 +381,21 @@ fu! <sid>PlaceSigns(...) "{{{1
 			\ <sid>PlaceAlternatingSigns(line)
 			continue
 		endif
-
 		" Skip folded lines
 		if foldclosed(line) != -1 "{{{3
 			call <sid>SkipFoldedLines(foldclosedend(line), range)
 			continue
 		endif
-
 		" Place Diff Signs "{{{3
 		if match(s:ignore, 'diff') == -1 && 
 			\ <sid>PlaceDiffSigns(line, DiffSigns)
 			continue
 		endif
-
 		" Place Bookmarks "{{{3
 		if match(s:ignore, 'marks') == -1 && 
 			\ <sid>PlaceBookmarks(line)
 			continue
 		endif
-
 		" Custom Sign Hooks "{{{3
 		if match(s:ignore, 'expression') == -1
 			let i = <sid>PlaceSignHook(line)
@@ -435,24 +407,20 @@ fu! <sid>PlaceSigns(...) "{{{1
 				return
 			endif
 		endif
-
 		" Place signs for mixed indentation rules "{{{3
 		if match(s:ignore, 'whitespace') == -1  &&
 			\ <sid>PlaceMixedWhitespaceSign(line)
 			continue
 		endif
-
 		" Place signs for Indentation Level {{{3
 		if match(s:ignore, 'indentation') == -1 &&
 			\ <sid>PlaceIndentationSign(line)
 			continue
 		endif
-
 	endfor
 	" Cache for configuration options
 	call <sid>BufferConfigCache()
 endfu
-
 fu! <sid>DefineSignsIcons(def) "{{{1
 	try
         let def=a:def
@@ -469,7 +437,6 @@ fu! <sid>DefineSignsIcons(def) "{{{1
 		exe substitute(a:def, 'icon=.*$', '', '')
 	endtry
 endfu
-
 fu! <sid>DefineSigns() "{{{1
 	let icon = 0
 	if (has("gui_gtk") || has("gui_win32") || has("win32") || has("win64"))
@@ -477,7 +444,7 @@ fu! <sid>DefineSigns() "{{{1
 		let icon = 1
 	endif
 
-	let utf8signs = (exists("g:NoUtf8Signs") ? !g:NoUtf8Signs : 1)
+	let utf8signs = get(g:, "NoUtf8Signs", 1)
 
 	if utf8signs && &enc != 'utf-8'
 		let utf8signs = 0
@@ -604,7 +571,6 @@ fu! <sid>DefineSigns() "{{{1
 
 	let s:SignDef = <sid>ReturnSignDef()
 endfu
-
 fu! <sid>ReturnDiffSigns() "{{{1
 	let fname = expand('%')
 	if !executable("diff")	||
@@ -641,7 +607,7 @@ fu! <sid>ReturnDiffSigns() "{{{1
 		call map(contents, 'iconv(v:val, &enc, &fenc)')
 	endif
 	call writefile(contents, new_file)
-	let result = split(system(cmd), "\n")
+	let result = systemlist(cmd)
 
 	if v:shell_error == -1 || (v:shell_error && v:shell_error != 1)
 		call add(s:msg, "There was an error executing the diff command!")
@@ -669,7 +635,6 @@ fu! <sid>ReturnDiffSigns() "{{{1
 	endfor
 	return diffsigns
 endfu
-
 fu! <sid>UpdateView(force) "{{{1
 	if !exists("b:dynamicsigns_tick")
 		let b:dynamicsigns_tick = 0
@@ -680,7 +645,6 @@ fu! <sid>UpdateView(force) "{{{1
 		let b:dynamicsigns_tick = b:changedtick
 	endif
 endfu
-
 fu! <sid>DoSigns() "{{{1
 	if !s:MixedIndentation &&
 		\ get(s:CacheOpts, 'MixedIndentation', 0) > 0
@@ -759,7 +723,6 @@ fu! <sid>DoSigns() "{{{1
 		return 1
 	endif
 endfu
-
 fu! <sid>DoSignBookmarks() "{{{1
 	if s:BookmarkSigns != get(s:CacheOpts, 'BookmarkSigns', 0)
 		let index = match(s:Signs,
@@ -780,7 +743,6 @@ fu! <sid>DoSignBookmarks() "{{{1
 	endif
 	return s:BookmarkSigns
 endfu
-
 fu! <sid>BufferConfigCache() "{{{1
 	if !exists("s:CacheOpts")
 		let s:CacheOpts = {}
@@ -791,14 +753,12 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.SignScrollbar    = s:SignScrollbar
 	let s:CacheOpts.SignHook		 = s:SignHook
 	let s:CacheOpts.SignDiff		 = s:SignDiff
-	let s:CacheOpts.NoUtf8Signs      = exists("g:NoUtf8Signs") ? g:NoUtf8Signs : 0
+	let s:CacheOpts.NoUtf8Signs      = get(g:, "NoUtf8Signs", 0)
 endfu
-
 fu! <sid>PlaceIndentationSign(line) "{{{1
-	if exists("s:IndentationLevel") &&
-				\ s:IndentationLevel == 1
+	if get(s:, "IndentationLevel", 0)
 		let indent = indent(a:line)
-		let div    = <sid>IndentFactor()
+		let div    = shiftwidth()
 
 		let oldSign = match(s:Signs, '^\s*\w\+='.a:line.
 			\ '.*=SignWSError')
@@ -824,12 +784,11 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 	endif 
 	return 0
 endfu
-
 fu! <sid>PlaceScrollbarSigns() "{{{1
 	" doesn't work well with folded lines, unfortunately
 	" Disabled in the gui, only works with +float and when s:SignScrollbar
 	" has been configured.
-	if exists("s:SignScrollbar") && s:SignScrollbar && has('float')
+	if get(s:, "SignScrollbar", 0) && has('float')
 		if !&lz
 			let do_unset_lz = 1
 			setl lz
@@ -839,14 +798,10 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		endif
 		let curline  = line('.')  + 0.0
 		let lastline = line('$')  + 0.0
-		"let wheight  = line('w$') - line('w0') + 0.0 
 		let wheight  = winheight(0) + 0.0 
 		let curperc  = curline/lastline
 		let tline    = round(wheight * curperc)
-		"if  tline < line('w0')
-		"let tline += line('w0') - (curperc >= 0.95 ? 0 : 1)
 		let tline += line('w0') - 1
-		"endif
 		let tline    = float2nr(tline)
 
 		" safety check
@@ -899,11 +854,8 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 	endif
 	return 0
 endfu
-
 fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
-	if exists("s:MixedIndentation") &&
-				\ s:MixedIndentation == 1
-
+	if get(s:, "MixedIndentation", 0)
 		let line = getline(a:line)
 		let pat1 = '\%(^\s\+\%(\t \)\|\%( \t\)\)'
 		let pat2 = '\%(\S\zs\s\+$\)'
@@ -977,7 +929,6 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	let did_place_sign = 0
 	if !empty(a:DiffSigns)
 		let oldSign = match(s:Signs, '^\s*\w\+='.a:line. '\D.*=SignAdded')
-
 		" Added Lines
 		for sign in sort(a:DiffSigns['a'])
 			if sign == a:line
@@ -992,7 +943,6 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		if did_place_sign
 			return 1
 		endif
-
 		" Changed Lines
 		let oldSign = match(s:Signs, '^\s*\w\+='. a:line. 
 				\ '\D.*=SignChanged')
@@ -1009,7 +959,6 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		if did_place_sign
 			return 1
 		endif
-
 		" Deleted Lines
 		let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
 				\ '\D.*=SignDeleted')
@@ -1033,7 +982,6 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	endif
 	return 0
 endfu
-
 fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	if !s:AlternatingSigns
 		return 0
@@ -1054,7 +1002,6 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	endif
 	return 1
 endfu
-
 fu! <sid>PlaceBookmarks(line) "{{{1
 	" Place signs for bookmarks
 	if exists("s:BookmarkSigns")
@@ -1088,11 +1035,9 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 	endif
 	return 0
 endfu
-
 fu! <sid>GetMarksOnLine(line) "{{{1
 	return sort(keys(filter(copy(s:bookmarks), 'v:val==a:line')))
 endfu
-
 fu! <sid>GetPattern(mark) "{{{1
 	let mark = a:mark
 	if mark != '.'
@@ -1104,7 +1049,6 @@ fu! <sid>GetPattern(mark) "{{{1
 	endif
 	return ''
 endfu
-
 fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 	if empty(a:DiffSigns)
 		" nothing to do
@@ -1172,14 +1116,12 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	let s:ignore = s:old_ignore
 	call winrestview(_a)
 endfu
-
 fu! DynamicSigns#UpdateScrollbarSigns() "{{{1
 	" When GuiEnter fires, we need to disable the scrollbar signs
 	call <sid>Init()
 	call <sid>DoSigns()
 	call <sid>PlaceScrollbarSigns()
 endfu
-
 fu! DynamicSigns#MapBookmark() "{{{1
 	let a = getchar()
 	if type(a) == type(0)
@@ -1189,8 +1131,7 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	endif
 	" make sure, this is only called, when Bookmark Signs are enabled
 	" Since plugin is possibly not init yet, need to check both variables
-	if (exists("s:BookmarkSigns") && s:BookmarkSigns)
-		\ || (exists("g:Signs_Bookmarks") && g:Signs_Bookmarks)
+	if get(s:, "BookmarkSigns", 0) || get(g:, "Signs_Bookmarks", 0)
 		" Initilize variables
 		call <sid>Init()
 		if <sid>DoSignBookmarks() &&
@@ -1223,13 +1164,11 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			sil! call matchdelete(s:BookmarkSignsHL[char])
 			" Mark hasn't been placed yet, so take cursor position
 			let s:BookmarkSignsHL[char] = matchadd('WildMenu', <sid>GetPattern('.'))
-
 		endif
 		call <sid>BufferConfigCache()
 	endif
 	return 'm'.char
 endfu
-
 fu! DynamicSigns#Update(...) "{{{1
 	if exists("s:SignScrollbar") && s:SignScrollbar
 		call DynamicSigns#UpdateScrollbarSigns()
@@ -1237,7 +1176,6 @@ fu! DynamicSigns#Update(...) "{{{1
 		call DynamicSigns#Run(0, line('w0'), line('w$'))
 	endif
 endfu
-
 fu! DynamicSigns#Run(...) "{{{1
 	set lz
 	let _a = winsaveview()
@@ -1260,7 +1198,6 @@ fu! DynamicSigns#Run(...) "{{{1
 	set nolz
 	call winrestview(_a)
 endfu
-
 fu! DynamicSigns#CleanUp() "{{{1
 	" only delete signs, that have been set by this plugin
 	call <sid>UnPlaceSigns()
@@ -1276,7 +1213,6 @@ fu! DynamicSigns#CleanUp() "{{{1
 	unlet! s:precheck s:SignDef
 	redraw!
 endfu
-
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
 	let w:Signs_Hook = a:arg
 	call <sid>Init()
@@ -1286,12 +1222,9 @@ fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
 	call DynamicSigns#Run()
 	let s:ignore = old_ignore
 endfu
-
 fu! <sid>MySortBookmarks(a, b) "{{{¹
 	return a:a+0 == a:b+0 ? 0 : a:a+0 > a:b+0 ? 1: -1
 endfu
-
-
 fu! DynamicSigns#SignsQFList(local) "{{{1
 	if !has("quickfix")
 		return
@@ -1323,11 +1256,9 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	unlet s:no_qf_autocmd 
 	copen
 endfu
-
 fu! DynamicSigns#ForceUpdate() "{{{1
 	call <sid>UpdateView(1)
 endfu
-
 fu! DynamicSigns#QFSigns() "{{{1
 	if has("quickfix")
 		if exists("s:no_qf_autocmd") && s:no_qf_autocmd
@@ -1346,6 +1277,5 @@ fu! DynamicSigns#QFSigns() "{{{1
 		endfor
 	endif
 endfu
-
 " Modeline "{{{1
 " vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4
