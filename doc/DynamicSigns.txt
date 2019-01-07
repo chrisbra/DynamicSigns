@@ -1,13 +1,12 @@
 *DynamicSigns.txt* - Using Signs for different things
 
 Author:  Christian Brabandt <cb@256bit.org>
-Version: 0.1 Thu, 15 Mar 2012 23:37:37 +0100
+Version: 0.2 Mon, 07 Jan 2019
                                                         *SignsCopyright*
-Copyright: (c) 2009, 2010, 2011, 2012 by Christian Brabandt
-           The VIM LICENSE applies to improved_ft.vim and improved_ft.txt
-           (see |copyright|) except use improved_ft instead of "Vim".
+Copyright: (c) 2009-2019 by Christian Brabandt
+           The VIM LICENSE applies to DynamicSigns (see |copyright|)
+           except use DynamicSigns instead of "Vim".
            NO WARRANTY, EXPRESS OR IMPLIED.  USE AT-YOUR-OWN-RISK.
-
 
 ===========================================================================
 1. Contents                                                 *Signs-content*
@@ -359,7 +358,7 @@ icons.
 -----------
 Feedback is always welcome. If you like the plugin, please rate it at the
 vim-page:
-http://www.vim.org/scripts/script.php?script_id=3877
+http://www.vim.org/scripts/script.php?script_id=3965
 
 You can also follow the development of the plugin at github:
 http://github.com/chrisbra/DynamicSigns
@@ -370,8 +369,7 @@ third line of this document.
 ==========================================================================
 4. History                                              *Signs-history*
 
-0.2: (unreleased) {{{1
-
+0.3: (unreleased) {{{1
 - Performance improvements to make updating the signs faster
   (could slow down saving considerably for large files)
 - Implement a Scrollbar |Signs-Scrollbar|
@@ -381,8 +379,8 @@ third line of this document.
 - Update SignExpressions on Changes to buffer or when switching to the gui
 - Do not clean the signs, when starting up
 - Make the |:SignExpression| command window-local
-0.1: Mar 15, 2012 {{{1
 
+0.2: Mar 15, 2012 {{{1
 - Initial upload
 - development versions are available at the github repository
 - put plugin on a public repository (http://github.com/chrisbra/Signs)
