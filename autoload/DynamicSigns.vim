@@ -467,7 +467,7 @@ fu! <sid>DefineSignsIcons(def) "{{{1
 	try
         let def=a:def
         let path=matchstr(def, 'icon=\zs\S\+')
-        if !empty(path) && filereadable(path)
+        if !filereadable(path)
             let def=substitute(def, 'icon=\S\+', '', '')
         endif
 		exe def
