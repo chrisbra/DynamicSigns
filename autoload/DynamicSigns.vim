@@ -196,10 +196,14 @@ fu! <sid>NextID() "{{{1
 	return s:Id
 endfu
 fu! <sid>ReturnSignDef() "{{{1
+	if s:sign_api
+		let list=sign_getdefined()
+		return filter(list, {i,v -> v.name =~ '^DSign'})
+	endif
 	let a = <sid>Redir(':sil sign list')
 	let b = split(a, "\n")[2:]
 	call map(b, 'split(v:val)[1]')
-	return filter(b, 'v:val=~''^\(Sign\)\|\(\d\+$\)''')
+	return filter(b, 'v:val=~''^DSign''')
 endfu
 fu! <sid>ReturnSigns(buffer) "{{{1
 	let lang=v:lang
@@ -318,7 +322,7 @@ endfu
 fu! <sid>DoBookmarkHL() "{{{1
 	if get(s:, "BookmarkSigns", 0)
 		let PlacedSigns = copy(s:Signs)
-		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=SignBookmark\(.\)'
+		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=DSignBookmark\(.\)'
 		let Sign = matchlist(PlacedSigns, pat)
 		if !exists("s:BookmarkSignsHL")
 			let s:BookmarkSignsHL = {}
@@ -456,14 +460,15 @@ fu! <sid>DefineSigns() "{{{1
 		let utf8signs = 0
 	endif
 
+	" Indentlevel
 	for item in range(1,9)
-		let def = printf("sign define %d text=%d texthl=%s %s",
+		let def = printf("sign define DSign%d text=%d texthl=%s %s",
 			\	item, item, s:id_hl.Line, (icon ? 'icon='.s:i_path.item.'.bmp' : ''))
 		call <sid>DefineSignsIcons(def)
 	endfor
 
 	" Indentlevel > 9
-	let def = printf("sign define 10 text=>9 texthl=%s %s",
+	let def = printf("sign define DSign10 text=>9 texthl=%s %s",
 				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 	
@@ -473,13 +478,13 @@ fu! <sid>DefineSigns() "{{{1
 	call <sid>DefineSignsIcons(def)
 
 	" Mixed Indentation Error
-	let def = printf("sign define SignWSError text=X texthl=%s %s",
+	let def = printf("sign define DSignWSError text=X texthl=%s %s",
 				\ s:id_hl.Error, 
 				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
 	
 	" Scrollbar
-	exe printf("sign define SignScrollbar text=%s texthl=%s",
+	exe printf("sign define DSignScrollbar text=%s texthl=%s",
 				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
 	"
 	" Custom Signs Hooks
@@ -532,7 +537,7 @@ fu! <sid>DefineSigns() "{{{1
 			let texthl = 'SignLine'. matchstr(sign, 'Gutter\zs\d')+0
 		endif
 
-		let def = printf("sign define SignCustom%s %s texthl=%s %s %s", 
+		let def = printf("sign define DSignCustom%s %s texthl=%s %s %s", 
 			\ sign, (!empty(text) ? "text=".text : ''),
 			\ empty(texthl) ? s:id_hl.Error : texthl, icn,
 			\ (line ? 'linehl=SignLine'.line : ''))
@@ -546,34 +551,34 @@ fu! <sid>DefineSigns() "{{{1
 			let icn = s:i_path.toupper(item).".bmp"
 		endif
 
-		let def = printf("sign define SignBookmark%s text='%s texthl=%s %s",
+		let def = printf("sign define DSignBookmark%s text='%s texthl=%s %s",
 					\ item, item, s:id_hl.Line, ( empty(icn) ? '' : 'icon='.icn))
 		call <sid>DefineSignsIcons(def)
 	endfor
 
 	" Make Errors (quickfix list)
 	if has("quickfix")
-		let def = printf("sign define SignQF text=! texthl=%s %s",
+		let def = printf("sign define DSignQF text=! texthl=%s %s",
 				\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
 	endif
 
 	" Diff Signs
 	if has("diff")
-		let def = printf("sign define SignAdded text=+ texthl=DiffAdd %s",
+		let def = printf("sign define DSignAdded text=+ texthl=DiffAdd %s",
 					\ (icon ? " icon=". s:i_path . "add.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
-		let def = printf("sign define SignChanged text=M texthl=DiffChange %s",
+		let def = printf("sign define DSignChanged text=M texthl=DiffChange %s",
 					\ (icon ? " icon=". s:i_path . "warning.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
-		let def = printf("sign define SignDeleted text=- texthl=DiffDelete %s",
+		let def = printf("sign define DSignDeleted text=- texthl=DiffDelete %s",
 					\ (icon ? " icon=". s:i_path . "delete.bmp" : ''))
 		call <sid>DefineSignsIcons(def)
 	endif
 
 	" Alternating Colors
-	exe "sign define SignEven linehl=". s:id_hl.LineEven
-	exe "sign define SignOdd linehl=".  s:id_hl.LineOdd
+	exe "sign define DSignEven linehl=". s:id_hl.LineEven
+	exe "sign define DSignOdd linehl=".  s:id_hl.LineOdd
 
 	let s:SignDef = <sid>ReturnSignDef()
 endfu
@@ -658,46 +663,46 @@ fu! <sid>DoSigns() "{{{1
 			call matchdelete(s:MixedIndentationHL)
 		endif
 		let index = match(s:Signs,
-			\ 'id='.s:sign_prefix.'\d\+.*=SignWSError')
+			\ 'id='.s:sign_prefix.'\d\+.*=DSignWSError')
 		while index > -1
 			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
 			call <sid>UnplaceSignID(s:sign_prefix.line)
 			call remove(s:Signs, index)
 			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=SignWSError') 
+				\ '\d\+.*=DSignWSError')
 		endw
 
 	elseif !s:IndentationLevel &&
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
-		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=\d\+')
+		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=DSign\d\+')
 		while index > -1
 			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
 			call <sid>UnplaceSignID(s:sign_prefix.line)
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=\d\+') 
+			let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=\d\+')
 		endw
 
 	elseif !s:SignHook &&
 		\ get(s:CacheOpts, 'SignHook', 0) > 0
-		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=SignCustom')
+		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=DSignCustom')
 		while index > -1
 			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
 			call <sid>UnplaceSignID(s:sign_prefix.line)
 			call remove(s:Signs, index)
 			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=SignCustom') 
+				\ '\d\+.*=DSignCustom')
 		endw
 
 	elseif !s:SignScrollbar &&
 		\ get(s:CacheOpts, 'SignScrollbar', 0) > 0
 		let index = match(s:Signs, 'id='. s:sign_prefix.
-			\ '\d\+.*=SignScrollbar')
+			\ '\d\+.*=DSignScrollbar')
 		while index > -1
 			let line = matchstr(s:Signs[index], '^\s*\w\+='\zs\d\+\ze\D')
 			call <sid>UnplaceSignId(s:sign_prefix.line)
 			call remove(s:Signs, index)
 			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=SignScrollbar')
+				\ '\d\+.*=DSignScrollbar')
 		endw
 		" remove autocommand
 		call <sid>DoSignScrollbarAucmd(0)
@@ -732,13 +737,13 @@ endfu
 fu! <sid>DoSignBookmarks() "{{{1
 	if s:BookmarkSigns != get(s:CacheOpts, 'BookmarkSigns', 0)
 		let index = match(s:Signs,
-			\'id='.s:sign_prefix.'\d\+.*=SignBookmark')
+			\'id='.s:sign_prefix.'\d\+.*=DSignBookmark')
 		while index > -1
 			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
 			call <sid>UnplaceSignID(s:sign_prefix.line)
 			call remove(s:Signs, index)
 			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=SignBookmark') 
+				\ '\d\+.*=DSignBookmark')
 		endw
 		if exists("s:BookmarkSignsHL")
 			for value in values(s:BookmarkSignsHL)
@@ -767,12 +772,12 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 		let div    = shiftwidth()
 
 		let oldSign = match(s:Signs, '^\s*\w\+='.a:line.
-			\ '.*=SignWSError')
-		if div > 0 && indent > 0 
+			\ '.*=DSignWSError')
+		if div > 0 && indent > 0
 			if oldSign < 0
 				try
 					exe "sign place ". <sid>NextID(). " line=" .
-						\ 	a:line.  " name=".
+						\ 	a:line.  " name=DSign".
 						\ (indent/div < 10 ? indent/div : '10').
 						\ " buffer=" . bufnr('')
 				catch
@@ -834,21 +839,21 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		for line in [tline, nline]
 			exe "sign place " s:sign_prefix . b:SignScrollbarState . 
 				\ " line=" . string(line) .
-				\ " name=SignScrollbar buffer=" . bufnr('')
+				\ " name=DSignScrollbar buffer=" . bufnr('')
 			if wrap
 				break
 			endif
 		endfor
 		let b:SignScrollbarState = !b:SignScrollbarState
 		let idx=match(s:Signs, 'id='. s:sign_prefix.
-				\ b:SignScrollbarState. '.*=SignScrollbar')
+				\ b:SignScrollbarState. '.*=DSignScrollbar')
 		while idx > -1
 			" unplace old signs
 			call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
 			" update s:Signs
 			call remove(s:Signs, idx)
 			let idx=match(s:Signs, 'id='. s:sign_prefix.
-					\ b:SignScrollbarState. '.*=SignScrollbar')
+					\ b:SignScrollbarState. '.*=DSignScrollbar')
 		endw
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
@@ -874,11 +879,11 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 			\ matchadd('Error', pat)
 		endif
 		let oldSign = match(s:Signs, '^\s*\w\+='.a:line.
-					\ '.*=SignWSError')
+					\ '.*=DSignWSError')
 		if match(line, pat) > -1 
 			if oldSign < 0
 				exe "sign place " . <sid>NextID(). " line=". a:line.
-					\ " name=SignWSError buffer=" . bufnr('')
+					\ " name=DSignWSError buffer=" . bufnr('')
 			endif
 			return 1
 		elseif oldSign >= 0
@@ -903,10 +908,10 @@ fu! <sid>PlaceSignHook(line) "{{{1
 				let result = 'Info'
 			endif
 			let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
-					\ '\D.*=SignCustom')
+					\ '\D.*=DSignCustom')
 			if a || !empty(a)
 				if oldSign >= 0
-					let oldSignname = matchstr(s:Signs[oldSign], 'SignCustom\zs\S\+\ze')
+					let oldSignname = matchstr(s:Signs[oldSign], 'DSignCustom\zs\S\+\ze')
 					" need to unplace old signs
 					if oldSignname !=# result
 						call <sid>UnplaceSignSingle(a:line)
@@ -915,7 +920,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 					endif
 				endif
 				exe "sign place ". <sid>NextID(). " line=". a:line.
-					\ " name=SignCustom". result. " buffer=". bufnr('')
+					\ " name=DSignCustom". result. " buffer=". bufnr('')
 			elseif oldSign >= 0
 				" Custom Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(a:line)
@@ -934,13 +939,13 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	" Diff Signs
 	let did_place_sign = 0
 	if !empty(a:DiffSigns)
-		let oldSign = match(s:Signs, '^\s*\w\+='.a:line. '\D.*=SignAdded')
+		let oldSign = match(s:Signs, '^\s*\w\+='.a:line. '\D.*=DSignAdded')
 		" Added Lines
 		for sign in sort(a:DiffSigns['a'])
 			if sign == a:line
 				if oldSign < 0
 					exe "sign place ". <sid>NextID(). " line=".
-						\ a:line. " name=SignAdded buffer=". bufnr('')
+						\ a:line. " name=DSignAdded buffer=". bufnr('')
 				endif
 				let did_place_sign = 1
 				break
@@ -951,12 +956,12 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		endif
 		" Changed Lines
 		let oldSign = match(s:Signs, '^\s*\w\+='. a:line. 
-				\ '\D.*=SignChanged')
+				\ '\D.*=DSignChanged')
 		for sign in sort(a:DiffSigns['c'])
 			if sign == a:line
 				if oldSign < 0
 					exe "sign place " . <sid>NextID(). " line=".
-						\ a:line. " name=SignChanged buffer=". bufnr('')
+						\ a:line. " name=DSignChanged buffer=". bufnr('')
 				endif
 				let did_place_sign = 1
 				break
@@ -967,12 +972,12 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		endif
 		" Deleted Lines
 		let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
-				\ '\D.*=SignDeleted')
+				\ '\D.*=DSignDeleted')
 		for sign in sort(a:DiffSigns['d'])
 			if sign == a:line
 				if oldSign < 0
 					exe "sign place " . <sid>NextID(). " line=".
-						\ a:line. " name=SignDeleted buffer=". bufnr('')
+						\ a:line. " name=DSignDeleted buffer=". bufnr('')
 				endif
 				let did_place_sign = 1
 				break
@@ -1003,7 +1008,7 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 		endif
 		let sign = printf('sign place %d line=%d name=%s buffer=%d',
 					\ <sid>NextID(), a:line,
-					\ (a:line % 2 ? "SignOdd" : "SignEven"), bufnr(''))
+					\ (a:line % 2 ? "DSignOdd" : "DSignEven"), bufnr(''))
 		exe sign
 	endif
 	return 1
@@ -1012,7 +1017,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 	" Place signs for bookmarks
 	if exists("s:BookmarkSigns")
 		\ && s:BookmarkSigns == 1
-		let pat = 'id='.s:sign_prefix.'\('.a:line.'\)[^0-9=]*=SignBookmark\(.\)'
+		let pat = 'id='.s:sign_prefix.'\('.a:line.'\)[^0-9=]*=DSignBookmark\(.\)'
 		let oldSign = matchlist(s:Signs, pat)
 		
 		let MarksOnLine = <sid>GetMarksOnLine(a:line)
@@ -1021,7 +1026,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 				" Take the first bookmark, that is on that line
 				let line = s:bookmarks[MarksOnLine[0]]
 				exe "sign place " . <sid>NextID().
-					\ " line=". line. " name=SignBookmark".
+					\ " line=". line. " name=DSignBookmark".
 					\ MarksOnLine[0]. " buffer=". bufnr('')
 				let s:BookmarkSignsHL[MarksOnLine[0]] = matchadd('WildMenu',
 					\ <sid>GetPattern(MarksOnLine[0]))
@@ -1141,19 +1146,19 @@ fu! DynamicSigns#MapBookmark() "{{{1
 		" Initilize variables
 		call <sid>Init()
 		if <sid>DoSignBookmarks() &&
-			\ match(s:SignDef, 'SignBookmark'.char) >= 0  " there was a sign defined for the mark
+			\ match(s:SignDef, 'DSignBookmark'.char) >= 0  " there was a sign defined for the mark
 			" First place the new sign
 			" don't unplace old signs first, that prevents flicker (e.g. first
 			" removing all signs, removes the sign column, than placing a sign adds
 			" the sign column again.
 			let cline = line('.')
 			let sign_cmd =
-				\ printf(":sign place %d line=%d name=SignBookmark%s buffer=%d",
+				\ printf(":sign place %d line=%d name=DSignBookmark%s buffer=%d",
 				\ <sid>NextID(), cline, char, bufnr(''))
 			exe sign_cmd
 			let indx = []
 			" unplace previous mark for this sign
-			let pat = 'line=\(\d\+\)\s\+id=\('.s:sign_prefix.'\d\+\)[^=]*=SignBookmark\('.char.'\)'
+			let pat = 'line=\(\d\+\)\s\+id=\('.s:sign_prefix.'\d\+\)[^=]*=DSignBookmark\('.char.'\)'
 			let indx = matchlist(s:Signs, pat)
 			while !empty(indx)
 				let line = indx[1]
@@ -1279,7 +1284,7 @@ fu! DynamicSigns#QFSigns() "{{{1
 				continue
 			endif
 			exe "sign place ". <sid>NextID(). " line=" . item.lnum .
-				\ " name=SignQF buffer=" . item.bufnr
+				\ " name=DSignQF buffer=" . item.bufnr
 		endfor
 	endif
 endfu
