@@ -20,6 +20,7 @@ let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
 let s:execute = exists("*execute")
 let s:sign_api = v:version > 801 || (v:version == 801 && has("patch614"))
+let s:sign_api = 0
 let s:sign_api_group = 'DynamicSigns'
 
 let s:sid    = <sid>GetSID()
