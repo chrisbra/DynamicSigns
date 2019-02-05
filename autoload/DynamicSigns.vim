@@ -42,7 +42,7 @@ fu! <sid>Check() "{{{1
 		throw 'Signs:abort'
 	endif
 
-	let s:sign_prefix = s:sid
+	let s:sign_prefix = (s:sign_api ? '' : s:sid)
 	let s:sign_count  = '10'
 	let s:id_hl       = {}
 	let s:id_hl.Line  = "DiffAdd"
@@ -136,6 +136,7 @@ fu! <sid>Init(...) "{{{1
 		let s:gui_running = has("gui_running")
 	endif
 	" highlight line
+	" TODO: simplify, a simple `:hi default should work!
 	if !hlexists("SignLine1") || empty(synIDattr(hlID("SignLine1"), "ctermbg"))
 		exe "hi default SignLine1 ctermbg=238 guibg=#403D3D"
 	endif
@@ -189,6 +190,7 @@ fu! <sid>Init(...) "{{{1
 	call <sid>AuCmd(1)
 endfu
 fu! <sid>NextID() "{{{1
+	" Not used for sign api
 	let s:sign_count+=1
 	let s:Id = s:sign_prefix . s:sign_count
 	return s:Id
@@ -1282,4 +1284,4 @@ fu! DynamicSigns#QFSigns() "{{{1
 	endif
 endfu
 " Modeline "{{{1
-" vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4
+" vim: fdm=marker fdl=0 ts=4 sts=4 com+=l\:\" fdl=0 sw=4 noet
