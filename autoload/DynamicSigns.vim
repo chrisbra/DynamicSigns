@@ -374,7 +374,11 @@ fu! <sid>UnplaceSignSingle(sign) "{{{1
 	call winrestview(oldcursor)
 endfu
 fu! <sid>UnplaceSignID(id) "{{{1
-	exe "sil sign unplace ". a:id. " buffer=".bufnr('')
+	if s:sign_api
+		call sign_unplace(s:sign_api_group, {'buffer': bufnr(''), 'id': a:id})
+	else
+		exe "sil sign unplace ". a:id. " buffer=".bufnr('')
+	endif
 endfu
 fu! <sid>GetMarks() "{{{1
 	let marks={}
