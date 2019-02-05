@@ -10,6 +10,7 @@
 
 " TODO: Make use VimScript API for managing signs!
 
+"{{{1 scriptlocal variables
 fu! <sid>GetSID()
 	return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_GetSID$')
 endfu
@@ -18,6 +19,8 @@ scriptencoding utf-8
 let s:plugin = fnamemodify(expand("<sfile>"), ':t:r')
 let s:i_path = fnamemodify(expand("<sfile>"), ':p:h'). '/'. s:plugin. '/'
 let s:execute = exists("*execute")
+let s:sign_api = v:version > 801 || (v:version == 801 && has("patch614"))
+let s:sign_api_group = 'DynamicSigns'
 
 let s:sid    = <sid>GetSID()
 delf <sid>GetSID "not needed anymore
