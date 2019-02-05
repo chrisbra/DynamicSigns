@@ -224,6 +224,13 @@ fu! <sid>ReturnSigns(buffer) "{{{1
 	return b
 endfu
 fu! <sid>RemoveDeletedSigns(list) "{{{1
+	" not used for sign_api
+	" but just in case
+	if s:sign_api
+		call add(s:msg, 'Using wrong function for Sign-API')
+		call <sid>WarningMsg()
+		return
+	endif
 	for sign in a:list
 		let id=matchstr(sign, 'id=\zs\d\+')
 		exe "sil sign unplace" id "buffer=". bufnr('')
