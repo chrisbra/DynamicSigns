@@ -334,12 +334,22 @@ fu! <sid>UnMatchHL() "{{{1
 endfu
 fu! <sid>DoBookmarkHL() "{{{1
 	if get(s:, "BookmarkSigns", 0)
-		let PlacedSigns = copy(s:Signs)
-		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=DSignBookmark\(.\)'
-		let Sign = matchlist(PlacedSigns, pat)
 		if !exists("s:BookmarkSignsHL")
 			let s:BookmarkSignsHL = {}
 		endif
+		if s:sign_api
+			for sign in s:Signs
+				let mark = matchstr(sign.name, 'DSignBookmark\(.\)')
+				if !empty(mark)
+					let s:BookmarkSignsHL[mark] = matchadd('WildMenu',
+						\ <sid>GetPattern(mark))
+				endif
+			endfor
+			return
+		endif
+		let PlacedSigns = copy(s:Signs)
+		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=DSignBookmark\(.\)'
+		let Sign = matchlist(PlacedSigns, pat)
 		while (!empty(Sign))
 			let s:BookmarkSignsHL[Sign[1]] = matchadd('WildMenu',
 						\ <sid>GetPattern(Sign[1]))
