@@ -35,7 +35,7 @@ fu! <sid>Check() "{{{1
 	endif
 
 	if !has("signs")
-		call add(s:msg, "Sign Support support not available" . 
+		call add(s:msg, "Sign Support support not available" .
 				\ "in your Vim version.")
 		call add(s:msg, "Signs plugin will not be working!")
 		call <sid>WarningMsg()
@@ -50,7 +50,7 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Check = "User1"
 	let s:id_hl.LineEven = get(g:, "g:DynamicSigns_Even", <sid>Color("Even"))
 	let s:id_hl.LineOdd  = get(g:, "g:DynamicSigns_Odd",  <sid>Color("Odd"))
-	
+
 	" Undefine Signs
 	if exists("s:precheck")
 		" just started up, there shouldn't be any signs yet
@@ -111,7 +111,7 @@ endfu
 fu! <sid>Init(...) "{{{1
 	" Message queue, that will be displayed.
 	let s:msg  = []
-	
+
 	" Setup configuration variables:
 	let s:MixedIndentation = get(g:, "Signs_MixedIndentation", 0)
 	let s:IndentationLevel = get(g:, "Signs_IndentationLevel", 0)
@@ -127,12 +127,12 @@ fu! <sid>Init(...) "{{{1
 	" and the gui can display its own scrollbar
 	let s:SignScrollbar = exists("g:Signs_Scrollbar") ?
 				\ (g:Signs_Scrollbar && !has("gui_running")) : 0
-	
+
 	let s:Sign_CursorHold = get(g:, "Signs_CursorHold", 0)
 	let s:debug    = get(g:, "Signs_Debug", 0)
     let s:ignore   = split(get(g:, 'Signs_Ignore', ''), ',')
 
-	if !exists("s:gui_running") 
+	if !exists("s:gui_running")
 		let s:gui_running = has("gui_running")
 	endif
 	" highlight line
@@ -228,7 +228,7 @@ fu! <sid>RemoveDeletedSigns(list) "{{{1
 	endfor
 endfu
 fu! <sid>AuCmd(arg) "{{{1
-	" Don't update signs for 
+	" Don't update signs for
 	" marks on insertleave
 	if a:arg
 		augroup Signs
@@ -242,7 +242,7 @@ fu! <sid>AuCmd(arg) "{{{1
 			exe s:SignQF ?
 				\ "au QuickFixCmdPost * :call DynamicSigns#QFSigns()" : ''
 			if exists("s:Sign_CursorHold") && s:Sign_CursorHold
-				au CursorHold,CursorHoldI * 
+				au CursorHold,CursorHoldI *
 					\ call DynamicSigns#UpdateWindowSigns('marks')
 			endif
 			" make sure, sign expression is reevaluated on changes to
@@ -266,7 +266,7 @@ fu! <sid>DoSignScrollbarAucmd(arg) "{{{1
 	if a:arg
 		augroup SignsScrollbar
 			autocmd!
-			au CursorMoved,CursorMovedI,VimResized,BufEnter * 
+			au CursorMoved,CursorMovedI,VimResized,BufEnter *
 				\ :call DynamicSigns#UpdateScrollbarSigns()
 		augroup END
 	else
@@ -397,12 +397,12 @@ fu! <sid>PlaceSigns(...) "{{{1
 			continue
 		endif
 		" Place Diff Signs "{{{3
-		if match(s:ignore, 'diff') == -1 && 
+		if match(s:ignore, 'diff') == -1 &&
 			\ <sid>PlaceDiffSigns(line, DiffSigns)
 			continue
 		endif
 		" Place Bookmarks "{{{3
-		if match(s:ignore, 'marks') == -1 && 
+		if match(s:ignore, 'marks') == -1 &&
 			\ <sid>PlaceBookmarks(line)
 			continue
 		endif
@@ -450,7 +450,7 @@ endfu
 fu! <sid>DefineSigns() "{{{1
 	let icon = 0
 	if (has("gui_gtk") || has("gui_win32") || has("win32") || has("win64"))
-		\ && has("gui_running") 
+		\ && has("gui_running")
 		let icon = 1
 	endif
 
@@ -471,7 +471,7 @@ fu! <sid>DefineSigns() "{{{1
 	let def = printf("sign define DSign10 text=>9 texthl=%s %s",
 				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
-	
+
 	" Indentlevel < 1
 	let def = printf("sign define 0 text=<1 texthl=%s %s",
 				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "warning.bmp" : ''))
@@ -479,10 +479,10 @@ fu! <sid>DefineSigns() "{{{1
 
 	" Mixed Indentation Error
 	let def = printf("sign define DSignWSError text=X texthl=%s %s",
-				\ s:id_hl.Error, 
+				\ s:id_hl.Error,
 				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
 	call <sid>DefineSignsIcons(def)
-	
+
 	" Scrollbar
 	exe printf("sign define DSignScrollbar text=%s texthl=%s",
 				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
@@ -537,7 +537,7 @@ fu! <sid>DefineSigns() "{{{1
 			let texthl = 'SignLine'. matchstr(sign, 'Gutter\zs\d')+0
 		endif
 
-		let def = printf("sign define DSignCustom%s %s texthl=%s %s %s", 
+		let def = printf("sign define DSignCustom%s %s texthl=%s %s %s",
 			\ sign, (!empty(text) ? "text=".text : ''),
 			\ empty(texthl) ? s:id_hl.Error : texthl, icn,
 			\ (line ? 'linehl=SignLine'.line : ''))
@@ -587,10 +587,10 @@ fu! <sid>ReturnDiffSigns() "{{{1
 	if !executable("diff")	||
 		\ empty(fname)		||
 		\ !has("diff")		||
-		\ !filereadable(fname) 
+		\ !filereadable(fname)
 		" nothing to do
 		if &verbose > 0
-			call add(s:msg, 'Diff not possible:' . 
+			call add(s:msg, 'Diff not possible:' .
 				\ (!executable("diff") ? ' No diff executable found!' :
 				\ empty(fname) ? ' Current file has never been written!' :
 				\ !filereadable(fname) ? ' '. fname. ' not readable!' :
@@ -792,7 +792,7 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 			"no more indentation Signs needed, remove
 			call <sid>UnplaceSignSingle(a:line)
 		endif
-	endif 
+	endif
 	return 0
 endfu
 fu! <sid>PlaceScrollbarSigns() "{{{1
@@ -809,7 +809,7 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		endif
 		let curline  = line('.')  + 0.0
 		let lastline = line('$')  + 0.0
-		let wheight  = winheight(0) + 0.0 
+		let wheight  = winheight(0) + 0.0
 		let curperc  = curline/lastline
 		let tline    = round(wheight * curperc)
 		let tline += line('w0') - 1
@@ -837,7 +837,7 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		" Place 2 Signs if no wrapping occurs,
 		" so the scrollbar looks better
 		for line in [tline, nline]
-			exe "sign place " s:sign_prefix . b:SignScrollbarState . 
+			exe "sign place " s:sign_prefix . b:SignScrollbarState .
 				\ " line=" . string(line) .
 				\ " name=DSignScrollbar buffer=" . bufnr('')
 			if wrap
@@ -872,15 +872,15 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 		let pat2 = '\%(\S\zs\s\+$\)'
 		"highlight non-breaking space, etc...
 		let pat3 = '\%([\x0b\x0c\u00a0\u1680\u180e\u2000-\u200a\u2028\u202f\u205f\u3000\ufeff]\)'
-		
+
 		let pat = pat1. '\|'. pat2. '\|'. pat3
 		if !exists("s:MixedIndentationHL")
-			let s:MixedIndentationHL = 
+			let s:MixedIndentationHL =
 			\ matchadd('Error', pat)
 		endif
 		let oldSign = match(s:Signs, '^\s*\w\+='.a:line.
 					\ '.*=DSignWSError')
-		if match(line, pat) > -1 
+		if match(line, pat) > -1
 			if oldSign < 0
 				exe "sign place " . <sid>NextID(). " line=". a:line.
 					\ " name=DSignWSError buffer=" . bufnr('')
@@ -955,7 +955,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 			return 1
 		endif
 		" Changed Lines
-		let oldSign = match(s:Signs, '^\s*\w\+='. a:line. 
+		let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
 				\ '\D.*=DSignChanged')
 		for sign in sort(a:DiffSigns['c'])
 			if sign == a:line
@@ -1019,7 +1019,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 		\ && s:BookmarkSigns == 1
 		let pat = 'id='.s:sign_prefix.'\('.a:line.'\)[^0-9=]*=DSignBookmark\(.\)'
 		let oldSign = matchlist(s:Signs, pat)
-		
+
 		let MarksOnLine = <sid>GetMarksOnLine(a:line)
 		if empty(oldSign)
 			if !empty(MarksOnLine)
@@ -1065,12 +1065,12 @@ fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 		" nothing to do
 		return
 	endif
-	let oldSign = match(s:Signs, 
+	let oldSign = match(s:Signs,
 		\ '.*=Sign\(Added\|Changed\|Deleted\)')
 	while oldSign > -1
 		call <sid>UnplaceSignSingle(matchstr(s:Signs[oldSign], '^\s*\w\+=\zs\d\+\ze'))
 		call remove(s:Signs, oldSign)
-		let oldSign = match(s:Signs, 
+		let oldSign = match(s:Signs,
 			\ '.*=Sign\(Added\|Changed\|Deleted\)')
 	endw
 	for line in a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d']
@@ -1264,7 +1264,7 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	endif
 	let s:no_qf_autocmd = 1
 	call call(func, args)
-	unlet s:no_qf_autocmd 
+	unlet s:no_qf_autocmd
 	copen
 endfu
 fu! DynamicSigns#ForceUpdate() "{{{1
