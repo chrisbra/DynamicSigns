@@ -337,14 +337,10 @@ fu! <sid>DoBookmarkHL() "{{{1
 		if !exists("s:BookmarkSignsHL")
 			let s:BookmarkSignsHL = {}
 		endif
+		let PlacedSigns = copy(s:Signs)
 		if s:sign_api
-			for sign in s:Signs
-				let mark = matchstr(sign.name, 'DSignBookmark\(.\)')
-				if !empty(mark)
-					let s:BookmarkSignsHL[mark] = matchadd('WildMenu',
-						\ <sid>GetPattern(mark))
-				endif
-			endfor
+			call filter(PlacedSigns, {i,v -> v.name =~ 'DSignBookmark\(.\)'})
+			call map(PlacedSigns, {i,v -> matchadd('WildMenu', <sid>GetPattern(v.name[-1]))})
 			return
 		endif
 		let PlacedSigns = copy(s:Signs)
