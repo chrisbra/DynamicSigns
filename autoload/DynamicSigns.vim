@@ -205,6 +205,9 @@ fu! <sid>ReturnSignDef() "{{{1
 	return filter(b, 'v:val=~''^DSign''')
 endfu
 fu! <sid>ReturnSigns(buffer) "{{{1
+	if s:sign_api
+		return sign_getplaced(a:buffer, {'group': s:sign_api_group})[0].signs
+	endif
 	let lang=v:lang
 	if lang isnot# 'C'
 		sil lang mess C
