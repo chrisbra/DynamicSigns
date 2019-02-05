@@ -294,6 +294,10 @@ fu! <sid>Redir(args) "{{{1
 	return a
 endfu
 fu! <sid>UnPlaceSigns() "{{{1
+	if s:sign_api
+		call sign_unplace(s:sign_api_group, {'buffer': bufnr('')})
+		return
+	endif
 	let a = <sid>Redir(':sil sign place buffer='.bufnr(''))
 	let b=split(a,"\n")[1:]
 	if empty(b)
