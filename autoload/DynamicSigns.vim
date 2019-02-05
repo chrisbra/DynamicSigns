@@ -197,8 +197,7 @@ fu! <sid>NextID() "{{{1
 endfu
 fu! <sid>ReturnSignDef() "{{{1
 	if s:sign_api
-		let list=sign_getdefined()
-		return filter(list, {i,v -> v.name =~ '^DSign'})
+		return filter(sign_getdefined(), {i,v -> v.name =~ '^DSign'})
 	endif
 	let a = <sid>Redir(':sil sign list')
 	let b = split(a, "\n")[2:]
