@@ -354,12 +354,21 @@ fu! <sid>DoBookmarkHL() "{{{1
 		endw
 	endif
 endfu
-fu! <sid>UnplaceSignSingle(item) "{{{1
-	if a:item < 0
+fu! <sid>GetLineForSign(sign) "{{{1
+	" not used for Sign-API
+	return matchstr(a:sign, '^\s*\w\+=\zs\d\+\ze\D') + 0
+endfunction
+fu! <sid>UnplaceSignSingle(sign) "{{{1
+	if s:sign_api
+		call sign_unplace(s:sign_api_group, {'buffer': bufnr(''), 'id': a:sign.id})
+		return
+	endif
+	let line = <sid>GetLineForSign(a:sign)
+	if line <= 0
 		return
 	endif
 	let oldcursor = winsaveview()
-	call cursor(a:item,0)
+	call cursor(line, 0)
 	" Vim errors, if the line does not contain a sign
 	sil! sign unplace
 	call winrestview(oldcursor)
@@ -809,7 +818,7 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 			return 1
 		elseif oldSign >= 0
 			"no more indentation Signs needed, remove
-			call <sid>UnplaceSignSingle(a:line)
+			call <sid>UnplaceSignSingle(s:Signs[oldSign])
 		endif
 	endif
 	return 0
@@ -907,7 +916,7 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 			return 1
 		elseif oldSign >= 0
 			" No more wrong indentation, remove sign
-			call <sid>UnplaceSignSingle(a:line)
+			call <sid>UnplaceSignSingle(s:Signs[oldSign])
 		endif
 	endif
 	if !s:MixedIndentation
@@ -933,7 +942,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 					let oldSignname = matchstr(s:Signs[oldSign], 'DSignCustom\zs\S\+\ze')
 					" need to unplace old signs
 					if oldSignname !=# result
-						call <sid>UnplaceSignSingle(a:line)
+						call <sid>UnplaceSignSingle(s:Signs[oldSign])
 					else
 						return 0
 					endif
@@ -942,7 +951,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 					\ " name=DSignCustom". result. " buffer=". bufnr('')
 			elseif oldSign >= 0
 				" Custom Sign no longer needed, remove it
-				call <sid>UnplaceSignSingle(a:line)
+				call <sid>UnplaceSignSingle(s:Signs[oldSign])
 			endif
 			return 0
 		catch
@@ -1007,7 +1016,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 			return 1
 		elseif oldSign >= 0
 			" Diff Sign no longer needed, remove it
-			call <sid>UnplaceSignSingle(a:line)
+			call <sid>UnplaceSignSingle(s:Signs[oldSign])
 		endif
 	endif
 	return 0
@@ -1023,7 +1032,7 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	if oldSign == -1
 		if oldSign1 > -1
 			" unplace previously place sign first
-			call <sid>UnplaceSignSingle(a:line)
+			call <sid>UnplaceSignSingle(s:Signs[oldSign1])
 		endif
 		let sign = printf('sign place %d line=%d name=%s buffer=%d',
 					\ <sid>NextID(), a:line,
@@ -1038,6 +1047,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 		\ && s:BookmarkSigns == 1
 		let pat = 'id='.s:sign_prefix.'\('.a:line.'\)[^0-9=]*=DSignBookmark\(.\)'
 		let oldSign = matchlist(s:Signs, pat)
+		let oldSign1 = match(s:Signs, '^\s*\w\+='. a:line. '\s*.*=DSignBookmark.')
 
 		let MarksOnLine = <sid>GetMarksOnLine(a:line)
 		if empty(oldSign)
@@ -1054,7 +1064,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 			return 0
 		else
 			" Bookmark Sign no longer needed, remove it
-			call <sid>UnplaceSignSingle(a:line)
+			call <sid>UnplaceSignSingle(s:Signs[oldSign1])
 			for mark in <sid>GetMarksOnLine(a:line)
 				if has_key(s:BookmarkSignsHL, mark)
 					call matchdelete(s:BookmarkSignsHL[mark])
@@ -1087,7 +1097,7 @@ fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 	let oldSign = match(s:Signs,
 		\ '.*=Sign\(Added\|Changed\|Deleted\)')
 	while oldSign > -1
-		call <sid>UnplaceSignSingle(matchstr(s:Signs[oldSign], '^\s*\w\+=\zs\d\+\ze'))
+		call <sid>UnplaceSignSingle(s:Signs[oldSign])
 		call remove(s:Signs, oldSign)
 		let oldSign = match(s:Signs,
 			\ '.*=Sign\(Added\|Changed\|Deleted\)')
