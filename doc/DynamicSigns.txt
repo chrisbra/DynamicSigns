@@ -90,6 +90,10 @@ bookmarks in your buffer and sets the mark. (|:k| does not update the signs,
 Use |:Signs| or |:UpdateSigns| to manually update the view in case this is
 needed).
 
+The position of the marks will be highlighted by using the
+`DynamicSignsHighlightMArks` highlighting group (by default, linked to
+|hl-Visual|.
+
                                                           *:SignExpression*
 2.4 SignExpressions                                        *Signs-Hook*
 -------------------
