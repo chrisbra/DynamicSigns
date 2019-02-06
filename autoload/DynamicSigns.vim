@@ -1286,7 +1286,11 @@ fu! DynamicSigns#CleanUp() "{{{1
 	" undefine all signs
 	if exists("s:SignDef")
 		for sign in s:SignDef
-			exe "sil! sign undefine" sign
+			if s:sign_api
+				call sign_undefine(sign.name)
+			else
+				exe "sil! sign undefine" sign
+			endif
 		endfor
 	endif
 	call <sid>AuCmd(0)
