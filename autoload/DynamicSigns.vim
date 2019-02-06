@@ -375,12 +375,12 @@ fu! <sid>UnplaceSignSingle(sign) "{{{1
 	sil! sign unplace
 	call winrestview(oldcursor)
 endfu
-fu! <sid>PlaceSignSingle(id, line, name, buffer) "{{{1
+fu! <sid>PlaceSignSingle(line, name, buffer) "{{{1
 	" Places a single sign
 	if s:sign_api
 		call sign_place(0, s:sign_api_group, a:name, a:buffer, {'lnum': a:line})
 	else
-		exe "sign place ". a:id. " line=" . a:line.  " name=". a:name.  " buffer=" . a:buffer
+		exe "sign place ". <sid>NextID(). " line=" . a:line.  " name=". a:name.  " buffer=" . a:buffer
 	endif
 endfu
 fu! <sid>SignName(sign)
@@ -869,7 +869,6 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 	if get(s:, "IndentationLevel", 0)
 		let indent = indent(a:line)
 		let div    = shiftwidth()
-		let id     = s:sign_api ? 0 : <sid>NextID()
 
 		let pat = <sid>SignPattern('DSign\d\+')
 		let index = <sid>SignNameMatches(pat)
@@ -877,7 +876,7 @@ fu! <sid>PlaceIndentationSign(line) "{{{1
 			if index < 0
 				try
 					let name = 'DSign'. (indent/div < 10 ? indent/div : '10')
-					call <sid>PlaceSignSingle(id, a:line, name, bufnr(''))
+					call <sid>PlaceSignSingle(a:line, name, bufnr(''))
 				catch
 					call add(s:msg, "Error placing Indtation sign at line: " . a:line)
 					if s:debug
@@ -927,11 +926,10 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		endif
 		call winrestview(_pos)
 
-		let id = s:sign_api ? 0 : <sid>NextID()
 		" Place 2 Signs if no wrapping occurs,
 		" so the scrollbar looks better
 		for line in [tline, nline]
-			call <sid>PlaceSignSingle(id, string(line), 'DSignScrollbar', bufnr(''))
+			call <sid>PlaceSignSingle(string(line), 'DSignScrollbar', bufnr(''))
 			if wrap
 				break
 			endif
@@ -971,8 +969,7 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 		let index = <sid>SignNameMatches(pat)
 		if match(line, pat) > -1
 			if index < 0
-				let id = s:sign_api ? 0 : <sid>NextID()
-				call <sid>PlaceSignSingle(id, a:line, 'DSignWSError', bufnr(''))
+				call <sid>PlaceSignSingle(a:line, 'DSignWSError', bufnr(''))
 			endif
 			return 1
 		elseif oldSign >= 0
@@ -1008,8 +1005,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 						return 1
 					endif
 				endif
-				let id = s:sign_api ? 0 : <sid>NextID()
-				call <sid>PlaceSignSingle(id, a:line, 'DSignCustom'.result, bufnr(''))
+				call <sid>PlaceSignSingle(a:line, 'DSignCustom'.result, bufnr(''))
 			elseif oldSign >= 0
 				" Custom Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(s:Signs[index])
@@ -1033,10 +1029,9 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		let index = <sid>SignNameMatches(pat)
 		" Added Lines
 		let target=index(a:DiffSigns['a'], a:line)
-		let id = s:sign_api ? 0 : <sid>NextID()
 		if target > -1
 			if index < 0
-				call <sid>PlaceSignSingle(id, a:line, 'DSignAdded', bufnr(''))
+				call <sid>PlaceSignSingle(a:line, 'DSignAdded', bufnr(''))
 			endif
 			let did_place_sign = 1
 		endif
@@ -1049,7 +1044,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		let target=index(a:DiffSigns['c'], a:line)
 		if target > -1
 			if index < 0
-				call <sid>PlaceSignSingle(id, a:line, 'DSignChanged', bufnr(''))
+				call <sid>PlaceSignSingle(a:line, 'DSignChanged', bufnr(''))
 			endif
 			let did_place_sign = 1
 		endif
@@ -1062,7 +1057,7 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		let target=index(a:DiffSigns['c'], a:line)
 		if target > -1
 			if index < 0
-				call <sid>PlaceSignSingle(id, a:line, 'DSignDeleted', bufnr(''))
+				call <sid>PlaceSignSingle(a:line, 'DSignDeleted', bufnr(''))
 			endif
 			let did_place_sign = 1
 		endif
@@ -1089,7 +1084,7 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 			" unplace previously place sign first
 			call <sid>UnplaceSignSingle(s:Signs[index2])
 		endif
-		call <sid>PlaceSignSingle(id, a:line, 'DSign'.suffix, bufnr(''))
+		call <sid>PlaceSignSingle(a:line, 'DSign'.suffix, bufnr(''))
 		return 1
 	endif
 	return 0
@@ -1100,7 +1095,6 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 		let MarksOnLine = <sid>GetMarksOnLine(a:line)
 		if !empty(MarksOnLine)
 			let mark = MarksOnLine[0]
-			let id = s:sign_api ? 0 : <sid>NextID()
 			let name = 'DSignBookmark'.mark
 			let pat = <sid>SignPattern(name)
 			let index = <sid>SignNameMatches(pat)
@@ -1108,7 +1102,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 				" Mark Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(s:Signs[index])
 			endif
-			call <sid>PlaceSignSingle(id, a:line, name, bufnr(''))
+			call <sid>PlaceSignSingle(a:line, name, bufnr(''))
 			let s:BookmarkSignsHL[mark] = matchadd(s:id_hl.Mark, <sid>GetPattern(mark))
 			return 1
 		endif
@@ -1223,9 +1217,8 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			" don't unplace old signs first, that prevents flicker (e.g. first
 			" removing all signs, removes the sign column, than placing a sign adds
 			" the sign column again.
-			let id = s:sign_api ? 0 : <sid>NextID()
 			let cline = line('.')
-			call <sid>PlaceSignSingle(id, line('.'), name, bufnr(''))
+			call <sid>PlaceSignSingle(line('.'), name, bufnr(''))
 			let indx = []
 			" unplace previous mark for this sign
 			let index = <sid>SignNameMatches(<sid>SignPattern(name))
@@ -1362,8 +1355,7 @@ fu! DynamicSigns#QFSigns() "{{{1
 			if item.bufnr == 0
 				continue
 			endif
-			let id = s:sign_api ? 0 : <sid>NextID()
-			call <sid>PlaceSignSingle(id, item.lnum, 'DSignQF', item.bufnr)
+			call <sid>PlaceSignSingle(item.lnum, 'DSignQF', item.bufnr)
 		endfor
 	endif
 endfu
