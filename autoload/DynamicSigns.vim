@@ -62,7 +62,7 @@ fu! <sid>Check() "{{{1
 endfu
 fu! <sid>Color(name) "{{{1
 	let definition = ''
-    let termmode=!empty(&t_Co) && &t_Co < 88 && !&tgc
+	let termmode=!empty(&t_Co) && &t_Co < 88 && !&tgc
 	if a:name == 'Even'
 		if &bg == 'dark'
 			if termmode
@@ -130,7 +130,7 @@ fu! <sid>Init(...) "{{{1
 
 	let s:Sign_CursorHold = get(g:, "Signs_CursorHold", 0)
 	let s:debug    = get(g:, "Signs_Debug", 0)
-    let s:ignore   = split(get(g:, 'Signs_Ignore', ''), ',')
+	let s:ignore   = split(get(g:, 'Signs_Ignore', ''), ',')
 
 	if !exists("s:gui_running")
 		let s:gui_running = has("gui_running")
@@ -475,12 +475,12 @@ fu! <sid>PlaceSigns(...) "{{{1
 	call <sid>BufferConfigCache()
 endfu
 fu! <sid>GetSignDef(def) "{{{1
-    " Returns sign definition as string for use as `:sign command`
-    " not used when s:sign_api is defined
-    return (has_key(a:def, 'text') ? ' text='.get(a:def, 'text', '') : '').
-        \ (has_key(a:def, 'texthl') ? ' texthl='.get(a:def, 'texthl', '') : '').
-        \ (has_key(a:def, 'icon') ? ' icon='.get(a:def, 'icon', '') : '').
-        \ (has_key(a:def, 'linehl') ? ' linehl='.get(a:def, 'linehl', '') : '')
+	" Returns sign definition as string for use as `:sign command`
+	" not used when s:sign_api is defined
+	return (has_key(a:def, 'text') ? ' text='.get(a:def, 'text', '') : '').
+		\ (has_key(a:def, 'texthl') ? ' texthl='.get(a:def, 'texthl', '') : '').
+		\ (has_key(a:def, 'icon') ? ' icon='.get(a:def, 'icon', '') : '').
+		\ (has_key(a:def, 'linehl') ? ' linehl='.get(a:def, 'linehl', '') : '')
 endfu
 fu! <sid>DefineSignIcons(def) "{{{1
 	for def in keys(a:def)
@@ -1099,7 +1099,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 			let name = 'DSignBookmark'.mark
 			let pat = <sid>SignPattern(name)
 			let index = <sid>SignNameMatches(pat)
-			if index > -1 
+			if index > -1
 				" Mark Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(s:Signs[index])
 			endif
@@ -1164,7 +1164,7 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	" or force parameter is set
 	if b:dynamicsigns_tick != b:changedtick
 		let b:dynamicsigns_tick = b:changedtick
-        " only run for at max 200 lines
+		" only run for at max 200 lines
 		if !s:SignScrollbar && line('w$') - line('w0')  <= 200
 			call <sid>PlaceSigns(line('w0'), line('w$'))
 		endif
