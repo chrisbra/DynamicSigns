@@ -826,14 +826,12 @@ fu! <sid>DoSigns() "{{{1
 endfu
 fu! <sid>DoSignBookmarks() "{{{1
 	if s:BookmarkSigns != get(s:CacheOpts, 'BookmarkSigns', 0)
-		let index = match(s:Signs,
-			\'id='.s:sign_prefix.'\d\+.*=DSignBookmark')
+		let pat = <sid>SignPattern('DSignBookmark')
+		let index = <sid>HasSignMatches(pat)
 		while index > -1
-			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
-			call <sid>UnplaceSignID(s:sign_prefix.line)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=DSignBookmark')
+			let index = <sid>HasSignMatches(pat)
 		endw
 		if exists("s:BookmarkSignsHL")
 			for value in values(s:BookmarkSignsHL)
