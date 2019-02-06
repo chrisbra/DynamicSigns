@@ -1307,19 +1307,31 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	endif
 	call <sid>Init()
 	let qflist = []
-	let a = <sid>Redir(':sil sign place')
-	for sign in split(a, "\n")
-		if match(sign, '^Signs for \(.*\):$') >= 0
-			let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
-			let file  = readfile(fname)
-		elseif match(sign, '^\s\+\w\+=\d\+\s') >= 0
-			let line = matchstr(sign, '^\s*\w\+=\zs\d\+\ze\s')
-			call add(qflist, {'filename': fname, 'lnum': line,
-				\ 'text': file[line-1]})
-		else
-			continue
-		endif
-	endfor
+	if s:sign_api
+		for sign in sign_getplaced()
+			if empty(sign.signs)
+				continue
+			endif
+			for item in sign.signs
+				call add(qflist, {'bufnr': sign.bufnr, 'lnum':item.lnum,
+							\ 'text': getbufline(sign.bufnr, item.lnum)})
+			endfor
+		endfor
+	else
+		let a = <sid>Redir(':sil sign place')
+		for sign in split(a, "\n")
+			if match(sign, '^Signs for \(.*\):$') >= 0
+				let fname = matchstr(sign, '^Signs for \zs.*\ze:$')
+				let file  = readfile(fname)
+			elseif match(sign, '^\s\+\w\+=\d\+\s') >= 0
+				let line = matchstr(sign, '^\s*\w\+=\zs\d\+\ze\s')
+				call add(qflist, {'filename': fname, 'lnum': line,
+					\ 'text': file[line-1]})
+			else
+				continue
+			endif
+		endfor
+	endif
 	if a:local
 		let func = 'setloclist'
 		let args = [0, qflist]
