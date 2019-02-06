@@ -1098,34 +1098,21 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 endfu
 fu! <sid>PlaceBookmarks(line) "{{{1
 	" Place signs for bookmarks
-	if exists("s:BookmarkSigns")
-		\ && s:BookmarkSigns == 1
-		let pat = 'id='.s:sign_prefix.'\('.a:line.'\)[^0-9=]*=DSignBookmark\(.\)'
-		let oldSign = matchlist(s:Signs, pat)
-		let oldSign1 = match(s:Signs, '^\s*\w\+='. a:line. '\s*.*=DSignBookmark.')
-
+	if get(s:, "BookmarkSigns", 0)
 		let MarksOnLine = <sid>GetMarksOnLine(a:line)
-		if empty(oldSign)
-			if !empty(MarksOnLine)
-				" Take the first bookmark, that is on that line
-				let line = s:bookmarks[MarksOnLine[0]]
-				exe "sign place " . <sid>NextID().
-					\ " line=". line. " name=DSignBookmark".
-					\ MarksOnLine[0]. " buffer=". bufnr('')
-				let s:BookmarkSignsHL[MarksOnLine[0]] = matchadd('WildMenu',
-					\ <sid>GetPattern(MarksOnLine[0]))
-				return 1
+		if !empty(MarksOnLine)
+			let mark = MarksOnLine[0]
+			let id = s:sign_api ? 0 : <sid>NextID()
+			let name = 'DSignBookmark'.mark
+			let pat = <sid>SignPattern(name)
+			let index = <sid>HasSignMatches(pat)
+			if index > -1 
+				" Mark Sign no longer needed, remove it
+				call <sid>UnplaceSignSingle(s:Signs[index])
 			endif
-			return 0
-		else
-			" Bookmark Sign no longer needed, remove it
-			call <sid>UnplaceSignSingle(s:Signs[oldSign1])
-			for mark in <sid>GetMarksOnLine(a:line)
-				if has_key(s:BookmarkSignsHL, mark)
-					call matchdelete(s:BookmarkSignsHL[mark])
-					call remove(s:BookmarkSignsHL, mark)
-				endif
-			endfor
+			call <sid>PlaceSignSingle(id, a:line, name, bufnr(''))
+			let s:BookmarkSignsHL[mark] = matchadd('WildMenu', <sid>GetPattern(mark))
+			return 1
 		endif
 	endif
 	return 0
