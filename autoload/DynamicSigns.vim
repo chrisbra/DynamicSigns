@@ -1139,18 +1139,19 @@ fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 		" nothing to do
 		return
 	endif
-	let oldSign = match(s:Signs,
-		\ '.*=Sign\(Added\|Changed\|Deleted\)')
-	while oldSign > -1
-		call <sid>UnplaceSignSingle(s:Signs[oldSign])
-		call remove(s:Signs, oldSign)
-		let oldSign = match(s:Signs,
-			\ '.*=Sign\(Added\|Changed\|Deleted\)')
+	" TODO: - instead of unplacing all signs first and
+	"         then placing the new signs, move existing
+	"         signs around
+	let pat = <sid>SignPattern('DSign\(Added\|Changed\|Deleted\)')
+	let index = <sid>HasSignMatches(pat)
+	while index > -1
+		call <sid>UnplaceSignSingle(s:Signs[index])
+		call remove(s:Signs, index)
+		let index = <sid>HasSignMatches(pat)
 	endw
 	for line in a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d']
 		call <sid>PlaceDiffSigns(line, a:DiffSigns)
 	endfor
-	" TODO: unplace Old DiffSigns
 endfu
 fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	" Only update all signs in the current window viewport
