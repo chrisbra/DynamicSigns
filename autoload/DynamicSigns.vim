@@ -1323,14 +1323,16 @@ fu! DynamicSigns#SignsQFList(local) "{{{1
 	if a:local
 		let func = 'setloclist'
 		let args = [0, qflist]
+		let open = 'lopen'
 	else
 		let func = 'setqflist'
 		let args = [qflist]
+		let open = 'copen'
 	endif
 	let s:no_qf_autocmd = 1
 	call call(func, args)
 	unlet s:no_qf_autocmd
-	copen
+	exe open
 endfu
 fu! DynamicSigns#ForceUpdate() "{{{1
 	call <sid>UpdateView(1)

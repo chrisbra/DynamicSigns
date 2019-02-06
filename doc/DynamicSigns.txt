@@ -315,7 +315,8 @@ Disable the Sign plugin.
     :SignQF
 
 Display a quickfix list that contains all your signs in the current buffer.
-|Sign-QF|
+|Sign-QF| (Use the `!` for using the location list, else it will use the
+global quickfix list).
 
 >
     :SignExpression expr
