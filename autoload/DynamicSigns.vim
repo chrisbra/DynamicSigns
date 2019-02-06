@@ -377,6 +377,15 @@ fu! <sid>UnplaceSignID(id) "{{{1
 		exe "sil sign unplace ". a:id. " buffer=".bufnr('')
 	endif
 endfu
+fu! <sid>PlaceSignSingle(id, line, name, buffer) "{{{1
+	" Places a single sign
+	if s:sign_api
+		call sign_place(0, s:sign_api_group, a:name, a:buffer, {'lnum': a:line})
+	else
+		exe "sign place ". a:id. " line=" . a:line.  " name=". a:name.  " buffer=" . a:buffer
+	endif
+endfu
+
 fu! <sid>GetMarks() "{{{1
 	let marks={}
 	let t = []
@@ -852,15 +861,6 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.SignDiff		 = s:SignDiff
 	let s:CacheOpts.NoUtf8Signs      = get(g:, "NoUtf8Signs", 0)
 endfu
-fu! <sid>PlaceSignSingle(id, line, name, buffer) "{{{1
-	" Places a single sign
-	if s:sign_api
-		call sign_place(0, s:sign_api_group, a:name, a:buffer, {'lnum': a:line})
-	else
-		exe "sign place ". a:id. " line=" . a:line.  " name=". a:name.  " buffer=" . a:buffer
-	endif
-endfu
-
 fu! <sid>PlaceIndentationSign(line) "{{{1
 	if get(s:, "IndentationLevel", 0)
 		let indent = indent(a:line)
