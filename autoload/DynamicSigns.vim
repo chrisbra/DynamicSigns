@@ -385,7 +385,13 @@ fu! <sid>PlaceSignSingle(id, line, name, buffer) "{{{1
 		exe "sign place ". a:id. " line=" . a:line.  " name=". a:name.  " buffer=" . a:buffer
 	endif
 endfu
-
+fu! <sid>SignName(sign)
+	if s:sign_api
+		return a:sign.name
+	else
+		return matchstr(a:sign, 'name=\zs\S\+\ze')
+	endif
+endfu
 fu! <sid>GetMarks() "{{{1
 	let marks={}
 	let t = []
@@ -992,25 +998,26 @@ fu! <sid>PlaceSignHook(line) "{{{1
 			if empty(result)
 				let result = 'Info'
 			endif
-			let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
-					\ '\D.*=DSignCustom')
-			if a || !empty(a)
-				if oldSign >= 0
-					let oldSignname = matchstr(s:Signs[oldSign], 'DSignCustom\zs\S\+\ze')
+			let pat = <sid>SignPattern('DSignCustom')
+			let index = <sid>HasSignMatches(pat)
+			if !empty(a)
+				if index > -1
+					let oldSignname = matchstr(<sid>SignName(s:Signs[index]), 'DSignCustom\zs\S\+\ze')
 					" need to unplace old signs
 					if oldSignname !=# result
-						call <sid>UnplaceSignSingle(s:Signs[oldSign])
+						call <sid>UnplaceSignSingle(s:Signs[index])
 					else
-						return 0
+						return 1
 					endif
 				endif
-				exe "sign place ". <sid>NextID(). " line=". a:line.
-					\ " name=DSignCustom". result. " buffer=". bufnr('')
+				let id = s:sign_api ? 0 : <sid>NextID()
+				call <sid>PlaceSignSingle(id, a:line, 'DSignCustom'.result, bufnr(''))
 			elseif oldSign >= 0
 				" Custom Sign no longer needed, remove it
-				call <sid>UnplaceSignSingle(s:Signs[oldSign])
+				call <sid>UnplaceSignSingle(s:Signs[index])
+				return 0
 			endif
-			return 0
+			return 1
 		catch
 			let s:SignHook = ''
 			call add(s:msg, 'Error evaluating SignExpression at '. a:line)
