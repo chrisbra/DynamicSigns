@@ -1031,56 +1031,49 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	" Diff Signs
 	let did_place_sign = 0
 	if !empty(a:DiffSigns)
-		let oldSign = match(s:Signs, '^\s*\w\+='.a:line. '\D.*=DSignAdded')
+		let pat = <sid>SignPattern('DSignAdded')
+		let index = <sid>HasSignMatches(pat)
 		" Added Lines
-		for sign in sort(a:DiffSigns['a'])
-			if sign == a:line
-				if oldSign < 0
-					exe "sign place ". <sid>NextID(). " line=".
-						\ a:line. " name=DSignAdded buffer=". bufnr('')
-				endif
-				let did_place_sign = 1
-				break
+		let target=index(a:DiffSigns['a'], a:line)
+		let id = s:sign_api ? 0 : <sid>NextID()
+		if target > -1
+			if index < 0
+				call <sid>PlaceSignSingle(id, a:line, 'DSignAdded', bufnr(''))
 			endif
-		endfor
+			let did_place_sign = 1
+		endif
 		if did_place_sign
 			return 1
 		endif
 		" Changed Lines
-		let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
-				\ '\D.*=DSignChanged')
-		for sign in sort(a:DiffSigns['c'])
-			if sign == a:line
-				if oldSign < 0
-					exe "sign place " . <sid>NextID(). " line=".
-						\ a:line. " name=DSignChanged buffer=". bufnr('')
-				endif
-				let did_place_sign = 1
-				break
+		let pat = <sid>SignPattern('DSignChanged')
+		let index = <sid>HasSignMatches(pat)
+		let target=index(a:DiffSigns['c'], a:line)
+		if target > -1
+			if index < 0
+				call <sid>PlaceSignSingle(id, a:line, 'DSignChanged', bufnr(''))
 			endif
-		endfor
+			let did_place_sign = 1
+		endif
 		if did_place_sign
 			return 1
 		endif
 		" Deleted Lines
-		let oldSign = match(s:Signs, '^\s*\w\+='. a:line.
-				\ '\D.*=DSignDeleted')
-		for sign in sort(a:DiffSigns['d'])
-			if sign == a:line
-				if oldSign < 0
-					exe "sign place " . <sid>NextID(). " line=".
-						\ a:line. " name=DSignDeleted buffer=". bufnr('')
-				endif
-				let did_place_sign = 1
-				break
+		let pat = <sid>SignPattern('DSignDeleted')
+		let index = <sid>HasSignMatches(pat)
+		let target=index(a:DiffSigns['c'], a:line)
+		if target > -1
+			if index < 0
+				call <sid>PlaceSignSingle(id, a:line, 'DSignDeleted', bufnr(''))
 			endif
-		endfor
+			let did_place_sign = 1
+		endif
+		return 1
 
-		if did_place_sign
-			return 1
-		elseif oldSign >= 0
+		let index = <sid>SignNameMatches(<sid>SignPattern('DSign\([ACD]\)'))
+		if index > -1
 			" Diff Sign no longer needed, remove it
-			call <sid>UnplaceSignSingle(s:Signs[oldSign])
+			call <sid>UnplaceSignSingle(s:Signs[index])
 		endif
 	endif
 	return 0
