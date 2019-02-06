@@ -375,13 +375,6 @@ fu! <sid>UnplaceSignSingle(sign) "{{{1
 	sil! sign unplace
 	call winrestview(oldcursor)
 endfu
-fu! <sid>UnplaceSignID(id) "{{{1
-	if s:sign_api
-		call sign_unplace(s:sign_api_group, {'buffer': bufnr(''), 'id': a:id})
-	else
-		exe "sil sign unplace ". a:id. " buffer=".bufnr('')
-	endif
-endfu
 fu! <sid>PlaceSignSingle(id, line, name, buffer) "{{{1
 	" Places a single sign
 	if s:sign_api
