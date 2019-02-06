@@ -852,31 +852,39 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.SignDiff		 = s:SignDiff
 	let s:CacheOpts.NoUtf8Signs      = get(g:, "NoUtf8Signs", 0)
 endfu
+fu! <sid>PlaceSignSingle(id, line, name, buffer) "{{{1
+	" Places a single sign
+	if s:sign_api
+		call sign_place(0, s:sign_api_group, a:name, a:buffer, {'lnum': a:line})
+	else
+		exe "sign place ". a:id. " line=" . a:line.  " name=". a:name.  " buffer=" . a:buffer
+	endif
+endfu
+
 fu! <sid>PlaceIndentationSign(line) "{{{1
 	if get(s:, "IndentationLevel", 0)
 		let indent = indent(a:line)
 		let div    = shiftwidth()
+		let id     = s:sign_api ? 0 : <sid>NextID()
 
-		let oldSign = match(s:Signs, '^\s*\w\+='.a:line.
-			\ '.*=DSignWSError')
+		let pat = <sid>SignPattern('DSign\d\+')
+		let index = <sid>HasSignMatches(pat)
 		if div > 0 && indent > 0
-			if oldSign < 0
+			if index < 0
 				try
-					exe "sign place ". <sid>NextID(). " line=" .
-						\ 	a:line.  " name=DSign".
-						\ (indent/div < 10 ? indent/div : '10').
-						\ " buffer=" . bufnr('')
+					let name = 'DSign'. (indent/div < 10 ? indent/div : '10')
+					call <sid>PlaceSignSingle(id, a:line, name, bufnr(''))
 				catch
-					call add(s:msg, "Error at line: " . a:line)
+					call add(s:msg, "Error placing Indtation sign at line: " . a:line)
 					if s:debug
 						call add(s:msg, v:exception)
 					endif
 				endtry
 			endif
 			return 1
-		elseif oldSign >= 0
+		elseif index >= 0
 			"no more indentation Signs needed, remove
-			call <sid>UnplaceSignSingle(s:Signs[oldSign])
+			call <sid>UnplaceSignSingle(s:Signs[index])
 		endif
 	endif
 	return 0
