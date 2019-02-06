@@ -898,16 +898,11 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 			let do_unset_lz = 1
 			setl lz
 		endif
-		if !exists("b:SignScrollbarState")
-			let b:SignScrollbarState = 0
-		endif
 		let curline  = line('.')  + 0.0
 		let lastline = line('$')  + 0.0
 		let wheight  = winheight(0) + 0.0
 		let curperc  = curline/lastline
-		let tline    = round(wheight * curperc)
-		let tline += line('w0') - 1
-		let tline    = float2nr(tline)
+		let tline    = float2nr(round(wheight * curperc) + line('w0') -1)
 
 		" safety check
 		if line('$')  < tline
@@ -918,7 +913,7 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 
 		let nline    = (line('.') > line('$')/2 ? tline-1 : tline+1)
 
-		let _pos     = getpos('.')
+		let _pos     = winsaveview()
 		call cursor(1,1)
 		if &wrap && search('\%>'.&tw.'c', 'nW') > 0
 			" Wrapping occurs, don't display 2 signs
@@ -926,28 +921,25 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		else
 			let wrap = 0
 		endif
-		call setpos('.', _pos)
+		call winrestview(_pos)
 
+		let id = s:sign_api ? 0 : <sid>NextID()
 		" Place 2 Signs if no wrapping occurs,
 		" so the scrollbar looks better
 		for line in [tline, nline]
-			exe "sign place " s:sign_prefix . b:SignScrollbarState .
-				\ " line=" . string(line) .
-				\ " name=DSignScrollbar buffer=" . bufnr('')
+			call <sid>PlaceSignSingle(id, string(line), 'DSignScrollbar', bufnr(''))
 			if wrap
 				break
 			endif
 		endfor
-		let b:SignScrollbarState = !b:SignScrollbarState
-		let idx=match(s:Signs, 'id='. s:sign_prefix.
-				\ b:SignScrollbarState. '.*=DSignScrollbar')
-		while idx > -1
+		let pat = <sid>SignPattern('DSignScrollbar')
+		let index = <sid>HasSignMatches(pat)
+		while index > -1
 			" unplace old signs
-			call <sid>UnplaceSignID(s:sign_prefix. b:SignScrollbarState)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			" update s:Signs
-			call remove(s:Signs, idx)
-			let idx=match(s:Signs, 'id='. s:sign_prefix.
-					\ b:SignScrollbarState. '.*=DSignScrollbar')
+			call remove(s:Signs, index)
+			let index = <sid>HasSignMatches(pat)
 		endw
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
