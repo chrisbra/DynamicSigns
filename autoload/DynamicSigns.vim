@@ -43,7 +43,6 @@ fu! <sid>Check() "{{{1
 	endif
 
 	let s:sign_prefix = (s:sign_api ? '' : s:sid)
-	let s:sign_count  = '10'
 	let s:id_hl       = {}
 	let s:id_hl.Line  = "DiffAdd"
 	let s:id_hl.Error = "Error"
@@ -190,9 +189,8 @@ fu! <sid>Init(...) "{{{1
 endfu
 fu! <sid>NextID() "{{{1
 	" Not used for sign api
-	let s:sign_count+=1
-	let s:Id = s:sign_prefix . s:sign_count
-	return s:Id
+	let b:sign_count= get(b:, 'sign_count', 0) + 1
+	return (s:sign_prefix . b:sign_count) + 0
 endfu
 fu! <sid>ReturnSignDef() "{{{1
 	if s:sign_api
