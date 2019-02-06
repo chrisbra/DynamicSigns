@@ -1308,9 +1308,6 @@ fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
 	call DynamicSigns#Run()
 	let s:ignore = old_ignore
 endfu
-fu! <sid>MySortBookmarks(a, b) "{{{¹
-	return a:a+0 == a:b+0 ? 0 : a:a+0 > a:b+0 ? 1: -1
-endfu
 fu! DynamicSigns#SignsQFList(local) "{{{1
 	if !has("quickfix")
 		return
