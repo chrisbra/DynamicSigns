@@ -1362,8 +1362,8 @@ fu! DynamicSigns#QFSigns() "{{{1
 			if item.bufnr == 0
 				continue
 			endif
-			exe "sign place ". <sid>NextID(). " line=" . item.lnum .
-				\ " name=DSignQF buffer=" . item.bufnr
+			let id = s:sign_api ? 0 : <sid>NextID()
+			call <sid>PlaceSignSingle(id, item.lnum, 'DSignQF', item.bufnr)
 		endfor
 	endif
 endfu
