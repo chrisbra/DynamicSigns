@@ -1082,21 +1082,19 @@ fu! <sid>PlaceAlternatingSigns(line) "{{{1
 	if !s:AlternatingSigns
 		return 0
 	endif
-	let oldSign = match(s:Signs, '^\s*\w\+='. a:line. '\s*id='. s:sign_prefix
-			\ . a:line. '\s*=Sign'. (a:line % 2 ? 'Odd': 'Even'))
-	let oldSign1 = match(s:Signs, '^\s*\w\+='. a:line. '\s*id='. s:sign_prefix
-			\ . a:line. '\s*=Sign')
-	if oldSign == -1
-		if oldSign1 > -1
+	let pat = <sid>SignPattern('DSignScrollbar')
+	let suffix = (a:line %2 ? 'Odd' : 'Even')
+	let index1 = <sid>HasSignMatches(<sid>SignPattern('DSign'. suffix))
+	let index2 = <sid>HasSignMatches(<sid>SignPattern('DSign'))
+	if index1 == -1
+		if index2 > -1
 			" unplace previously place sign first
-			call <sid>UnplaceSignSingle(s:Signs[oldSign1])
+			call <sid>UnplaceSignSingle(s:Signs[index2])
 		endif
-		let sign = printf('sign place %d line=%d name=%s buffer=%d',
-					\ <sid>NextID(), a:line,
-					\ (a:line % 2 ? "DSignOdd" : "DSignEven"), bufnr(''))
-		exe sign
+		call <sid>PlaceSignSingle(id, a:line, 'DSign'.suffix, bufnr(''))
+		return 1
 	endif
-	return 1
+	return 0
 endfu
 fu! <sid>PlaceBookmarks(line) "{{{1
 	" Place signs for bookmarks
