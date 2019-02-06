@@ -729,67 +729,85 @@ fu! <sid>UpdateView(force) "{{{1
 		let b:dynamicsigns_tick = b:changedtick
 	endif
 endfu
+fu! <sid>HasSignMatches(pat) "{{{1
+	" Return signs whose name matches pattern
+	if s:sign_api
+		let i = 0
+		for sign in s:Signs
+			if sign.name =~ a:pat
+				return i
+			endif
+			let i+=1
+		endfor
+		return -1
+		" foobar
+	else
+		return match(s:Signs, a:pat)
+	endif
+endfu
+fu! <sid>SignPattern(name) "{{{1
+	" Generate a pattern that can be used for <sid>SignNameMatches
+	if s:sign_api
+		return a:name
+	else
+		return 'id='.s:sign_prefix.'\d\+.*='.a:name
+	endif
+endfu
 fu! <sid>DoSigns() "{{{1
+	" Returns true, if signs need to be processed by this plugin
 	if !s:MixedIndentation &&
 		\ get(s:CacheOpts, 'MixedIndentation', 0) > 0
 		if exists("s:MixedIndentationHL")
 			call matchdelete(s:MixedIndentationHL)
 		endif
-		let index = match(s:Signs,
-			\ 'id='.s:sign_prefix.'\d\+.*=DSignWSError')
+		let pat = <sid>SignPattern('DSignWSError')
+		let index = <sid>HasSignMatches(pat)
 		while index > -1
-			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
-			call <sid>UnplaceSignID(s:sign_prefix.line)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=DSignWSError')
+			let index = <sid>HasSignMatches(pat)
 		endw
 
 	elseif !s:IndentationLevel &&
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
-		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=DSign\d\+')
+		let pat = <sid>SignPattern('DSign\d\+')
+		let index = <sid>HasSignMatches(pat)
 		while index > -1
-			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
-			call <sid>UnplaceSignID(s:sign_prefix.line)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=\d\+')
+			let index = <sid>HasSignMatches(pat)
 		endw
 
 	elseif !s:SignHook &&
 		\ get(s:CacheOpts, 'SignHook', 0) > 0
-		let index = match(s:Signs, 'id='.s:sign_prefix.'\d\+.*=DSignCustom')
+		let pat = <sid>SignPattern('DSignCustom')
+		let index = <sid>HasSignMatches(pat)
 		while index > -1
-			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
-			call <sid>UnplaceSignID(s:sign_prefix.line)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=DSignCustom')
+			let index = <sid>HasSignMatches(pat)
 		endw
 
 	elseif !s:SignScrollbar &&
 		\ get(s:CacheOpts, 'SignScrollbar', 0) > 0
-		let index = match(s:Signs, 'id='. s:sign_prefix.
-			\ '\d\+.*=DSignScrollbar')
+		let pat = <sid>SignPattern('DSignScrollbar')
+		let index = <sid>HasSignMatches(pat)
 		while index > -1
-			let line = matchstr(s:Signs[index], '^\s*\w\+='\zs\d\+\ze\D')
-			call <sid>UnplaceSignId(s:sign_prefix.line)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=DSignScrollbar')
+			let index = <sid>HasSignMatches(pat)
 		endw
 		" remove autocommand
 		call <sid>DoSignScrollbarAucmd(0)
 
 	elseif !s:SignDiff &&
 		\ get(s:CacheOpts, 'SignDiff', 0) > 0
-		let index = match(s:Signs, 'id='.s:sign_prefix.
-			\ '\d\+.*=Sign\(Add\|Change\|Delete\)')
+		let pat = <sid>SignPattern('DSign\(Add\|Change\|Delete\)')
+		let index = <sid>HasSignMatches(pat)
 		while index > -1
-			let line = matchstr(s:Signs[index], '^\s*\w\+=\zs\d\+\ze\D')
-			call <sid>UnplaceSignID(s:sign_prefix.line)
+			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = match(s:Signs, 'id='.s:sign_prefix.
-				\ '\d\+.*=Sign\(Add\|Change\|Delete\)')
+			let index = <sid>HasSignMatches(pat)
 		endw
 	endif
 	call <sid>DoSignBookmarks()
