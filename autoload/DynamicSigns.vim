@@ -125,8 +125,7 @@ fu! <sid>Init(...) "{{{1
 
 	" Don't draw an ascii scrollbar in the gui, because it does not look nice
 	" and the gui can display its own scrollbar
-	let s:SignScrollbar = exists("g:Signs_Scrollbar") ?
-				\ (g:Signs_Scrollbar && !has("gui_running")) : 0
+	let s:SignScrollbar = get(g:, "Signs_Scrollbar", 0) && !has("gui_running")
 
 	let s:Sign_CursorHold = get(g:, "Signs_CursorHold", 0)
 	let s:debug    = get(g:, "Signs_Debug", 0)
@@ -817,7 +816,7 @@ fu! <sid>DoSigns() "{{{1
 		\ !s:BookmarkSigns	   &&
 		\ !s:SignHook		   &&
 		\ !s:SignDiff		   &&
-		\ s:SignScrollbar)  "return false, when s:SignScrollbar is set
+		\ !s:SignScrollbar)  "return false, when s:SignScrollbar is set
 		" update cache
 		call <sid>BufferConfigCache()
 		return 0
