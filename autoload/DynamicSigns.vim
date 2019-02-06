@@ -463,21 +463,43 @@ fu! <sid>PlaceSigns(...) "{{{1
 	" Cache for configuration options
 	call <sid>BufferConfigCache()
 endfu
-fu! <sid>DefineSignsIcons(def) "{{{1
-	try
-        let def=a:def
-        let path=matchstr(def, 'icon=\zs\S\+')
-        if !filereadable(path)
-            let def=substitute(def, 'icon=\S\+', '', '')
-        endif
-		exe def
-	catch /^Vim\%((\a\+)\)\=:E255/
-		" gvim can't read the icon
-		" first undefine the sign
-		exe "sign undefine" matchstr(a:def, '^sign define \zs\S\+\ze')
-		" redefine the sign without an icon
-		exe substitute(a:def, 'icon=.*$', '', '')
-	endtry
+fu! <sid>GetSignDef(def) "{{{1
+    " Returns sign definition as string for use as `:sign command`
+    " not used when s:sign_api is defined
+    return (has_key(a:def, 'text') ? ' text='.get(a:def, 'text', '') : '').
+        \ (has_key(a:def, 'texthl') ? ' texthl='.get(a:def, 'texthl', '') : '').
+        \ (has_key(a:def, 'icon') ? ' icon='.get(a:def, 'icon', '') : '').
+        \ (has_key(a:def, 'linehl') ? ' linehl='.get(a:def, 'linehl', '') : '')
+endfu
+fu! <sid>DefineSignIcons(def) "{{{1
+	for def in keys(a:def)
+		if s:sign_api
+			let sign = a:def[def]
+			try
+				call sign_define(def, sign)
+			catch /^Vim\%((\a\+)\)\=:E255/
+				" gvim can't read the icon
+				" first undefine the sign
+				call remove(sign, 'icon')
+				call sign_define(key, sign)
+			endtry
+			continue
+		endif
+		try
+			let cmd="sign define ". def. <sid>GetSignDef(a:def[def])
+			let path=matchstr(cmd, 'icon=\zs\S\+')
+			if !filereadable(path)
+				let cmd=substitute(cmd, 'icon=\S\+', '', '')
+			endif
+			exe cmd
+		catch /^Vim\%((\a\+)\)\=:E255/
+			" gvim can't read the icon
+			" first undefine the sign
+			exe "sign undefine" matchstr(cmd, '^sign define \zs\S\+\ze')
+			" redefine the sign without an icon
+			exe substitute(cmd, 'icon=.*$', '', '')
+		endtry
+	endfor
 endfu
 fu! <sid>DefineSigns() "{{{1
 	let icon = 0
@@ -491,34 +513,39 @@ fu! <sid>DefineSigns() "{{{1
 	if utf8signs && &enc != 'utf-8'
 		let utf8signs = 0
 	endif
+	let def = {}
 
 	" Indentlevel
 	for item in range(1,9)
-		let def = printf("sign define DSign%d text=%d texthl=%s %s",
-			\	item, item, s:id_hl.Line, (icon ? 'icon='.s:i_path.item.'.bmp' : ''))
-		call <sid>DefineSignsIcons(def)
+		let def["DSign".item] = {
+					\ 'text': item,
+					\ 'texthl': s:id_hl.Line,
+					\ 'icon': icon ? (s:i_path. item. '.bmp') : ''}
 	endfor
 
 	" Indentlevel > 9
-	let def = printf("sign define DSign10 text=>9 texthl=%s %s",
-				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "error.bmp" : ''))
-	call <sid>DefineSignsIcons(def)
+	let def["DSign10"] = {
+					\ 'text': ">9",
+					\ 'texthl': s:id_hl.Error,
+					\ 'icon': icon ? (s:i_path. 'error.bmp') : ''}
 
 	" Indentlevel < 1
-	let def = printf("sign define 0 text=<1 texthl=%s %s",
-				\ s:id_hl.Error, (icon ? "icon=". s:i_path. "warning.bmp" : ''))
-	call <sid>DefineSignsIcons(def)
+	let def["DSign0"] = {
+					\ 'text': "<1",
+					\ 'texthl': s:id_hl.Warning,
+					\ 'icon': icon ? (s:i_path. 'warning.bmp') : ''}
 
 	" Mixed Indentation Error
-	let def = printf("sign define DSignWSError text=X texthl=%s %s",
-				\ s:id_hl.Error,
-				\ (icon ? "icon=". s:i_path. "error.bmp" : ''))
-	call <sid>DefineSignsIcons(def)
+	let def["DSignWSError"] = {
+					\ 'text': "X",
+					\ 'texthl': s:id_hl.Error,
+					\ 'icon': icon ? (s:i_path. 'error.bmp') : ''}
 
 	" Scrollbar
-	exe printf("sign define DSignScrollbar text=%s texthl=%s",
-				\ (utf8signs ? '██': '>>'), s:id_hl.Check)
-	"
+	let def["DSignScrollbar"] = {
+					\ 'text': (utf8signs ? '██': '>>'),
+					\ 'texthl': s:id_hl.Check}
+
 	" Custom Signs Hooks
 	for sign in ['OK', 'Warning', 'Error', 'Info', 'Add', 'Arrow', 'Flag', 'Delete', 'Stop']
 				\ + ['Line1', 'Line2', 'Line3', 'Line4', 'Line5']
@@ -568,12 +595,17 @@ fu! <sid>DefineSigns() "{{{1
 			let text = "\u00a0"
 			let texthl = 'SignLine'. matchstr(sign, 'Gutter\zs\d')+0
 		endif
-
-		let def = printf("sign define DSignCustom%s %s texthl=%s %s %s",
-			\ sign, (!empty(text) ? "text=".text : ''),
-			\ empty(texthl) ? s:id_hl.Error : texthl, icn,
-			\ (line ? 'linehl=SignLine'.line : ''))
-		call <sid>DefineSignsIcons(def)
+		let def["DSignCustom".sign] = {
+					\ 'texthl': (empty(texthl) ? s:id_hl.Error : texthl)}
+		if !empty(text)
+			let def["DSignCustom".sign]["text"] = text
+		endif
+		if !empty(icn)
+			let def["DSignCustom".sign]["icon"] = icn
+		endif
+		if line
+			let def["DSignCustom".sign]["linehl"] = "SignLine". line
+		endif
 	endfor
 
 	" Bookmark Signs
@@ -582,35 +614,44 @@ fu! <sid>DefineSigns() "{{{1
 		if item =~# "[a-z0-9]" && icon
 			let icn = s:i_path.toupper(item).".bmp"
 		endif
-
-		let def = printf("sign define DSignBookmark%s text='%s texthl=%s %s",
-					\ item, item, s:id_hl.Line, ( empty(icn) ? '' : 'icon='.icn))
-		call <sid>DefineSignsIcons(def)
+		let def["DSignBookmark".item] = {
+					\ 'text': "'".item,
+					\ 'texthl': s:id_hl.Line,
+					\ 'icon': icn }
 	endfor
 
 	" Make Errors (quickfix list)
 	if has("quickfix")
-		let def = printf("sign define DSignQF text=! texthl=%s %s",
-				\ s:id_hl.Check, (icon ? " icon=". s:i_path. "arrow-right.bmp" : ''))
-		call <sid>DefineSignsIcons(def)
+		let def["DSignQF"] = {
+					\ 'text': "!",
+					\ 'texthl': s:id_hl.Check,
+					\ 'icon': (icon ? s:i_path. "arrow-right.bmp" : '')}
 	endif
 
 	" Diff Signs
 	if has("diff")
-		let def = printf("sign define DSignAdded text=+ texthl=DiffAdd %s",
-					\ (icon ? " icon=". s:i_path . "add.bmp" : ''))
-		call <sid>DefineSignsIcons(def)
-		let def = printf("sign define DSignChanged text=M texthl=DiffChange %s",
-					\ (icon ? " icon=". s:i_path . "warning.bmp" : ''))
-		call <sid>DefineSignsIcons(def)
-		let def = printf("sign define DSignDeleted text=- texthl=DiffDelete %s",
-					\ (icon ? " icon=". s:i_path . "delete.bmp" : ''))
-		call <sid>DefineSignsIcons(def)
+		let def["DSignAdded"] = {
+					\ 'text': "+",
+					\ 'texthl': 'DiffAdd',
+					\ 'icon': (icon ? s:i_path. "add.bmp" : '')}
+		let def["DSignChanged"] = {
+					\ 'text': "M",
+					\ 'texthl': 'DiffAdd',
+					\ 'icon': (icon ? s:i_path. "warning.bmp" : '')}
+		let def["DSignDeleted"] = {
+					\ 'text': "-",
+					\ 'texthl': 'DiffDeleted',
+					\ 'icon': (icon ? s:i_path. "delete.bmp" : '')}
 	endif
 
 	" Alternating Colors
-	exe "sign define DSignEven linehl=". s:id_hl.LineEven
-	exe "sign define DSignOdd linehl=".  s:id_hl.LineOdd
+	let def["DSignEven"] = {
+				\ 'linehl': s:id_hl.LineEven}
+	let def["DSignOdd"] = {
+				\ 'linehl': s:id_hl.LineOdd}
+	" Check for all the defined signs for accessibility of the icon
+	" and define the signs then finally
+	call <sid>DefineSignIcons(def)
 
 	let s:SignDef = <sid>ReturnSignDef()
 endfu
