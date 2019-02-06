@@ -1220,38 +1220,32 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	if get(s:, "BookmarkSigns", 0) || get(g:, "Signs_Bookmarks", 0)
 		" Initilize variables
 		call <sid>Init()
-		if <sid>DoSignBookmarks() &&
-			\ match(s:SignDef, 'DSignBookmark'.char) >= 0  " there was a sign defined for the mark
+		if <sid>DoSignBookmarks()
+			let name = 'DSignBookmark'.char
+			let index = <sid>SignNameMatches(<sid>SignPattern(name))
+			" there was a sign defined for the mark
 			" First place the new sign
 			" don't unplace old signs first, that prevents flicker (e.g. first
 			" removing all signs, removes the sign column, than placing a sign adds
 			" the sign column again.
+			let id = s:sign_api ? 0 : <sid>NextID()
 			let cline = line('.')
-			let sign_cmd =
-				\ printf(":sign place %d line=%d name=DSignBookmark%s buffer=%d",
-				\ <sid>NextID(), cline, char, bufnr(''))
-			exe sign_cmd
+			call <sid>PlaceSignSingle(id, line('.'), name, bufnr(''))
 			let indx = []
 			" unplace previous mark for this sign
-			let pat = 'line=\(\d\+\)\s\+id=\('.s:sign_prefix.'\d\+\)[^=]*=DSignBookmark\('.char.'\)'
-			let indx = matchlist(s:Signs, pat)
-			while !empty(indx)
-				let line = indx[1]
-				let id   = indx[2]
-				let mark = indx[3]
-				call <sid>UnplaceSignID(id)
-				sil! call matchdelete(s:BookmarkSignsHL[mark])
-
-				let index = match(s:Signs, pat)
+			let index = <sid>HasSignMatches(<sid>SignPattern(name))
+			while index > -1
+				call <sid>UnplaceSignSingle(s:Signs[index])
 				call remove(s:Signs, index)
-				let indx = matchlist(s:Signs, pat)
+				let index = <sid>HasSignMatches(<sid>SignPattern(name))
 			endw
-			" Unplace anyhow (in case the while loop didn't run)
+			" Refresh highlighting
 			sil! call matchdelete(s:BookmarkSignsHL[char])
-			" Mark hasn't been placed yet, so take cursor position
-			let s:BookmarkSignsHL[char] = matchadd(DynamicSignsHighlightMarks, <sid>GetPattern('.'))
+			" Mark hasn't been plRefresh highlighting
+			let s:BookmarkSignsHL[char] = matchadd(s:id_hl.Mark, <sid>GetPattern('.'))
+			" Refresh highlighting
+			call <sid>BufferConfigCache()
 		endif
-		call <sid>BufferConfigCache()
 	endif
 	return 'm'.char
 endfu
