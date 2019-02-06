@@ -150,6 +150,9 @@ fu! <sid>Init(...) "{{{1
 	if !hlexists("SignLine5") || empty(synIDattr(hlID("SignLine5"), "ctermbg"))
 		exe "hi default SignLine5 ctermbg=190 guibg=#DFFF00"
 	endif
+	if !hlexists("DynamicSignsHighlightMarks")
+		hi default link DynamicSignsHighlightMarks Visual
+	endif
 
 	" Highlighting for the bookmarks
 	if !exists("s:BookmarkSignsHL")
@@ -337,14 +340,14 @@ fu! <sid>DoBookmarkHL() "{{{1
 		let PlacedSigns = copy(s:Signs)
 		if s:sign_api
 			call filter(PlacedSigns, {i,v -> v.name =~ 'DSignBookmark\(.\)'})
-			call map(PlacedSigns, {i,v -> matchadd('WildMenu', <sid>GetPattern(v.name[-1]))})
+			call map(PlacedSigns, {i,v -> matchadd(DynamicSignsHighlightMarks, <sid>GetPattern(v.name[-1]))})
 			return
 		endif
 		let PlacedSigns = copy(s:Signs)
 		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=DSignBookmark\(.\)'
 		let Sign = matchlist(PlacedSigns, pat)
 		while (!empty(Sign))
-			let s:BookmarkSignsHL[Sign[1]] = matchadd('WildMenu',
+			let s:BookmarkSignsHL[Sign[1]] = matchadd(DynamicSignsHighlightMarks,
 						\ <sid>GetPattern(Sign[1]))
 			call remove(PlacedSigns, match(PlacedSigns, pat))
 			let Sign = matchlist(PlacedSigns, pat)
@@ -1111,7 +1114,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 				call <sid>UnplaceSignSingle(s:Signs[index])
 			endif
 			call <sid>PlaceSignSingle(id, a:line, name, bufnr(''))
-			let s:BookmarkSignsHL[mark] = matchadd('WildMenu', <sid>GetPattern(mark))
+			let s:BookmarkSignsHL[mark] = matchadd(DynamicSignsHighlightMarks, <sid>GetPattern(mark))
 			return 1
 		endif
 	endif
@@ -1245,7 +1248,7 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			" Unplace anyhow (in case the while loop didn't run)
 			sil! call matchdelete(s:BookmarkSignsHL[char])
 			" Mark hasn't been placed yet, so take cursor position
-			let s:BookmarkSignsHL[char] = matchadd('WildMenu', <sid>GetPattern('.'))
+			let s:BookmarkSignsHL[char] = matchadd(DynamicSignsHighlightMarks, <sid>GetPattern('.'))
 		endif
 		call <sid>BufferConfigCache()
 	endif
