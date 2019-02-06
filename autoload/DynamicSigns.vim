@@ -49,6 +49,8 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Check = "User1"
 	let s:id_hl.LineEven = get(g:, "g:DynamicSigns_Even", <sid>Color("Even"))
 	let s:id_hl.LineOdd  = get(g:, "g:DynamicSigns_Odd",  <sid>Color("Odd"))
+	let s:id_hl.Warning = "WarningMsg"
+	let s:id_hl.Mark    = 'DynamicSignsHighlightMarks'
 
 	" Undefine Signs
 	if exists("s:precheck")
@@ -340,14 +342,14 @@ fu! <sid>DoBookmarkHL() "{{{1
 		let PlacedSigns = copy(s:Signs)
 		if s:sign_api
 			call filter(PlacedSigns, {i,v -> v.name =~ 'DSignBookmark\(.\)'})
-			call map(PlacedSigns, {i,v -> matchadd(DynamicSignsHighlightMarks, <sid>GetPattern(v.name[-1]))})
+			call map(PlacedSigns, {i,v -> matchadd(s:id_hl.Mark, <sid>GetPattern(v.name[-1]))})
 			return
 		endif
 		let PlacedSigns = copy(s:Signs)
 		let pat = 'id='.s:sign_prefix.'\d\+[^0-9=]*=DSignBookmark\(.\)'
 		let Sign = matchlist(PlacedSigns, pat)
 		while (!empty(Sign))
-			let s:BookmarkSignsHL[Sign[1]] = matchadd(DynamicSignsHighlightMarks,
+			let s:BookmarkSignsHL[Sign[1]] = matchadd(s:id_hl.Mark,
 						\ <sid>GetPattern(Sign[1]))
 			call remove(PlacedSigns, match(PlacedSigns, pat))
 			let Sign = matchlist(PlacedSigns, pat)
@@ -1114,7 +1116,7 @@ fu! <sid>PlaceBookmarks(line) "{{{1
 				call <sid>UnplaceSignSingle(s:Signs[index])
 			endif
 			call <sid>PlaceSignSingle(id, a:line, name, bufnr(''))
-			let s:BookmarkSignsHL[mark] = matchadd(DynamicSignsHighlightMarks, <sid>GetPattern(mark))
+			let s:BookmarkSignsHL[mark] = matchadd(s:id_hl.Mark, <sid>GetPattern(mark))
 			return 1
 		endif
 	endif

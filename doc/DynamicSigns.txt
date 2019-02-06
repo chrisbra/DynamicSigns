@@ -91,7 +91,7 @@ Use |:Signs| or |:UpdateSigns| to manually update the view in case this is
 needed).
 
 The position of the marks will be highlighted by using the
-`DynamicSignsHighlightMArks` highlighting group (by default, linked to
+`DynamicSignsHighlightMarks` highlighting group (by default, linked to
 |hl-Visual|.
 
                                                           *:SignExpression*
