@@ -961,20 +961,19 @@ fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 
 		let pat = pat1. '\|'. pat2. '\|'. pat3
 		if !exists("s:MixedIndentationHL")
-			let s:MixedIndentationHL =
-			\ matchadd('Error', pat)
+			let s:MixedIndentationHL = matchadd('Error', pat)
 		endif
-		let oldSign = match(s:Signs, '^\s*\w\+='.a:line.
-					\ '.*=DSignWSError')
+		let pat = <sid>SignPattern('DSignWSError')
+		let index = <sid>HasSignMatches(pat)
 		if match(line, pat) > -1
-			if oldSign < 0
-				exe "sign place " . <sid>NextID(). " line=". a:line.
-					\ " name=DSignWSError buffer=" . bufnr('')
+			if index < 0
+				let id = s:sign_api ? 0 : <sid>NextID()
+				call <sid>PlaceSignSingle(id, a:line, 'DSignWSError', bufnr(''))
 			endif
 			return 1
 		elseif oldSign >= 0
 			" No more wrong indentation, remove sign
-			call <sid>UnplaceSignSingle(s:Signs[oldSign])
+			call <sid>UnplaceSignSingle(s:Signs[index])
 		endif
 	endif
 	if !s:MixedIndentation
