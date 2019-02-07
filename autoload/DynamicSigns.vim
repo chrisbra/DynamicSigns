@@ -126,7 +126,7 @@ endfu
 fu! <sid>WarningMsg() "{{{1
 	redraw!
 	if !empty(s:msg)
-		let msg=["Signs.vim: " . s:msg[0]] + len(s:msg) > 1 ? s:msg[1:] : []
+		let msg=["Signs.vim: " . s:msg[0]] + (len(s:msg) > 1 ? s:msg[1:] : [])
 		echohl WarningMsg
 		for mess in msg
 			exe s:echo_cmd "mess"
@@ -765,16 +765,23 @@ fu! <sid>SignNameMatches(pat, line) "{{{1
 	" Return signs whose name matches pattern
 	let line = a:line == 0 ? -1 : a:line
 	if s:sign_api
+		let id=0
 		for sign in s:Signs
 			if sign.name =~ a:pat && (line == -1 || sign.lnum == a:line)
-				return 0
+				return id
 			endif
+			let id+=1
 		endfor
 		return -1
 		" foobar
 	else
-		if match(s:Signs, a:pat) > -1 && (line == -1 || match(s:Signs, 'line='. a:line. '\S') > -1 )
-			return 0
+		let idx1 = match(s:Signs, a:pat)
+		if idx1 > -1
+			if (line == -1)
+				return idx1
+			else
+				return match(s:Signs, 'line='.a:line.'\D.*'. a:pat)
+			endif
 		endif
 	endif
 	return -1
@@ -1035,7 +1042,7 @@ fu! <sid>PlaceSignHook(line) "{{{1
 					endif
 				endif
 				call <sid>PlaceSignSingle(a:line, 'DSignCustom'.result)
-			elseif oldSign >= 0
+			elseif index >= 0
 				" Custom Sign no longer needed, remove it
 				call <sid>UnplaceSignSingle(s:Signs[index])
 				return 0
