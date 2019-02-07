@@ -509,9 +509,9 @@ fu! <sid>DefineSignIcons(def) "{{{1
 		endif
 		try
 			let cmd="sign define ". def. <sid>GetSignDef(a:def[def])
-			let path=matchstr(cmd, 'icon=\zs\S\+')
+			let path=matchstr(cmd, 'icon=\zs\S*')
 			if !filereadable(path)
-				let cmd=substitute(cmd, 'icon=\S\+', '', '')
+				let cmd=substitute(cmd, 'icon=\S*', '', '')
 			endif
 			exe cmd
 		catch /^Vim\%((\a\+)\)\=:E255/
@@ -671,6 +671,11 @@ fu! <sid>DefineSigns() "{{{1
 				\ 'linehl': s:id_hl.LineEven}
 	let def["DSignOdd"] = {
 				\ 'linehl': s:id_hl.LineOdd}
+
+"    for name in keys(def)
+"      " remove empty keys from dictionary
+"      call filter(def[name], {key, val -> !empty(val)})
+"    endfor
 	" Check for all the defined signs for accessibility of the icon
 	" and define the signs then finally
 	call <sid>DefineSignIcons(def)
