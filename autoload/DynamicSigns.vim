@@ -52,6 +52,27 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Warning = "WarningMsg"
 	let s:id_hl.Mark    = 'DynamicSignsHighlightMarks'
 
+	" highlight line
+	" TODO: simplify, a simple `:hi default should work!
+	if !hlexists("SignLine1") || empty(synIDattr(hlID("SignLine1"), "ctermbg"))
+		exe "hi default SignLine1 ctermbg=238 guibg=#403D3D"
+	endif
+	if !hlexists("SignLine2") || empty(synIDattr(hlID("SignLine2"), "ctermbg"))
+		exe "hi default SignLine2 ctermbg=208 guibg=#FD971F"
+	endif
+	if !hlexists("SignLine3") || empty(synIDattr(hlID("SignLine3"), "ctermbg"))
+		exe "hi default SignLine3 ctermbg=24  guibg=#13354A"
+	endif
+	if !hlexists("SignLine4") || empty(synIDattr(hlID("SignLine4"), "ctermbg"))
+		exe "hi default SignLine4 ctermbg=1  guibg=Red"
+	endif
+	if !hlexists("SignLine5") || empty(synIDattr(hlID("SignLine5"), "ctermbg"))
+		exe "hi default SignLine5 ctermbg=190 guibg=#DFFF00"
+	endif
+	if !hlexists("DynamicSignsHighlightMarks")
+		hi default link DynamicSignsHighlightMarks Visual
+	endif
+
 	if exists("+signcolumn")
 		let s:unset_signcolumn=1
 		set signcolumn=yes
@@ -139,26 +160,6 @@ fu! <sid>Init(...) "{{{1
 
 	if !exists("s:gui_running")
 		let s:gui_running = has("gui_running")
-	endif
-	" highlight line
-	" TODO: simplify, a simple `:hi default should work!
-	if !hlexists("SignLine1") || empty(synIDattr(hlID("SignLine1"), "ctermbg"))
-		exe "hi default SignLine1 ctermbg=238 guibg=#403D3D"
-	endif
-	if !hlexists("SignLine2") || empty(synIDattr(hlID("SignLine2"), "ctermbg"))
-		exe "hi default SignLine2 ctermbg=208 guibg=#FD971F"
-	endif
-	if !hlexists("SignLine3") || empty(synIDattr(hlID("SignLine3"), "ctermbg"))
-		exe "hi default SignLine3 ctermbg=24  guibg=#13354A"
-	endif
-	if !hlexists("SignLine4") || empty(synIDattr(hlID("SignLine4"), "ctermbg"))
-		exe "hi default SignLine4 ctermbg=1  guibg=Red"
-	endif
-	if !hlexists("SignLine5") || empty(synIDattr(hlID("SignLine5"), "ctermbg"))
-		exe "hi default SignLine5 ctermbg=190 guibg=#DFFF00"
-	endif
-	if !hlexists("DynamicSignsHighlightMarks")
-		hi default link DynamicSignsHighlightMarks Visual
 	endif
 
 	" Highlighting for the bookmarks
