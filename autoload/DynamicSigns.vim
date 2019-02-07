@@ -264,7 +264,8 @@ fu! <sid>AuCmd(arg) "{{{1
 			endif
 			" make sure, sign expression is reevaluated on changes to
 			" the buffer
-			au TextChanged * call DynamicSigns#UpdateWindowSigns('alternate,diff,marks,indentation')
+			au TextChanged * call DynamicSigns#UpdateWindowSigns('diff,marks,indentation')
+			au CursorMoved * call DynamicSigns#UpdateWindowSigns('diff,whitespace')
 		augroup END
 	else
 		augroup Signs
