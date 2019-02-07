@@ -953,7 +953,6 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
 			unlet! do_unset_lz
-			redraw
 		endif
 		call <sid>BufferConfigCache()
 		return 1
