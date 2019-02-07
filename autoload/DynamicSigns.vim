@@ -10,7 +10,7 @@
 
 " TODO: Make use VimScript API for managing signs!
 
-"{{{1 scriptlocal variables
+"{{{1Scriptlocal variables
 fu! <sid>GetSID()
 	return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_GetSID$')
 endfu
