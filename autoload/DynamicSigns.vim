@@ -376,6 +376,10 @@ fu! <sid>UnplaceSignSingle(sign) "{{{1
 	call winrestview(oldcursor)
 endfu
 fu! <sid>PlaceSignSingle(line, name, ...) "{{{1
+	" safety check
+	if a:line == 0
+		return
+	endif
 	" Places a single sign
 	let bufnr=get(a:000, 0, bufnr(''))
 	if s:sign_api
@@ -915,22 +919,24 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 			let tline = line('w0')
 		endif
 
-		let nline    = (line('.') > line('$')/2 ? tline-1 : tline+1)
+		if (line('.') > line('$')/2 && tline > 1)
+			let nline = tline - 1
+		else
+			let nline = tline + 1
+		endif
 
-		let _pos     = winsaveview()
-		call cursor(1,1)
-		if &wrap && search('\%>'.&tw.'c', 'nW') > 0
+		let wrap = search('\%>'. &tw. 'c', 'nW')
+		if &wrap && index([nline, tline], wrap) > -1
 			" Wrapping occurs, don't display 2 signs
 			let wrap = 1
 		else
 			let wrap = 0
 		endif
-		call winrestview(_pos)
 
 		" Place 2 Signs if no wrapping occurs,
 		" so the scrollbar looks better
 		for line in [tline, nline]
-			call <sid>PlaceSignSingle(string(line), 'DSignScrollbar')
+			call <sid>PlaceSignSingle(line, 'DSignScrollbar')
 			if wrap
 				break
 			endif
