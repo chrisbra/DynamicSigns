@@ -52,7 +52,7 @@ if get(g:, "Signs_QFList", 0)
 	call <sid>ActivateAuCmds()
 endif
 
-if get(g:, "g:Signs_Scrollbar", 0)
+if get(g:, "Signs_Scrollbar", 0)
 	call DynamicSigns#UpdateScrollbarSigns()
 endif
 
