@@ -57,12 +57,12 @@ if get(g:, "Signs_Scrollbar", 0)
 endif
 
 if (get(g:, "Signs_MixedIndentation", 0) ||
-		\ get(g:, "Signs_IndentationLevel, ", 0) ||
-		\ get(g:, "Signs_Bookmarks, ", 0)  ||
-		\ get(g:, "Signs_Alternate, ", 0)  ||
-		\ get(g:, "Signs_Hook, ", 0)	   ||
-		\ get(g:, "Signs_QFList, ", 0)	   ||
-		\ get(g:, "Signs_Diff, ", 0))
+		\ get(g:, "Signs_IndentationLevel", 0) ||
+		\ get(g:, "Signs_Bookmarks", 0)  ||
+		\ get(g:, "Signs_Alternate", 0)  ||
+		\ get(g:, "Signs_Hook", 0)	     ||
+		\ get(g:, "Signs_QFList", 0)	 ||
+		\ get(g:, "Signs_Diff", 0))
 	call DynamicSigns#Update()
 endif
 
