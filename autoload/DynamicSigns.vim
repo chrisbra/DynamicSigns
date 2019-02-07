@@ -750,6 +750,11 @@ fu! <sid>UpdateView(force) "{{{1
 		let b:dynamicsigns_tick = b:changedtick
 	endif
 endfu
+fu! <sid>SignNameMatchesAny(pat) "{{{1
+	" just check there exists any sign with
+	" the given name, regardless of the line
+	return <sid>SignNameMatches(a:pat, 0)
+endfu
 fu! <sid>SignNameMatches(pat, line) "{{{1
 	" Return signs whose name matches pattern
 	let line = a:line == 0 ? -1 : a:line
@@ -784,41 +789,41 @@ fu! <sid>DoSigns() "{{{1
 			call matchdelete(s:MixedIndentationHL)
 		endif
 		let pat = <sid>SignPattern('DSignWSError')
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, 0)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 
 	elseif !s:IndentationLevel &&
 		\ get(s:CacheOpts, 'IndentationLevel', 0) > 0
 		let pat = <sid>SignPattern('DSign\d\+')
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, 0)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 
 	elseif !s:SignHook &&
 		\ get(s:CacheOpts, 'SignHook', 0) > 0
 		let pat = <sid>SignPattern('DSignCustom')
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, 0)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 
 	elseif !s:SignScrollbar &&
 		\ get(s:CacheOpts, 'SignScrollbar', 0) > 0
 		let pat = <sid>SignPattern('DSignScrollbar')
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, 0)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 		" remove autocommand
 		call <sid>DoSignScrollbarAucmd(0)
@@ -826,11 +831,11 @@ fu! <sid>DoSigns() "{{{1
 	elseif !s:SignDiff &&
 		\ get(s:CacheOpts, 'SignDiff', 0) > 0
 		let pat = <sid>SignPattern('DSign\(Add\|Change\|Delete\)')
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, 0)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 	endif
 	call <sid>DoSignBookmarks()
@@ -852,11 +857,11 @@ endfu
 fu! <sid>DoSignBookmarks() "{{{1
 	if s:BookmarkSigns != get(s:CacheOpts, 'BookmarkSigns', 0)
 		let pat = <sid>SignPattern('DSignBookmark')
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, 0)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 		if exists("s:BookmarkSignsHL")
 			for value in values(s:BookmarkSignsHL)
@@ -952,13 +957,13 @@ fu! <sid>PlaceScrollbarSigns() "{{{1
 			endif
 		endfor
 		let pat = <sid>SignPattern('DSignScrollbar')
-		let index = <sid>SignNameMatches(pat, a:line)
+		let index = <sid>SignNameMatchesAny(pat)
 		while index > -1
 			" unplace old signs
 			call <sid>UnplaceSignSingle(s:Signs[index])
 			" update s:Signs
 			call remove(s:Signs, index)
-			let index = <sid>SignNameMatches(pat, a:line)
+			let index = <sid>SignNameMatchesAny(pat)
 		endw
 		if exists("do_unset_lz") && do_unset_lz
 			setl nolz
@@ -1152,11 +1157,11 @@ fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 	"         then placing the new signs, move existing
 	"         signs around
 	let pat = <sid>SignPattern('DSign\(Added\|Changed\|Deleted\)')
-	let index = <sid>SignNameMatches(pat, 0)
+	let index = <sid>SignNameMatchesAny(pat)
 	while index > -1
 		call <sid>UnplaceSignSingle(s:Signs[index])
 		call remove(s:Signs, index)
-		let index = <sid>SignNameMatches(pat, 0)
+		let index = <sid>SignNameMatchesAny(pat)
 	endw
 	for line in a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d']
 		call <sid>PlaceDiffSigns(line, a:DiffSigns)
@@ -1232,7 +1237,7 @@ fu! DynamicSigns#MapBookmark() "{{{1
 		if <sid>DoSignBookmarks()
 			let name = 'DSignBookmark'.char
 			let cline = line('.')
-			let index = <sid>SignNameMatches(<sid>SignPattern(name), cline)
+			let index = <sid>SignNameMatchesAny(<sid>SignPattern(name))
 			" there was a sign defined for the mark
 			" First place the new sign
 			" don't unplace old signs first, that prevents flicker (e.g. first
@@ -1241,11 +1246,11 @@ fu! DynamicSigns#MapBookmark() "{{{1
 			call <sid>PlaceSignSingle(cline, name)
 			let indx = []
 			" unplace previous mark for this sign
-			let index = <sid>SignNameMatches(<sid>SignPattern(name), 0)
+			let index = <sid>SignNameMatchesAny(<sid>SignPattern(name))
 			while index > -1
 				call <sid>UnplaceSignSingle(s:Signs[index])
 				call remove(s:Signs, index)
-				let index = <sid>SignNameMatches(<sid>SignPattern(name), 0)
+				let index = <sid>SignNameMatchesAny(<sid>SignPattern(name))
 			endw
 			" Refresh highlighting
 			sil! call matchdelete(s:BookmarkSignsHL[char])
