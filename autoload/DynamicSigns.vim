@@ -1037,7 +1037,7 @@ endfu
 fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	" Diff Signs
 	let did_place_sign = 0
-	if !empty(a:DiffSigns)
+	if !empty(a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d'])
 		let pat = <sid>SignPattern('DSignAdded')
 		let index = <sid>SignNameMatches(pat)
 		" Added Lines
@@ -1067,14 +1067,16 @@ fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 		" Deleted Lines
 		let pat = <sid>SignPattern('DSignDeleted')
 		let index = <sid>SignNameMatches(pat)
-		let target=index(a:DiffSigns['c'], a:line)
+		let target=index(a:DiffSigns['d'], a:line)
 		if target > -1
 			if index < 0
 				call <sid>PlaceSignSingle(a:line, 'DSignDeleted')
 			endif
 			let did_place_sign = 1
 		endif
-		return 1
+		if did_place_sign
+			return 1
+		endif
 
 		let index = <sid>SignNameMatches(<sid>SignPattern('DSign\([ACD]\)'))
 		if index > -1
