@@ -832,6 +832,7 @@ fu! <sid>DoSigns() "{{{1
 		\ !s:BookmarkSigns	   &&
 		\ !s:SignHook		   &&
 		\ !s:SignDiff		   &&
+		\ !s:AlternatingSigns  &&
 		\ !s:SignScrollbar)  "return false, when s:SignScrollbar is set
 		" update cache
 		call <sid>BufferConfigCache()
@@ -868,6 +869,7 @@ fu! <sid>BufferConfigCache() "{{{1
 	let s:CacheOpts.SignScrollbar    = s:SignScrollbar
 	let s:CacheOpts.SignHook		 = s:SignHook
 	let s:CacheOpts.SignDiff		 = s:SignDiff
+	let s:CacheOpts.AlternatingSigns = s:AlternatingSigns
 	let s:CacheOpts.NoUtf8Signs      = get(g:, "NoUtf8Signs", 0)
 endfu
 fu! <sid>PlaceIndentationSign(line) "{{{1
