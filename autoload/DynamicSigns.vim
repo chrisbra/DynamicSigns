@@ -52,6 +52,11 @@ fu! <sid>Check() "{{{1
 	let s:id_hl.Warning = "WarningMsg"
 	let s:id_hl.Mark    = 'DynamicSignsHighlightMarks'
 
+	if exists("+signcolumn")
+		let s:unset_signcolumn=1
+		set signcolumn=yes
+	endif
+
 	" Undefine Signs
 	if exists("s:precheck")
 		" just started up, there shouldn't be any signs yet
@@ -1290,7 +1295,10 @@ fu! DynamicSigns#CleanUp() "{{{1
 		endfor
 	endif
 	call <sid>AuCmd(0)
-	unlet! s:precheck s:SignDef
+	if exists("s:unset_signcolumn")
+		set signcolumn=auto
+	endif
+	unlet! s:precheck s:SignDef s:unset_signcolumn
 	redraw!
 endfu
 fu! DynamicSigns#PrepareSignExpression(arg) "{{{1
