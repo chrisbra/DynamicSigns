@@ -22,8 +22,8 @@ let g:loaded_Signs = 1
 
 fu! <sid>ActivateAuCmds()
 	augroup Signs
-			autocmd!
-			au QuickFixCmdPost * :call DynamicSigns#QFSigns()
+		autocmd!
+		au QuickFixCmdPost * :call DynamicSigns#QFSigns()
 	augroup END
 endfu
 
