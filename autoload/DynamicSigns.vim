@@ -1214,6 +1214,9 @@ fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 			call <sid>WarningMsg()
 		endtry
 	endif
+	if s:AlternatingSigns
+		call <sid>PlaceSigns(line('w0'), line('w$'))
+	endif
 	let s:ignore = s:old_ignore
 	call winrestview(_a)
 endfu
