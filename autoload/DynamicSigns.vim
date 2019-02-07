@@ -1048,7 +1048,7 @@ endfu
 fu! <sid>PlaceDiffSigns(line, DiffSigns) "{{{1
 	" Diff Signs
 	let did_place_sign = 0
-	if !empty(a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d'])
+	if !empty(a:DiffSigns) && !empty(a:DiffSigns['a'] + a:DiffSigns['c'] + a:DiffSigns['d'])
 		let pat = <sid>SignPattern('DSignAdded')
 		let index = <sid>SignNameMatches(pat, a:line)
 		" Added Lines
