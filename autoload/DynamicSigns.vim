@@ -969,23 +969,25 @@ endfu
 fu! <sid>PlaceMixedWhitespaceSign(line) "{{{1
 	if get(s:, "MixedIndentation", 0)
 		let line = getline(a:line)
-		let pat1 = '\%(^\s\+\%(\t \)\|\%( \t\)\)'
-		let pat2 = '\%(\S\zs\s\+$\)'
-		"highlight non-breaking space, etc...
-		let pat3 = '\%([\x0b\x0c\u00a0\u1680\u180e\u2000-\u200a\u2028\u202f\u205f\u3000\ufeff]\)'
+		if !exists("s:MixedWhitespacePattern")
+			let pat1 = '\%(^\s\+\%(\t \)\|\%( \t\)\)'
+			let pat2 = '\%(\S\zs\s\+$\)'
+			"highlight non-breaking space, etc...
+			let pat3 = '\%([\x0b\x0c\u00a0\u1680\u180e\u2000-\u200a\u2028\u202f\u205f\u3000\ufeff]\)'
 
-		let pat = pat1. '\|'. pat2. '\|'. pat3
+			let s:MixedWhitespacePattern = pat1. '\|'. pat2. '\|'. pat3
+		endif
 		if !exists("s:MixedIndentationHL")
-			let s:MixedIndentationHL = matchadd('Error', pat)
+			let s:MixedIndentationHL = matchadd('Error', s:MixedWhitespacePattern)
 		endif
 		let pat = <sid>SignPattern('DSignWSError')
 		let index = <sid>SignNameMatches(pat)
-		if match(line, pat) > -1
+		if match(line, s:MixedWhitespacePattern) > -1
 			if index < 0
 				call <sid>PlaceSignSingle(a:line, 'DSignWSError')
 			endif
 			return 1
-		elseif oldSign >= 0
+		elseif index >= 0
 			" No more wrong indentation, remove sign
 			call <sid>UnplaceSignSingle(s:Signs[index])
 		endif
