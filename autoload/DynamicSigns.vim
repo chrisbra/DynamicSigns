@@ -1247,7 +1247,7 @@ fu! DynamicSigns#MapBookmark() "{{{1
 	if get(s:, "BookmarkSigns", 0) || get(g:, "Signs_Bookmarks", 0)
 		" Initilize variables
 		call <sid>Init()
-		if <sid>DoSignBookmarks()
+		if <sid>DoSignBookmarks() && index(s:Bookmarks, char) > -1
 			let name = 'DSignBookmark'.char
 			let cline = line('.')
 			let index = <sid>SignNameMatchesAny(<sid>SignPattern(name))
