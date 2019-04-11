@@ -570,7 +570,7 @@ fu! <sid>DefineSigns() "{{{1
 				\ + ['Line1', 'Line2', 'Line3', 'Line4', 'Line5']
 				\ + ['Gutter1', 'Gutter2', 'Gutter3', 'Gutter4', 'Gutter5']
 				\ + range(1,99)
-		let icn  = (icon ? 'icon='. s:i_path : '')
+		let icn  = (icon ? s:i_path : '')
 		let text = ""
 		let texthl = ''
 		let line = 0
@@ -669,10 +669,10 @@ fu! <sid>DefineSigns() "{{{1
 	let def["DSignOdd"] = {
 				\ 'linehl': s:id_hl.LineOdd}
 
-"    for name in keys(def)
-"      " remove empty keys from dictionary
-"      call filter(def[name], {key, val -> !empty(val)})
-"    endfor
+    for name in keys(def)
+      " remove empty keys from dictionary
+      call filter(def[name], {key, val -> !empty(val)})
+    endfor
 	" Check for all the defined signs for accessibility of the icon
 	" and define the signs then finally
 	call <sid>DefineSignIcons(def)
