@@ -671,7 +671,11 @@ fu! <sid>DefineSigns() "{{{1
 
     for name in keys(def)
       " remove empty keys from dictionary
-      call filter(def[name], {key, val -> !empty(val)})
+		if v:version >= 800
+			call filter(def[name], {key, val -> !empty(val)})
+		else
+			call filter(def[name], '!empty(v:val)')
+		endif
     endfor
 	" Check for all the defined signs for accessibility of the icon
 	" and define the signs then finally
