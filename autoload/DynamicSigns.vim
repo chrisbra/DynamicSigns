@@ -1183,6 +1183,13 @@ fu! <sid>UpdateDiffSigns(DiffSigns) "{{{1
 endfu
 fu! DynamicSigns#UpdateWindowSigns(ignorepat) "{{{1
 	" Only update all signs in the current window viewport
+	" if no signs have been placed, return early
+	if !exists("s:Signs")
+		let s:Signs=<sid>ReturnSigns(bufnr(''))
+	endif
+	if empty(s:Signs)
+		return
+	endif
 	let _a = winsaveview()
 	" remove old matches first...
 	call <sid>UnMatchHL()
