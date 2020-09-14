@@ -100,7 +100,7 @@ fu! <sid>Color(name) "{{{1
 				let definition .= ' ctermbg='. (&t_Co == 88 ? '86' : '245') . ' guibg=#525252'
 			endif
 		endif
-		exe "hi LineEven" definition
+		exe "hi default LineEven" definition
 		return 'LineEven'
 	else
 		if &bg == 'dark'
@@ -116,7 +116,7 @@ fu! <sid>Color(name) "{{{1
 				let definition .= ' ctermbg='. (&t_Co == 88 ? '80' : '234') . ' guibg=#292929'
 			endif
 		endif
-		exe "hi LineOdd" definition
+		exe "hi default LineOdd" definition
 		return 'LineOdd'
 	endif
 endfu

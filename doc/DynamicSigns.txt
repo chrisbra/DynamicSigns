@@ -235,6 +235,12 @@ numbered line in a different color.
 Run |:UpdateSigns| or |:Signs| to update displaying the signs in your
 buffer.
 
+The highlighting colors can be customized by defining the LineEven and LineOdd
+highlighting groups in your |.vimrc|  >
+        hi LineOdd  ctermbg=52 guibg=#ff0000
+
+This will highlight odd lines in a red.
+
 2.8 ASCII Scrollbar                                        *Signs-Scrollbar*
 -------------------
 The DynamicSigns plugin can also emulate an ascii scrollbar. This is useful
